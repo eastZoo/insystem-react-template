@@ -1,97 +1,68 @@
-import { Routes as DomRoutes, Route, Navigate } from "react-router-dom";
-import { readAccessToken } from "@/lib/functions/authFunctions";
-import { MainPage } from "@/pages/MainPage";
-import HomePage from "@/pages/home/HomePage";
-import LoginPage from "@/pages/auth/LoginPage";
-import PrivateRoute from "./PrivateRoute";
-import NotFoundPage from "@/pages/404/NotFoundPage";
-import SamplePage from "@/pages/sample/SamplePage";
-import SamplePage1_1 from "@/pages/sample/sample1_1/SamplePage1_1";
-import SamplePage1_2 from "@/pages/sample/sample1_2/SamplePage1_2";
+import React, { lazy, Suspense } from "react";
+import { Navigate, Routes as DomRoutes, Route } from "react-router-dom";
 
-interface RouterItem {
+// Vite의 glob import를 사용하여 모든 페이지를 동적으로 로드
+// 상대 경로 사용 (Routes.tsx 위치: src/lib/core/routes/)
+const pageModules = import.meta.glob<{ default: React.ComponentType<any> }>(
+  "../../../pages/**/*.tsx"
+);
+
+interface RouteConfig {
   path: string;
-  element: React.ReactNode;
+  filePath: string;
   withAuthorization: boolean;
-  title?: string;
+  isNavigate?: boolean;
 }
 
-const routerItems: RouterItem[] = [
-  /* 인증 */
-  { path: "/auth/login", element: <LoginPage />, withAuthorization: false },
-
-  /* 홈 */
-  {
-    path: "/",
-    element: <HomePage />,
-    withAuthorization: true,
-    title: "대시보드",
-  },
-
-  /* 키 관리 */
-  {
-    path: "/sample",
-    element: <SamplePage />,
-    withAuthorization: true,
-    title: "1.샘플 메뉴",
-  },
-
-  {
-    path: "/sample/1-1",
-    element: <SamplePage1_1 />,
-    withAuthorization: true,
-    title: "1-1.샘플페이지",
-  },
-  {
-    path: "/sample/1-2",
-    element: <SamplePage1_2 />,
-    withAuthorization: true,
-    title: "1-2.샘플페이지",
-  },
-
-
-  /* 404 */
-  {
-    path: "*",
-    element: <NotFoundPage />,
-    withAuthorization: true,
-    title: "404 - 페이지 없음",
-  },
-];
-
 export default function AppRoutes() {
-  const accessToken = readAccessToken();
+  const routes: RouteConfig[] = [
+    { 
+      path: "/auth/login", 
+      filePath: "/auth/LoginPage",
+      withAuthorization: false,
+    },
+    { 
+      path: "/404", 
+      filePath: "/404/NotFoundPage",
+      withAuthorization: false,
+    },
+    // { 
+    //   path: "*", 
+    //   filePath: "/404/NotFoundPage",
+    //   withAuthorization: false,
+    //   isNavigate: true,
+    // },
+  ];
+
   return (
-    <DomRoutes>
-      <Route element={<MainPage />}>
-        {routerItems
-          .filter((route) => route.withAuthorization)
-          .map((route: RouterItem) => {
+    <Suspense fallback={<div style={{ padding: 24 }}>로딩중…</div>}>
+      <DomRoutes>
+        {routes
+          .filter((route) => !route.withAuthorization)
+          .map(({ path, filePath, isNavigate }) => {
+            const modulePath = `../../../pages${filePath}.tsx`;
+            const moduleLoader = pageModules[modulePath];
+            
+            if (!moduleLoader) {
+              console.warn(`Module not found: ${modulePath}`);
+              return null;
+            }
+
+            const Component = lazy(() => moduleLoader());
+
             return (
               <Route
-                key={route.path}
-                path={route.path}
+                key={path}
+                path={path}
                 element={
-                  <>
-                    {route.title && <title>{route.title}</title>}
-                    <PrivateRoute
-                      component={route.element}
-                      authenticated={accessToken}
-                    />
-                  </>
+                 
+                    <Component />
+                  
                 }
               />
             );
           })}
-      </Route>
-
-      {routerItems
-        .filter((route) => !route.withAuthorization)
-        .map((route: RouterItem) => {
-          return (
-            <Route key={route.path} path={route.path} element={route.element} />
-          );
-        })}
-    </DomRoutes>
+      </DomRoutes>
+    </Suspense>
   );
 }

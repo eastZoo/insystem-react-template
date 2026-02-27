@@ -1,8 +1,8 @@
 export const permissionDummy = [
   {
-    pmsId: "1",
+    pmsId: "14",
     pmsGroup: "User",
-    pmsMenuName: "대시보드",
+    pmsMenuName: "샘플 페이지1",
     pmsMenuActive: 1,
     pmsMenuInsert: 0,
     pmsMenuUpdate: 0,
@@ -16,9 +16,9 @@ export const permissionDummy = [
     updatedAt: "2025-02-11T06:01:37.661Z",
   },
   {
-    pmsId: "2",
+    pmsId: "15",
     pmsGroup: "User",
-    pmsMenuName: "1.샘플 메뉴",
+    pmsMenuName: "샘플 페이지2",
     pmsMenuActive: 1,
     pmsMenuInsert: 0,
     pmsMenuUpdate: 0,
@@ -32,9 +32,9 @@ export const permissionDummy = [
     updatedAt: "2025-02-11T06:01:37.661Z",
   },
   {
-    pmsId: "3",
+    pmsId: "15",
     pmsGroup: "User",
-    pmsMenuName: "1.샘플 메뉴",
+    pmsMenuName: "샘플 페이지3",
     pmsMenuActive: 1,
     pmsMenuInsert: 0,
     pmsMenuUpdate: 0,
@@ -48,9 +48,9 @@ export const permissionDummy = [
     updatedAt: "2025-02-11T06:01:37.661Z",
   },
   {
-    pmsId: "4",
+    pmsId: "16",
     pmsGroup: "User",
-    pmsMenuName: "1-1.샘플페이지",
+    pmsMenuName: "샘플 페이지3-1",
     pmsMenuActive: 1,
     pmsMenuInsert: 0,
     pmsMenuUpdate: 0,
@@ -64,9 +64,9 @@ export const permissionDummy = [
     updatedAt: "2025-02-11T06:01:37.661Z",
   },
   {
-    pmsId: "5",
+    pmsId: "17",
     pmsGroup: "User",
-    pmsMenuName: "1-2.샘플페이지",
+    pmsMenuName: "샘플 페이지3-2",
     pmsMenuActive: 1,
     pmsMenuInsert: 0,
     pmsMenuUpdate: 0,

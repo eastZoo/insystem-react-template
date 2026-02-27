@@ -41,38 +41,19 @@ declare module "styled-components" {
       black5: string;
       black4: string;
       black2: string;
-
-      // Gray scale
-      gray50: string;
       gray100: string;
-      gray200: string;
-      gray300: string;
-      gray400: string;
-      gray500: string;
-      gray600: string;
-      gray700: string;
-      gray800: string;
-      gray900: string;
 
       // Status
-      greenStatus: string;
-      greenStatus8: string;
+      [greenStatus: string]: string;
+      [greenStatus8: string]: string;
       greenStatusHover: string;
-      yellowStatus: string;
-      redStatus: string;
-      redStatus5: string;
-      redStatus8: string;
+      [yellowStatus: string]: string;
+      [redStatus: string]: string;
+      [redStatus5: string]: string;
+      [redStatus8: string]: string;
       redStatusHover: string;
-      redStatusLight: string;
-      redStatusBorder: string;
-      blueStatus: string;
-      grayStatus: string;
-
-      // Text
-      text: {
-        primary: string;
-        secondary: string;
-      };
+      [blueStatus: string]: string;
+      [grayStatus: string]: string;
 
       // Component
       flowLabelBox: string;
@@ -82,16 +63,6 @@ declare module "styled-components" {
       shipMonitorBackgroud: string;
       shipMonitorShade: string;
       shipMonitorBorder: string;
-
-      // Sidemenu
-      sidemenuBackground: string;
-      sidemenuBackgroundLight: string;
-      sidemenuActive: string;
-      sidemenuHover: string;
-      sidemenuDivider: string;
-      sidemenuScrollbar: string;
-      sidemenuLogoutButton: string;
-      sidemenuLogoutButtonHover: string;
     };
   }
 }

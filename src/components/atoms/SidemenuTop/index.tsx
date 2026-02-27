@@ -1,46 +1,29 @@
 import * as S from "./SidemenuTop.style";
-// import IconMenu from "@/styles/assets/svg/icon_sidemenu.svg";
+import IconMenu from "@/styles/assets/svg/icon_sidemenu.svg?react";
+import IconLogo from "@/styles/assets/svg/logo-light-sample.svg?react";
 import { Link } from "react-router-dom";
-import ImgCheckbox from "../../../styles/assets/img/logo.png";
 
 interface SidemenuTopProps {
   asideToggle?: any;
 }
 
-/** 사이드메뉴 상단 컴포넌트 */
 export const SidemenuTop = ({ asideToggle }: SidemenuTopProps) => {
   return (
-    <S.SidemenuTop style={{ justifyContent: "center" }}>
-      <S.SidemenuTopSpan
-        style={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          width: "100%",
-        }}
-      >
+    <S.SidemenuTop>
+      <S.SidemenuBtn type="button" onClick={asideToggle}>
+        <IconMenu width={20} height={20} />
+      </S.SidemenuBtn>
+      <S.SidemenuTopSpan>
         <Link
           to={"/"}
-          style={{
-            textDecoration: "none",
-            color: "inherit",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            width: "100%",
+          style={{ textDecoration: "none", color: "inherit" }}
+          onClick={() => {
+            window.location.reload();
           }}
         >
-          <img
-            src={ImgCheckbox}
-            alt="logo"
-            style={{
-              width: "165px",
-              height: "72px",
-              marginRight: "10px",
-              objectFit: "contain",
-              display: "block",
-            }}
-          />
+          {/* 텍스트 혹은 아이콘 둘 중 하나를 선택해서 사용 */}
+          <span>SAMPLE</span>
+          {/* <IconLogo width={100} height={20} /> */}
         </Link>
       </S.SidemenuTopSpan>
     </S.SidemenuTop>

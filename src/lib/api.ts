@@ -44,7 +44,7 @@ api.interceptors.response.use(
       }
       try {
         const response = await axios.post(
-          `${process.env.VITE_API_BASE_URL}/auth/refresh-token`,
+          `${process.env.VITE_API_BASE_URL}/stm-user/refresh-token`,
           {
             jwtToken,
             refreshToken,

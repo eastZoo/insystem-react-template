@@ -26,12 +26,10 @@ export function buildMenuTree(flatList: MenuType[]) {
   for (const item of flatList) {
     const menuItem = {
       id: item.oid,
-      oid: item.oid,
       title: item.title,
-      icon: item.icon ? iconMap[item.icon as keyof typeof iconMap] : undefined,
+      icon: item.icon ? iconMap[item.icon as keyof typeof iconMap] : undefined, // 실제 React 엘리먼트는 바인딩 필요
       depth: item.depth,
       path: item.path,
-      allowNavigation: item.allowNavigation,
       submenu: [],
     };
     map.set(item.oid, menuItem);

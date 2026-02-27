@@ -1,16 +1,17 @@
 import * as S from "./Sidemenu.style";
+// import { menuList } from "../../../data/menu";
+import { useRecoilValue } from "recoil";
+import { menuState } from "@/store/menu";
 import type { MenuItem, MenuType } from "@/types/menu";
 import type { Permission } from "@/types/permission";
 import { SidemenuTop } from "../../atoms/SidemenuTop";
-import SidemenuList from "../../molecules/SidemenuList";
-import { SidemenuFooter } from "../../atoms/SidemenuFooter";
+import SidemenuList from "../SidemenuList";
 import { menuListDummy } from "@/lib/data/menuListDummy";
 import { permissionDummy } from "@/lib/data/permissionDummy";
-import { buildMenuTree } from "@/lib/utils/buildMenuTree";
 
 interface SidemenuProps {
   asideToggle?: any;
-  permissions?: Permission[];
+  permissions: Permission[];
   onContextMenu: (event: React.MouseEvent, target: any) => void;
 }
 
@@ -19,6 +20,8 @@ export const Sidemenu = ({
   permissions,
   onContextMenu,
 }: SidemenuProps) => {
+  const menuList = useRecoilValue<MenuType[]>(menuState);
+
   const filterMenuByPermission = (
     menuList: any[],
     permissions: Permission[]
@@ -44,13 +47,9 @@ export const Sidemenu = ({
     <S.SidemenuSection>
       <SidemenuTop asideToggle={asideToggle} />
       <SidemenuList
-        menuList={filterMenuByPermission(
-          buildMenuTree([...menuListDummy]),
-          (permissionDummy as unknown) as Permission[]
-        )}
+        menuList={filterMenuByPermission(menuListDummy, permissionDummy as any)}
         onContextMenu={onContextMenu}
       />
-      <SidemenuFooter />
     </S.SidemenuSection>
   );
 };

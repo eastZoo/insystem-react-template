@@ -32,7 +32,7 @@ export const Buttons = styled.button<ButtonProps>`
   align-items: center;
   justify-content: center;
 
-  // SIZE
+  // ── SIZE ────────────────────────────────────────────────────────────
   ${(props) =>
     props.$size === "xsm" &&
     css`
@@ -41,7 +41,6 @@ export const Buttons = styled.button<ButtonProps>`
       font-size: 1.2rem;
     `}
 
-  // SIZE
   ${(props) =>
     props.$size === "sm" &&
     css`
@@ -63,7 +62,6 @@ export const Buttons = styled.button<ButtonProps>`
       flex-grow: 0;
     `}
 
-
   ${(props) =>
     props.$size === "md-icon" &&
     css`
@@ -81,7 +79,9 @@ export const Buttons = styled.button<ButtonProps>`
       font-weight: 600;
     `}
 
-  // LAYOUT
+  // ── LAYOUT ──────────────────────────────────────────────────────────
+
+  /* Primary: 차콜 배경 + 흰 글자 */
   ${(props) =>
     props.$layout === "primary" &&
     css`
@@ -94,51 +94,69 @@ export const Buttons = styled.button<ButtonProps>`
       }
     `}
 
-     ${(props) =>
+  /* Disabled: 연한 회색 배경 + 중간 회색 글자 */
+  ${(props) =>
     props.$layout === "disabled" &&
     css`
-      color: ${(props) => props.theme.colors.white100};
+      color: ${(props) => props.theme.colors.black38};
       border: none;
-      background: ${(props) => props.theme.colors.black12};
+      background: ${(props) => props.theme.colors.black10};
+      cursor: default;
     `}
 
+  /* Secondary: 다크 그레이 배경 + 흰 글자 */
   ${(props) =>
     props.$layout === "secondary" &&
     css`
       color: ${(props) => props.theme.colors.white100};
       border: none;
-      background: ${(props) => props.theme.colors.black60};
+      background: ${(props) => props.theme.colors.secondary100};
 
       &:hover {
-        background: ${(props) => props.theme.colors.black70};
+        background: ${(props) => props.theme.colors.black60};
       }
     `}
 
+  /* Highlight: 중간 회색 배경 + 흰 글자 */
+  ${(props) =>
+    props.$layout === "highlight" &&
+    css`
+      color: ${(props) => props.theme.colors.white100};
+      background: ${(props) => props.theme.colors.black38};
+      border: none;
 
+      &:hover {
+        background: ${(props) => props.theme.colors.black60};
+      }
+    `}
+
+  /* Warn: 다크 배경 + 흰 글자 (에러 상황) */
   ${(props) =>
     props.$layout === "warn" &&
     css`
       color: ${(props) => props.theme.colors.white100};
-      background: ${(props) => props.theme.colors.redStatus};
+      background: ${(props) => props.theme.colors.black70};
       border: none;
 
       &:hover {
-        background: ${(props) => props.theme.colors.redStatusHover};
+        background: ${(props) => props.theme.colors.black100};
       }
     `}
 
+  /* Destructive: 흰 배경 + 다크 테두리/글자 (삭제 등 위험 액션 강조) */
   ${(props) =>
     props.$layout === "destructive" &&
     css`
-      color: ${(props) => props.theme.colors.redStatus};
-      border: 1px solid ${(props) => props.theme.colors.redStatus};
+      color: ${(props) => props.theme.colors.black70};
+      border: 1px solid ${(props) => props.theme.colors.black70};
       background: ${(props) => props.theme.colors.white100};
 
       &:hover {
-        background: ${(props) => props.theme.colors.redStatus5};
+        background: ${(props) => props.theme.colors.black5};
       }
     `}
 
+  /* Ghost: 흰 배경 + 차콜 테두리/글자 */
   ${(props) =>
     props.$layout === "ghost" &&
     css`
@@ -147,18 +165,24 @@ export const Buttons = styled.button<ButtonProps>`
       background: ${(props) => props.theme.colors.white100};
 
       &:hover {
-        background: ${(props) => props.theme.colors.primary5};
+        background: ${(props) => props.theme.colors.black5};
       }
     `}
 
+  /* CancelModal: 중간 회색 배경 + 흰 글자 */
   ${(props) =>
     props.$layout === "cancelModal" &&
     css`
-      border: none;
       color: ${(props) => props.theme.colors.white100};
-      background: ${(props) => props.theme.colors.black60};
+      border: none;
+      background: ${(props) => props.theme.colors.black38};
+
+      &:hover {
+        background: ${(props) => props.theme.colors.black60};
+      }
     `}
 
+  /* Find: 아이콘 전용 버튼 — 회색 배경 */
   ${(props) =>
     props.$layout === "find" &&
     css`
@@ -166,33 +190,24 @@ export const Buttons = styled.button<ButtonProps>`
       width: 32px;
       border: none;
       padding: 0 !important;
-      background: ${(props) => props.theme.colors.black60};
+      background: ${(props) => props.theme.colors.black12};
       align-items: center;
       justify-content: center;
 
-      svg {
-        path {
-          fill: ${(props) => props.theme.colors.white100};
+      svg path {
+        fill: ${(props) => props.theme.colors.black70};
+      }
+
+      &:hover {
+        background: ${(props) => props.theme.colors.gray100};
+
+        svg path {
+          fill: ${(props) => props.theme.colors.black100};
         }
       }
-
-      &:hover {
-        background: ${(props) => props.theme.colors.black80};
-      }
     `}
 
-    ${(props) =>
-    props.$layout === "highlight" &&
-    css`
-      color: ${(props) => props.theme.colors.white100};
-      background: ${(props) => props.theme.colors.greenStatus};
-      border: none;
-
-      &:hover {
-        background: ${(props) => props.theme.colors.greenStatusHover};
-      }
-    `}
-
+  /* Icon: 배경 없는 아이콘 버튼 */
   ${(props) =>
     props.$layout === "icon" &&
     css`
@@ -200,74 +215,67 @@ export const Buttons = styled.button<ButtonProps>`
       border: none;
       background: none;
 
-      // 보고서 버튼에 아이콘 사용 시 검정색상 변경으로 인한 주석 처리
-      svg {
-        path {
-          fill: ${(props) => props.theme.colors.black60};
-        }
+      svg path {
+        fill: ${(props) => props.theme.colors.black38};
       }
 
       &:hover {
         background: ${(props) => props.theme.colors.black5};
 
-        svg {
-          path {
-            fill: ${(props) => props.theme.colors.primary100};
-            fill-opacity: 1;
-          }
-        }
-      }
-    `}
-
-
-${(props) =>
-    props.$layout === "outline" &&
-    css`
-      padding: 0 12px 0 6px;
-      color: ${(props) => props.theme.colors.black80};
-      border: 1px solid ${(props) => props.theme.colors.black12};
-      background: none;
-
-      svg {
-        path {
-          fill: ${(props) => props.theme.colors.black60};
+        svg path {
+          fill: ${(props) => props.theme.colors.black100};
           fill-opacity: 1;
         }
       }
+    `}
+
+  /* Outline: 테두리 버튼 — 연한 회색 테두리 */
+  ${(props) =>
+    props.$layout === "outline" &&
+    css`
+      padding: 0 12px 0 6px;
+      color: ${(props) => props.theme.colors.black70};
+      border: 1px solid ${(props) => props.theme.colors.black12};
+      background: none;
+
+      svg path {
+        fill: ${(props) => props.theme.colors.black38};
+        fill-opacity: 1;
+      }
 
       &:hover {
-        color: ${(props) => props.theme.colors.primary100};
+        color: ${(props) => props.theme.colors.black100};
         background: ${(props) => props.theme.colors.black5};
 
-        svg {
-          path {
-            fill: ${(props) => props.theme.colors.primary100};
-            fill-opacity: 1;
-          }
+        svg path {
+          fill: ${(props) => props.theme.colors.black100};
+          fill-opacity: 1;
         }
       }
     `}
 
+  /* SelectCondition: 선택 조건 토글 버튼 */
   ${(props) =>
     props.$layout.includes("selectCondition") &&
     css`
       color: ${props.$layout.includes("active")
         ? props.theme.colors.white100
-        : props.theme.colors.primary100};
-      border: 1px solid ${(props) => props.theme.colors.primary100};
+        : props.theme.colors.black70};
+      border: 1px solid ${(props) => props.theme.colors.black70};
       background: ${props.$layout.includes("active")
-        ? props.theme.colors.primary100
+        ? props.theme.colors.black70
         : "none"};
 
       &:hover {
-        background: ${(props) => props.theme.colors.primaryHover};
+        background: ${(props) => props.theme.colors.black100};
         color: ${(props) => props.theme.colors.white100};
       }
     `}
 
+  /* 네이티브 :disabled 상태 공통 처리 */
   &:disabled {
     color: ${(props) => props.theme.colors.black38} !important;
-    background: ${(props) => props.theme.colors.black8} !important;
+    background: ${(props) => props.theme.colors.black10} !important;
     cursor: default;
   }
 `;
@@ -275,12 +283,12 @@ ${(props) =>
 export const ButtonTooltipBox = styled.div<TooltipProps>`
   position: absolute;
   width: 230px;
-
   padding: 10px 16px;
   font-size: 1.2rem;
   line-height: 16px;
   text-align: left;
-  background: ${(props) => props.theme.colors.black80};
+  color: ${(props) => props.theme.colors.white100};
+  background: ${(props) => props.theme.colors.black70};
   border-radius: 6px;
   z-index: 10;
 
@@ -289,7 +297,7 @@ export const ButtonTooltipBox = styled.div<TooltipProps>`
     css`
       top: 36px;
       left: 0;
-    `};
+    `}
 
   ${(props) =>
     props.$tooltipPosition === "right" &&

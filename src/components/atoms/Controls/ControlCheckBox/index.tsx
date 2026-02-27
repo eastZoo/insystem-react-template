@@ -1,8 +1,6 @@
-import type { Control } from "react-hook-form";
-import { Controller } from "react-hook-form";
-import type { InputProps } from "../../Inputs/Inputs";
-import { Inputs } from "../../Inputs/Inputs";
-import type { ChangeEvent } from "react";
+import { Control, Controller } from "react-hook-form";
+import { InputProps, Inputs } from "../../Inputs/Inputs";
+import { ChangeEvent } from "react";
 
 interface ControlCheckBoxProps extends InputProps {
   control: Control<any>;

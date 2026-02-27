@@ -2,13 +2,13 @@ import { RecoilRoot } from "recoil";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ThemeProvider } from "styled-components";
 import { BrowserRouter } from "react-router-dom";
-import { ToastContainer } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
 
 import { theme } from "@/styles/theme";
 import { GlobalStyle } from "@/styles/GlobalStyle";
 import AppRoutes from "@/lib/core/routes/Routes";
 import "maplibre-gl/dist/maplibre-gl.css";
+import { MainTemplate } from "@/components/template/MainTemplate";
+import TabContents from "./lib/core/TabContents";
 
 
 const queryClient = new QueryClient({
@@ -27,17 +27,9 @@ export default function AppProviders() {
           <BrowserRouter>
             <GlobalStyle />
             <AppRoutes />
-            <ToastContainer
-              position="top-right"
-              autoClose={3000}
-              hideProgressBar={false}
-              newestOnTop={false}
-              closeOnClick
-              rtl={false}
-              pauseOnFocusLoss
-              draggable
-              pauseOnHover
-            />
+            <MainTemplate>
+              <TabContents />
+            </MainTemplate>
           </BrowserRouter>
         </ThemeProvider>
       </QueryClientProvider>

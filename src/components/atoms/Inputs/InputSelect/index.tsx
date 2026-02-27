@@ -1,6 +1,5 @@
-import type { ChangeEvent } from "react";
-import type { InputProps } from "../Inputs";
-import { Inputs } from "../Inputs";
+import { ChangeEvent } from "react";
+import { InputProps, Inputs } from "../Inputs";
 import * as S from "./InputSelect.style";
 
 interface InputSelectProps extends InputProps {
@@ -19,9 +18,9 @@ export const InputSelect = ({
   id,
   ref,
   label,
-  size = "md",
+  size,
   width,
-  direction = "column",
+  direction,
   errored,
   erroredTxt,
   name,

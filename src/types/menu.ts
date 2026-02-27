@@ -17,7 +17,6 @@ export interface MenuType {
   parentId: string;
   path?: string;
   sortRef?: number;
-  allowNavigation?: boolean; // submenu가 있어도 경로 이동 허용 여부 (기본값: false)
 }
 
 export interface Tab {

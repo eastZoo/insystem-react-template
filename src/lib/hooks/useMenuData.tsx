@@ -1,14 +1,13 @@
 import { useQuery } from "@tanstack/react-query";
 import { useEffect } from "react";
 import { useSetRecoilState } from "recoil";
-import { menuState } from "@/store/menu";
+import { menuState, MenuSet } from "@/store/menu";
 import { request } from "@/lib/api";
 import { GET_MENU } from "@/lib/querykeys";
 import type { BaseResponse } from "@/types/baseRespones";
 import type { MenuType } from "@/types/menu";
 import { buildMenuTree } from "@/lib/utils/buildMenuTree";
 import { readAccessToken } from "@/lib/functions/authFunctions";
-import { MenuSet } from "@/types/menu.static";
 import { menuListDummy } from "../data/menuListDummy";
 
 const useMenuData = () => {
@@ -28,11 +27,11 @@ const useMenuData = () => {
   });
 
   useEffect(() => {
-    // menuData가 없으면 menuListDummy 사용
-    const menuToUse = menuData && menuData.length > 0 ? menuData : menuListDummy;
-    MenuSet(menuToUse);
-    if (menuToUse) {
-      setMenuList(buildMenuTree(menuToUse));
+    // menuData가 있으면 사용하고, 없으면 menuListDummy 사용
+    const dataToUse = menuData && menuData.length > 0 ? menuData : menuListDummy;
+    MenuSet(dataToUse);
+    if (dataToUse && dataToUse.length > 0) {
+      setMenuList(buildMenuTree(dataToUse));
     }
   }, [menuData, setMenuList]);
 };

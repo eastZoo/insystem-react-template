@@ -4,7 +4,7 @@ import { SelectBox } from "./InputSelect/InputSelect.style";
 
 export const InputBox = styled.div<InputProps>`
   display: flex;
-  width: ${(props) => (props.width ? props.width + "px" : "100%")};
+  width: ${(props) => (props.width ? props.width + "px" : "auto")};
   flex-shrink: 0;
 
   // DIRECTION
@@ -101,7 +101,7 @@ export const Input = styled.div<InputProps>`
 
   // Input, Select 공통
   input,
-  textarea {
+  ${SelectBox}, textarea {
     width: 100%;
     border: 1px solid ${(props) => props.theme.colors.black12};
     border-radius: 6px;
@@ -115,16 +115,6 @@ export const Input = styled.div<InputProps>`
     }
   }
 
-  ${SelectBox} {
-    width: 100%;
-    border: 1px solid ${(props) => props.theme.colors.black12};
-    border-radius: 6px;
-
-    &:focus-within {
-      outline: 1px solid ${(props) => props.theme.colors.primary100};
-    }
-  }
-
   input[type="number"] {
     text-align: right;
   }
@@ -134,18 +124,11 @@ export const Input = styled.div<InputProps>`
     props.size === "sm" &&
     css`
       input,
-      textarea {
+      select,
+      ${SelectBox} {
         height: 30px;
         padding: 0 10px;
         font-size: 1.2rem;
-      }
-      ${SelectBox} {
-        height: 30px;
-        font-size: 1.2rem;
-      }
-      ${SelectBox} select {
-        font-size: 1.2rem;
-        line-height: 30px;
       }
     `}
 
@@ -153,18 +136,11 @@ export const Input = styled.div<InputProps>`
     props.size === "md" &&
     css`
       input,
-      textarea {
+      select,
+      ${SelectBox} {
         height: 32px;
         padding: 0 10px;
         font-size: 1.2rem;
-      }
-      ${SelectBox} {
-        height: 32px;
-        font-size: 1.2rem;
-      }
-      ${SelectBox} select {
-        font-size: 1.2rem;
-        line-height: 32px;
       }
     `}
 
@@ -172,16 +148,10 @@ export const Input = styled.div<InputProps>`
     props.size === "lg" &&
     css`
       input,
-      textarea {
-        height: 48px;
-        padding: 0 16px;
-        font-size: 1.4rem;
-      }
+      select,
       ${SelectBox} {
         height: 48px;
-        font-size: 1.4rem;
-      }
-      ${SelectBox} select {
+        padding: 0 16px;
         font-size: 1.4rem;
       }
     `}
@@ -191,19 +161,14 @@ export const Input = styled.div<InputProps>`
     props.errored &&
     css`
       input,
-      textarea {
+      textarea,
+      ${SelectBox} {
         color: ${(props) => props.theme.colors.redStatus};
         border: 1px solid ${(props) => props.theme.colors.redStatus};
 
         &::placeholder {
           color: ${(props) => props.theme.colors.redStatus};
         }
-      }
-      ${SelectBox} {
-        border: 1px solid ${(props) => props.theme.colors.redStatus};
-      }
-      ${SelectBox} select {
-        color: ${(props) => props.theme.colors.redStatus};
       }
     `}
 `;

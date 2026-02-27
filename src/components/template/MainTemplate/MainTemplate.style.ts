@@ -1,5 +1,5 @@
 import styled, { css } from "styled-components";
-import { SidemenuListBox } from "@/components/molecules/SidemenuList/SidemenuList.style";
+import { SidemenuListBox } from "@/components/organisms/SidemenuList/SidemenuList.style";
 import {
   SidemenuTop,
   SidemenuTopSpan,
@@ -19,10 +19,10 @@ export const MainTemplate = styled.div<MainBoxProps>`
   width: 100vw;
   height: 100svh;
   grid-template-areas:
-    "MN CT"
+    "MN HD"
     "MN CT";
   grid-template-columns: ${({ $asideOpen }) =>
-    $asideOpen ? "260px auto" : "58px auto"};
+    $asideOpen ? "224px auto" : "58px auto"};
   grid-template-rows: 52px auto;
   transition: all 0.3s ease;
 
@@ -56,7 +56,7 @@ export const MainTemplate = styled.div<MainBoxProps>`
   // 화면크기(1400px 미만) 설정
   @media (max-width: 1399px) {
     grid-template-columns: ${({ $asideOpen }) =>
-      $asideOpen ? "260px auto" : "0 auto"};
+      $asideOpen ? "224px auto" : "0 auto"};
 
     // 사이드메뉴 OPEN/CLOSE
     ${({ $asideOpen }) =>
@@ -71,10 +71,9 @@ export const MainTemplate = styled.div<MainBoxProps>`
 
 export const ContentSection = styled.section`
   position: relative;
-  overflow-y: auto;
-  overflow-x: hidden;
+  overflow: hidden;
   grid-area: CT;
-  height: calc(100svh);
+  height: calc(100svh - 52px);
   background: ${(props) => props.theme.colors.primary5};
   display: flex;
   flex-direction: column;

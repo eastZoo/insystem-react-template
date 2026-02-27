@@ -1,8 +1,6 @@
-import type { Control } from "react-hook-form";
-import { Controller } from "react-hook-form";
-import type { ChangeEvent } from "react";
-import type { InputProps } from "../../Inputs/Inputs";
-import { Inputs } from "../../Inputs/Inputs";
+import { Control, Controller } from "react-hook-form";
+import { ChangeEvent } from "react";
+import { InputProps, Inputs } from "../../Inputs/Inputs";
 
 interface ControlNumberProps extends InputProps {
   control: Control<any>;

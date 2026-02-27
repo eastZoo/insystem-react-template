@@ -1,5 +1,4 @@
-import type { InputProps } from "../Inputs";
-import { Inputs } from "../Inputs";
+import { InputProps, Inputs } from "../Inputs";
 import * as S from "./InputCheckbox.style";
 
 interface InputCheckboxProps extends InputProps {

@@ -1,5 +1,5 @@
 import * as S from "./PageContent.style";
-// import IconArrow from "@/styles/assets/svg/icon_title_arrow.svg";
+import IconArrow from "@/styles/assets/svg/icon_title_arrow.svg?react";
 
 interface PageContentProps {
   depth01Title: string;
@@ -26,13 +26,13 @@ export const PageContent = ({
         {depth01Title}
         {depth02Title && (
           <>
-            {/* <IconArrow /> */}
+            <IconArrow />
             {depth02Title}
           </>
         )}
         {depth03Title && (
           <>
-            {/* <IconArrow /> */}
+            <IconArrow />
             {depth03Title}
           </>
         )}

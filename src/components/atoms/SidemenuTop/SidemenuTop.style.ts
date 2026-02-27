@@ -4,14 +4,10 @@ export const SidemenuTop = styled.div`
   overflow: hidden;
   display: flex;
   width: 100%;
-  padding: 0 20px;
-  background: linear-gradient(
-    to left,
-    ${(props) => props.theme.colors.sidemenuBackgroundLight},
-    ${(props) => props.theme.colors.sidemenuBackground}
-  );
+  padding: 0 13px;
+  background: ${(props) => props.theme.colors.primary100};
   align-items: center;
-  gap: 12px;
+  gap: 4px;
 `;
 
 export const SidemenuBtn = styled.button`
@@ -26,16 +22,15 @@ export const SidemenuBtn = styled.button`
   cursor: pointer;
   transition: background 0.2s ease;
   flex-shrink: 0;
-  color: ${(props) => props.theme.colors.white100};
 
   &:hover {
-    background: ${(props) => props.theme.colors.sidemenuHover};
+    background: ${(props) => props.theme.colors.black30};
   }
 `;
 
 export const SidemenuTopSpan = styled.span`
   color: ${(props) => props.theme.colors.white100};
-  font-size: 3.4rem;
-  font-weight: 400;
+  font-size: 1.5rem;
+  font-weight: 600;
   white-space: nowrap;
 `;

@@ -1,14 +1,12 @@
 import * as S from "./Header.style";
 import { useEffect, useRef, useState } from "react";
 import { Buttons } from "../../atoms/Buttons";
-import { HeaderPopup } from "../../molecules/HeaderPopup";
+import { HeaderPopup } from "../HeaderPopup";
 import { useLogout } from "@/lib/hooks/useLogout";
+import IconMenu from "@/styles/assets/svg/icon_sidemenu.svg?react";
 
-
-import { ChangePasswordModal } from "../../containers/Member/ChangePasswordModal";
 import { useRecoilValue } from "recoil";
 import { userState } from "@/store/loginUser";
-
 interface HeaderProps {
   asideToggle?: any;
   asideOpen?: boolean;
@@ -19,8 +17,6 @@ export const Header = ({ asideOpen, asideToggle, innerWidth }: HeaderProps) => {
   const logout = useLogout();
   const popupRef = useRef<HTMLDivElement>(null);
   const [popupShow, setPopupShow] = useState(false);
-  const [modalPasswordShow, setModalPasswordShow] = useState(false);
-  const [modalChangeUserInfoShow, setModalChangeUserInfoShow] = useState(false);
   const userInfo = useRecoilValue(userState);
 
   // 페이지 새로고침 판별
@@ -41,7 +37,25 @@ export const Header = ({ asideOpen, asideToggle, innerWidth }: HeaderProps) => {
   return (
     <>
       <S.HeaderSection>
+        <S.ShipModelTit>
+          {asideOpen === true ? (
+            "메인 타이틀"
+          ) : innerWidth < 1400 ? (
+            <S.HeaderSidemenuBtn type="button" onClick={asideToggle}>
+              <IconMenu />
+            </S.HeaderSidemenuBtn>
+          ) : (
+            "메인 타이틀"
+          )}
+        </S.ShipModelTit>
         <S.HeaderBtnBox>
+          <Buttons
+            type="button"
+            size="md"
+            layout="icon"
+
+            onClick={() => { }}
+          />
           <Buttons
             type="button"
             size="md"
@@ -54,34 +68,19 @@ export const Header = ({ asideOpen, asideToggle, innerWidth }: HeaderProps) => {
             <>
               {/* 직책 : 사용자명 바인딩 */}
               <span style={{ margin: "0 8px" }}>
-                {userInfo?.dutiesName + " : "}
+                {"사용자명" + " : "}
               </span>
-              <span>{userInfo?.userName}</span>
+              <span>홍길동</span>
             </>
           </Buttons>
         </S.HeaderBtnBox>
       </S.HeaderSection>
+      {/* 로그아웃 팝업 */}
       {popupShow && (
         <HeaderPopup
           logout={logout}
           popupRef={popupRef}
           popupOutsideClick={popupOutsideClick}
-          handleModal={() => {
-            setPopupShow(false);
-            setModalPasswordShow(!modalPasswordShow);
-          }}
-          changedInfo={() => {
-            setPopupShow(false);
-            setModalChangeUserInfoShow(!modalChangeUserInfoShow);
-          }}
-        />
-      )}
-
-      {modalPasswordShow && (
-        <ChangePasswordModal
-          setModalShow={setModalPasswordShow}
-          userId={userInfo?.userId}
-          formId="change_password"
         />
       )}
     </>

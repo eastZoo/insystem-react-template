@@ -5,19 +5,19 @@ interface ButtonsProps {
   type: "reset" | "submit" | "button" | undefined;
   size: "xsm" | "sm" | "md" | "md-icon" | "lg";
   layout:
-    | "primary"
-    | "secondary"
-    | "highlight"
-    | "warn"
-    | "destructive"
-    | "ghost"
-    | "icon"
-    | "find"
-    | "cancelModal"
-    | "outline"
-    | "selectCondition"
-    | "selectCondition active"
-    | "disabled";
+  | "primary"
+  | "secondary"
+  | "highlight"
+  | "warn"
+  | "destructive"
+  | "ghost"
+  | "icon"
+  | "find"
+  | "cancelModal"
+  | "outline"
+  | "selectCondition"
+  | "selectCondition active"
+  | "disabled";
   label?: string;
   form?: string;
   onClick?: any;

@@ -5,91 +5,66 @@ export const theme: DefaultTheme = {
     popup: "0px 2px 10px 0px rgba(0,0,0,0.1)",
     modal: "0px 8px 24px 0px rgba(0,0,0,.14)",
     field: "0px 6px 16px 0px rgba(0,0,0,.06)",
-    item: "0px 5px 10px 0px rgba(0,0,0,.12)",
-    card: "0px 12px 12px 0px rgba(0,0,0,.08)",
+    item: "0px 5px 10px 0px rgba(0,0,0,.08)",
+    card: "0px 12px 12px 0px rgba(0,0,0,.10)",
   },
 
   colors: {
-    // Primary (무채색 - 검정 위주)
-    primary100: "#262626",
-    primary60: "#26262699",
-    primary50: "#26262680",
-    primary38: "#26262661",
-    primary10: "#26262619",
-    primary6: "#2626260f",
-    primary5: "#2626260d",
-    primaryHover: "#171717",
-    secondary100: "#404040",
+    // ── Achromatic Primary (브랜드 포인트: 진한 회색/차콜) ─────────────
+    primary100: "#1F1F1F",       // 차콜 — 주요 강조
+    primary60: "#1F1F1F99",
+    primary50: "#1F1F1F80",
+    primary38: "#1F1F1F61",
+    primary10: "#1F1F1F19",
+    primary6: "#1F1F1F0f",
+    primary5: "#1F1F1F0d",
+    primaryHover: "#111111",     // 차콜 hover (더 진하게)
+    secondary100: "#3D3D3D",     // 다크 그레이
 
-    // Basic
-    white100: "#ffffff",
-    white80: "#ffffffcc",
-    white60: "#ffffff99",
-    white38: "#ffffff61",
-    white12: "#ffffff1f",
+    // ── White scale ────────────────────────────────────────────────────
+    white100: "#FFFFFF",
+    white80: "#FFFFFFcc",
+    white60: "#FFFFFF99",
+    white38: "#FFFFFF61",
+    white12: "#FFFFFF1f",
+
+    // ── Black scale ────────────────────────────────────────────────────
     black100: "#000000",
-    black90: "#000000e6",
-    black80: "#000000cc",
-    black70: "#000000b3",
-    black60: "#00000099",
-    black38: "#00000061",
-    black30: "#0000004C",
-    black12: "#0000001f",
-    black10: "#00000019",
-    black8: "#00000014",
-    black5: "#0000000d",
-    black4: "#00000004",
-    black2: "#00000005",
+    black90: "#0A0A0A",
+    black80: "#141414",
+    black70: "#1F1F1F",
+    black60: "#2E2E2E",
+    black38: "#5C5C5C",
+    black30: "#707070",
+    black12: "#E0E0E0",
+    black10: "#E8E8E8",
+    black8: "#EFEFEF",
+    black5: "#F5F5F5",
+    black4: "#F9F9F9",
+    black2: "#FAFAFA",
 
-    // Gray scale
-    gray50: "#f9fafb",
-    gray100: "#f3f4f6",
-    gray200: "#e5e7eb",
-    gray300: "#d1d5db",
-    gray400: "#9ca3af",
-    gray500: "#6b7280",
-    gray600: "#4b5563",
-    gray700: "#374151",
-    gray800: "#1f2937",
-    gray900: "#111827",
+    // ── Gray scale ─────────────────────────────────────────────────────
+    gray100: "#CCCCCC",          // 기본 경계선/구분선
 
-    // Status
-    greenStatus: "#00C572",
-    greenStatus8: "#00C57214",
-    greenStatusHover: "#09B06A",
-    yellowStatus: "#FFBC11",
-    redStatus: "#dc2626",
-    redStatus5: "#dc26260d",
-    redStatus8: "#dc262614",
-    redStatusHover: "#b91c1c",
-    redStatusLight: "#fee2e2",
-    redStatusBorder: "#fecaca",
-    blueStatus: "#0098FF",
-    grayStatus: "#00000061",
+    // ── Status (무채색 기반으로 재정의) ────────────────────────────────
+    greenStatus: "#4A4A4A",      // 성공 → 진회색
+    greenStatus8: "#4A4A4A14",
+    greenStatusHover: "#333333",
+    yellowStatus: "#8A8A8A",     // 경고 → 중간 회색
+    redStatus: "#2E2E2E",        // 에러 → 다크 그레이
+    redStatus5: "#2E2E2E0d",
+    redStatus8: "#2E2E2E14",
+    redStatusHover: "#1A1A1A",
+    blueStatus: "#5A5A5A",       // 정보 → 회색
+    grayStatus: "#9E9E9E",       // 비활성
 
-    // Text
-    text: {
-      primary: "#262626",
-      secondary: "#6b7280",
-    },
-
-    // Component
-    flowLabelBox: "#666666",
-    labelBox: "#4b5563",
-    scrollTrack: "#1A1A1A",
-    authBackground: "rgba(0,0,0,0.3)",
-    shipMonitorBackgroud: "#e5e7eb",
-    shipMonitorShade: "#d1d5db",
-    shipMonitorBorder: "#9ca3af",
-
-    // Sidemenu
-    sidemenuBackground: "#111827",
-    sidemenuBackgroundLight: "#1f2937",
-    sidemenuActive: "#374151",
-    sidemenuHover: "rgba(255, 255, 255, 0.1)",
-    sidemenuDivider: "rgba(255, 255, 255, 0.2)",
-    sidemenuScrollbar: "rgba(255, 255, 255, 0.3)",
-    sidemenuLogoutButton: "#4b5563",
-    sidemenuLogoutButtonHover: "#374151",
+    // ── Component ──────────────────────────────────────────────────────
+    flowLabelBox: "#555555",
+    labelBox: "#3D3D3D",
+    scrollTrack: "#DEDEDE",
+    authBackground: "#00000033",
+    shipMonitorBackgroud: "#B0B0B0",
+    shipMonitorShade: "#9A9A9A",
+    shipMonitorBorder: "#888888",
   },
 };

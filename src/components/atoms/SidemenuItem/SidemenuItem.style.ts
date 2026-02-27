@@ -1,5 +1,5 @@
 import styled, { css } from "styled-components";
-import { SidemenuListBox } from "../../molecules/SidemenuList/SidemenuList.style";
+import { SidemenuListBox } from "../../organisms/SidemenuList/SidemenuList.style";
 
 interface SidemenuItemProps {
   $depth?: number;
@@ -9,22 +9,20 @@ interface SidemenuItemProps {
 
 export const SidemenuListItem = styled.div<SidemenuItemProps>`
   display: flex;
-  color: ${(props) => props.theme.colors.white100};
+  color: ${(props) => props.theme.colors.white60};
   font-weight: 500;
   align-items: center;
   justify-content: space-between;
   cursor: pointer;
   transition: all 0.2s ease;
-  background: ${(props) => (props.$menuActive ? props.theme.colors.sidemenuActive : "transparent")};
 
   svg {
     path {
-      fill: ${(props) => props.theme.colors.white100};
+      fill: ${(props) => props.theme.colors.white38};
     }
   }
 
   &:hover {
-    background: ${(props) => (props.$menuActive ? props.theme.colors.sidemenuActive : props.theme.colors.sidemenuHover)};
     color: ${(props) => props.theme.colors.white100};
     font-weight: 600;
 
@@ -62,13 +60,12 @@ export const SidemenuListItem = styled.div<SidemenuItemProps>`
 
 export const SidemenuItemTit = styled.div`
   display: flex;
-  align-items: center;
+  align-items: Center;
   gap: 8px;
-  color: ${(props) => props.theme.colors.white100};
 
   svg {
     path {
-      fill: ${(props) => props.theme.colors.white100};
+      fill: ${(props) => props.theme.colors.white60};
     }
   }
 `;
@@ -77,25 +74,37 @@ export const TitBox = styled.div`
   white-space: nowrap;
 `;
 
-export const BulletPoint = styled.span`
-  color: ${(props) => props.theme.colors.white100};
-  font-size: 1.2rem;
-  margin-right: 4px;
+export const MenuIcon = styled.span`
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+
+  svg {
+    width: 18px;
+    height: 18px;
+
+    path {
+      fill: currentColor;
+    }
+  }
 `;
 
 export const ArrowIcon = styled.span<{ $open: boolean }>`
-  display: inline-flex;
+  display: flex;
   align-items: center;
-  justify-content: center;
-  transition: transform 0.2s ease;
-  color: ${(props) => props.theme.colors.white100};
-  font-size: 12px;
-  ${(props) => props.$open && "transform: rotate(180deg);"}
+  flex-shrink: 0;
+  transform: ${({ $open }) => ($open ? "rotate(180deg)" : "rotate(0deg)")};
+  transition:
+    transform 0.25s ease,
+    opacity 0.2s ease;
 
   svg {
-    width: 16px;
-    height: 16px;
-    display: block;
+    width: 20px;
+    height: 20px;
+  }
+
+  ${SidemenuListItem}:hover & {
+    opacity: 1;
   }
 `;
 
@@ -121,18 +130,6 @@ export const SidemenuItemBox = styled.li<SidemenuItemProps>`
       & > ${SidemenuListBox} {
         max-height: 100svh;
         transition: max-height 0.4s ease-in-out;
-        padding-left: 20px;
-        position: relative;
-        
-        &::before {
-          content: "";
-          position: absolute;
-          left: 20px;
-          top: 0;
-          bottom: 0;
-          width: 1px;
-          background: ${(props) => props.theme.colors.sidemenuDivider};
-        }
       }
     `}
 
@@ -142,7 +139,6 @@ export const SidemenuItemBox = styled.li<SidemenuItemProps>`
       & > ${SidemenuListBox} {
         max-height: 0px;
         transition: max-height 0.2s ease-in-out;
-        overflow: hidden;
       }
     `} 
     
@@ -151,16 +147,16 @@ export const SidemenuItemBox = styled.li<SidemenuItemProps>`
     props.$menuActive === true &&
     css`
       & > ${SidemenuListItem} {
-        background: ${props.theme.colors.sidemenuActive};
+        background: ${(props) => props.theme.colors.white12};
 
         & > ${SidemenuItemTit} {
-          color: ${props.theme.colors.white100};
+          color: ${(props) => props.theme.colors.white100};
           font-weight: 600;
         }
 
         svg {
           path {
-            fill: ${props.theme.colors.white100};
+            fill: ${(props) => props.theme.colors.white100};
           }
         }
       }

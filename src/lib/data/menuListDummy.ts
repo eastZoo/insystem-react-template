@@ -1,50 +1,54 @@
-import type { MenuType } from "@/types/menu";
-
-const ROOT_ID = "0";
-
-/** 1·2·3 뎁스 사이드 메뉴용 flat 더미 (parentId로 계층 구성, buildMenuTree로 트리 변환)
- *
- * permissionDummy와 매칭되어 권한에 따라 메뉴가 표시됩니다.
- */
-export const menuListDummy: MenuType[] = [
-  // ----- 1뎁스 -----
+export const menuListDummy = [
   {
-    oid: "menu-1-main",
-    title: "대시보드",
+    oid: "menu-20250630081541-eab00d9e-6e57-416c-a5e3-f0accd0eb651",
+    title: "샘플 페이지1",
+    icon: "IconMenu01",
+    depth: 1,
+    parentId: "menu-10250630081541-eab00d9e-6e57-416c-a5e3-f0accd0eb651",
+    path: "/",
+    sortRef: 20,
+    isUse: true,
+  },
+  {
+    oid: "menu-20250630081541-f3c87121-0d78-4a86-875d-8aa96f6a1ee6",
+    title: "샘플 페이지2",
     icon: "IconMenu02",
     depth: 1,
-    parentId: ROOT_ID,
-    path: "/",
-    sortRef: 10,
+    parentId: "menu-10250630081541-eab00d9e-6e57-416c-a5e3-f0accd0eb651",
+    path: "/sample-page-2",
+    sortRef: 30,
+    isUse: true,
   },
   {
-    oid: "menu-1-sample",
-    title: "1.샘플 메뉴",
+    oid: "menu-20250630081541-a1b2c3d4-0000-4000-8000-000000000001",
+    title: "샘플 페이지3",
     icon: "IconMenu03",
     depth: 1,
-    parentId: ROOT_ID,
-    path: "/sample",
-    sortRef: 20,
-  },
-
-  // ----- 2뎁스 (키 관리 하위) -----
-
-  {
-    oid: "menu-2-sample-info",
-    title: "1-1.샘플페이지",
-    icon: "IconMenu06",
-    depth: 2,
-    parentId: "menu-1-sample",
-    path: "/sample/1-1",
-    sortRef: 22,
-  },
-  {
-    oid: "menu-2-sample-create",
-    title: "1-2.샘플페이지",
-    icon: "IconMenu05",
-    depth: 2,
-    parentId: "menu-1-sample",
-    path: "/sample/1-2",
-    sortRef: 23,
+    parentId: "menu-10250630081541-eab00d9e-6e57-416c-a5e3-f0accd0eb651",
+    path: "/sample-page-3",
+    sortRef: 40,
+    isUse: true,
+    submenu: [
+      {
+        oid: "menu-20250630081541-a1b2c3d4-0000-4000-8000-000000000002",
+        title: "샘플 페이지3-1",
+        icon: null,
+        depth: 2,
+        parentId: "menu-20250630081541-a1b2c3d4-0000-4000-8000-000000000001",
+        path: "/sample-page-3-1",
+        sortRef: 10,
+        isUse: true,
+      },
+      {
+        oid: "menu-20250630081541-a1b2c3d4-0000-4000-8000-000000000003",
+        title: "샘플 페이지3-2",
+        icon: null,
+        depth: 2,
+        parentId: "menu-20250630081541-a1b2c3d4-0000-4000-8000-000000000001",
+        path: "/sample-page-3-2",
+        sortRef: 20,
+        isUse: true,
+      },
+    ],
   },
 ];

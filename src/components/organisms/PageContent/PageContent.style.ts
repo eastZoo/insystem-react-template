@@ -19,6 +19,7 @@ export const PageContent = styled.div`
   gap: 16px;
   height: 100%;
   min-height: 0;
+  background-color: #f9f9f9;
 
   // calendar.css
   .rbc-month-row {
@@ -68,7 +69,7 @@ export const PageContentBox = styled.div<PageContentStyleProps>`
   box-shadow: ${(props) => (props.$height === "100%" ? "none" : props.theme.shadows.field)};
   flex-direction: column;
   gap: ${(props) => (props.$gap ? props.$gap : "16px")};
-  overflow-y: auto;
+  overflow: ${(props) => (props.$height === "100%" ? "auto" : "auto")};
   flex: 1;
   min-height: 0;
 

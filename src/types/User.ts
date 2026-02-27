@@ -5,14 +5,8 @@ export interface User {
   /** 아이디 */
   userId?: string;
 
-  /** 비밀번호 */
-  password?: string;
-
   /** 유저명 */
   userName?: string;
-
-  /** 등급 */
-  grade?: string;
 
   /** 전화번호 */
   tel?: string;
@@ -36,7 +30,7 @@ export interface User {
   auth?: string;
 
   /** 사용여부 */
-  isActive?: boolean;
+  useYn?: boolean;
 
   /** 비고 */
   remark?: string;
@@ -49,10 +43,4 @@ export interface User {
 
   /* 부서 */
   departmentName?: string;
-
-  /* 생성일 */
-  createdAt?: string;
-
-  /* 수정일 */
-  updatedAt?: string;
 }

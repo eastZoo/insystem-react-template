@@ -1,11 +1,19 @@
 import { useEffect, useState } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
-// import { ReactComponent as IconSidemenuArrow } from "@/styles/assets/svg/icon_sidemenu_arrow.svg";
+import { useLocation } from "react-router-dom";
+import IconArrow from "@/styles/assets/svg/icon_sidemenu_arrow.svg?react";
+
 import * as S from "./SidemenuItem.style";
-import SidemenuList from "../../molecules/SidemenuList";
+import SidemenuList from "../../organisms/SidemenuList";
 import { useRecoilValue, useSetRecoilState } from "recoil";
 import { selectedMenuSelector, selectedMenuState } from "@/store/menu";
-import { menuListDummy } from "@/lib/data/menuListDummy";
+
+import IconMenu01 from "@/styles/assets/svg/icon_menu_01.svg?react";
+import { MenuIcon } from "./SidemenuItem.style";
+
+const ICON_MAP: Record<string, React.FC<React.SVGProps<SVGSVGElement>>> = {
+  IconMenu01,
+
+};
 
 interface SidemenuItemProps {
   data: any;
@@ -13,27 +21,15 @@ interface SidemenuItemProps {
 }
 
 export const SidemenuItem = ({ data, onContextMenu }: SidemenuItemProps) => {
+
+
   const location = useLocation();
-  const navigate = useNavigate();
   const [submenu, setSubmenu] = useState(false);
   const [initialized, setInitialized] = useState(false);
   const setMenu = useSetRecoilState(selectedMenuSelector);
-  const selectedMenuId = useRecoilValue(selectedMenuState);
+  const selectedMenu = useRecoilValue(selectedMenuState);
 
-  const isMatch = () => {
-    if (selectedMenuId && data.oid === selectedMenuId) {
-      return true;
-    }
-    if (location.pathname === data.path) {
-      return true;
-    }
-    if (!data.submenu) {
-      return location.pathname === data.path;
-    }
-    return false;
-  };
-
-  const isActive = isMatch();
+  const isMatch = data.oid === selectedMenu;
 
   useEffect(() => {
     if (!initialized) {
@@ -55,55 +51,32 @@ export const SidemenuItem = ({ data, onContextMenu }: SidemenuItemProps) => {
 
       setInitialized(true);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [location.pathname, data]);
 
   const submenuToggle = () => {
+    console.log("submenuToggle");
     setSubmenu(!submenu);
   };
-
-  const handleMenuClick = () => {
-    if (data.path) {
-      navigate(data.path);
-      setMenu({ id: data.oid });
-    }
-  };
-
-  const handleSubmenuClick = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    submenuToggle();
-    if (data.allowNavigation && data.path) {
-      handleMenuClick();
-    }
-  };
-
-  useEffect(() => {
-    if (location.pathname === data.path && !data.submenu) {
-      setMenu({ id: data.oid });
-    }
-  }, [location.pathname, data.path, data.oid, data.submenu, setMenu]);
 
   return (
     <S.SidemenuItemBox
       $submenuToggle={submenu}
-      $menuActive={isActive}
+      $menuActive={isMatch}
       onContextMenu={(e) => onContextMenu(e, data.path)}
     >
       {data.submenu ? (
         <>
           <S.SidemenuListItem
             $depth={data.depth}
-            $menuActive={isActive}
-            onClick={handleSubmenuClick}
+            onClick={data.submenu && submenuToggle}
           >
             <S.SidemenuItemTit>
-              {data.depth !== 1 && <S.BulletPoint>•</S.BulletPoint>}
+              {data.depth === 1 && data.icon ? <MenuIcon><IconMenu01 /></MenuIcon> : null}
+              {data.depth !== 1 && "- "}
               <S.TitBox>{data.title}</S.TitBox>
             </S.SidemenuItemTit>
-            {data.depth === 1 && data.submenu && (
-              <S.ArrowIcon $open={submenu} aria-hidden>
-                ▼
-              </S.ArrowIcon>
-            )}
+            {data.submenu && <IconArrow />}
           </S.SidemenuListItem>
           <SidemenuList
             depth={data.depth + 1}
@@ -112,18 +85,21 @@ export const SidemenuItem = ({ data, onContextMenu }: SidemenuItemProps) => {
           />
         </>
       ) : (
+        // <Link to={`${data.path}`}>
         <S.SidemenuListItem
           key={data.path}
           $depth={data.depth}
-          $menuActive={isActive}
-          onClick={handleMenuClick}
+          onClick={() => {
+            console.log("data.id", data);
+            setMenu({ id: data.oid });
+          }}
         >
           <S.SidemenuItemTit>
-            {/* {data.depth === 1 && data.icon} */}
-            {data.depth !== 1 && <S.BulletPoint>•</S.BulletPoint>}
+            {data.depth === 1 && data.icon ? <MenuIcon><IconMenu01 /></MenuIcon> : null}
+            {data.depth !== 1 && "- "}
             <S.TitBox>{data.title}</S.TitBox>
           </S.SidemenuItemTit>
-          {/* {data.submenu && <IconArrow />} */}
+          {data.submenu && <IconArrow />}
         </S.SidemenuListItem>
       )}
     </S.SidemenuItemBox>

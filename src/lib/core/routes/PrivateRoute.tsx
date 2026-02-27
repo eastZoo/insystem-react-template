@@ -6,8 +6,9 @@ interface PrivateRouteProps {
   authenticated?: string | null;
 }
 
-const PrivateRoute = ({ component, authenticated }: PrivateRouteProps) => {
-  if (authenticated) {
+const PrivateRoute = ({ component }: PrivateRouteProps) => {
+  const accessToken = readAccessToken();
+  if (accessToken) {
     return <>{component}</>;
   } else {
     return <Navigate to="/auth/login" />;
