@@ -1,6 +1,8 @@
-# Bumin Web V2 Boilerplate
+# eastzoo V1 Boilerplate
 
-React + TypeScript + Vite 기반으로 구성된 스타터 템플릿입니다.  
+React + TypeScript + Vite 기반으로 구성된 스타터 템플릿입니다.
+별도의 레이아웃 없이 기본적인 컴포넌트와 프로젝트 폴더구조 및 자주사용하는 라이브러리만 세팅되어 있습니다,
+
 React Query, Recoil, Styled-Components, React Router, Axios 토큰 갱신 로직 등을 기본 제공해 팀 내 공통 보일러플레이트로 활용할 수 있습니다.
 
 ---
