@@ -1,0 +1,12 @@
+export const QUERY_KEY = "QUERY_KEY";
+
+/** Auth */
+export const GET_AUTH_ME = "GET_AUTH_ME";
+
+/** Test API (/api/app/test/*) */
+export const GET_TEST_PING = "GET_TEST_PING";
+export const GET_TEST_USERS = "GET_TEST_USERS";
+export const GET_TEST_MENUS = "GET_TEST_MENUS";
+export const GET_TEST_PERMISSIONS = "GET_TEST_PERMISSIONS";
+export const GET_TEST_ORDERS = "GET_TEST_ORDERS";
+export const GET_TEST_STOCKS = "GET_TEST_STOCKS";

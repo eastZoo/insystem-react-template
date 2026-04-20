@@ -6,12 +6,17 @@ export default function ProtectedRoute({
 }: {
   children: React.ReactNode;
 }) {
-  const token = readAccessToken(); // 로그인 토큰 확인
+  const token = readAccessToken();
   const location = useLocation();
 
-  return token ? (
-    <>{children}</>
-  ) : (
-    <Navigate to="/auth/login" replace state={{ from: location }} />
-  );
+  if (!token) {
+    return (
+      <div style={{ padding: 24, fontFamily: "system-ui, sans-serif" }}>
+        로그인 페이지로 이동 중…
+        <Navigate to="/auth/login" replace state={{ from: location }} />
+      </div>
+    );
+  }
+
+  return <>{children}</>;
 }

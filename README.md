@@ -3,7 +3,7 @@
 React + TypeScript + Vite 기반으로 구성된 스타터 템플릿입니다.
 별도의 레이아웃 없이 기본적인 컴포넌트와 프로젝트 폴더구조 및 자주사용하는 라이브러리만 세팅되어 있습니다,
 
-React Query, Recoil, Styled-Components, React Router, Axios 토큰 갱신 로직 등을 기본 제공해 팀 내 공통 보일러플레이트로 활용할 수 있습니다.
+React Query, jotai, Styled-Components, React Router, Axios 토큰 갱신 로직 등을 기본 제공해 팀 내 공통 보일러플레이트로 활용할 수 있습니다.
 
 ---
 # 브랜치별 템플릿 미리보기
@@ -25,7 +25,7 @@ React Query, Recoil, Styled-Components, React Router, Axios 토큰 갱신 로직
 - React 19, TypeScript 5, Vite 7
 - React Router DOM 7 (코드 스플리팅 기반 라우팅)
 - @tanstack/react-query 5 (전역 쿼리 설정 + Devtools)
-- Recoil 상태 관리 및 persist 키 세팅
+- jotai 상태 관리
 - Styled-Components + styled-normalize + 테마 시스템
 - Axios 인스턴스 & 토큰 자동 갱신 인터셉터
 
@@ -67,7 +67,7 @@ VITE_APP_NAME=your-app-name
 VITE_API_BASE_URL=https://api.example.com
 ```
 
-- `VITE_APP_NAME` : 토큰 키 및 Recoil persist key 생성에 사용됩니다.
+- `VITE_APP_NAME` : 토큰 키 및 jotai 생성에 사용됩니다.
 - `VITE_API_BASE_URL` : Axios 인스턴스 기본 URL로, 토큰 리프레시 요청도 이 값을 기준으로 전송됩니다.
 
 필요한 환경 변수는 `import.meta.env`를 통해 접근하며 `src/lib/constants/sharedStrings.tsx`, `src/lib/axios.ts` 등에서 사용 중입니다.
@@ -78,7 +78,7 @@ VITE_API_BASE_URL=https://api.example.com
 
 ```
 src/
-  AppProviders.tsx           # 전역 Provider (Recoil, QueryClient, Theme, Router)
+  AppProviders.tsx           # 전역 Provider ( QueryClient, Theme, Router)
   main.tsx                   # 엔트리 포인트
   lib/
     axios.ts                 # Axios 인스턴스 + 토큰 리프레시 인터셉터
@@ -96,7 +96,7 @@ src/
     HomePage.tsx             # Protected Route 예시 페이지
     auth/LoginPage.tsx       # 임시 로그인 로직 샘플
     404/NotFoundPage.tsx
-  store/exampleAtom.ts       # Recoil atom 샘플
+  store/exampleAtom.ts       # jotai atom 샘플
   styles/
     GlobalStyle.ts           # styled-normalize + 글로벌 스타일
     theme.ts                 # 공통 테마 (colors, spacing 등)
@@ -108,13 +108,13 @@ src/
 ## 핵심 모듈 가이드
 
 - **AppProviders**  
-  RecoilRoot, QueryClientProvider, ThemeProvider, BrowserRouter를 한 번에 감싸 전역 상태와 스타일을 세팅합니다. 신규 Provider 추가 시 이 파일을 수정하세요.
+  QueryClientProvider, ThemeProvider, BrowserRouter를 한 번에 감싸 전역 상태와 스타일을 세팅합니다. 신규 Provider 추가 시 이 파일을 수정하세요.
 
 - **라우팅 (`src/lib/core/routes`)**  
   `Routes.tsx`에서 lazy import와 `useRoutes`를 사용해 라우트를 선언합니다. 인증이 필요한 페이지는 `ProtectedRoute`로 감싸 토큰 여부를 확인합니다.
 
 - **인증/토큰 관리 (`src/lib/functions/authFunctions.ts`)**  
-  로그인 토큰을 저장·조회·삭제하고 로그아웃 시 Recoil persist 데이터를 함께 초기화합니다. 실제 API 연동 시 이 헬퍼를 확장하세요.
+  로그인 토큰을 저장·조회·삭제하고 로그아웃 시. 실제 API 연동 시 이 헬퍼를 확장하세요.
 
 - **Axios 인프라 (`src/lib/axios.ts`)**  
   요청마다 Access Token을 헤더에 주입하고, 401 응답 시 Refresh Token으로 자동 재발급 후 재시도합니다. 공통 에러 처리나 헤더 정책이 필요하면 이 파일에서 확장합니다.
