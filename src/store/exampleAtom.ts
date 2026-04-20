@@ -1,6 +1,3 @@
-import { atom } from "recoil";
+import { atom } from "jotai";
 
-export const usernameState = atom<string>({
-  key: "usernameState",
-  default: "eastzoo",
-});
+export const exampleAtom = atom<any>(null);

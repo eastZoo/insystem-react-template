@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { useEffect } from "react";
-import { useSetRecoilState } from "recoil";
+import { useSetAtom } from "jotai";
 import { menuState, MenuSet } from "@/store/menu";
 import { request } from "@/lib/api";
 import { GET_MENU } from "@/lib/querykeys";
@@ -11,7 +11,7 @@ import { readAccessToken } from "@/lib/functions/authFunctions";
 import { menuListDummy } from "../data/menuListDummy";
 
 const useMenuData = () => {
-  const setMenuList = useSetRecoilState(menuState);
+  const setMenuList = useSetAtom(menuState);
   const accessToken = readAccessToken();
   // 여기서 메뉴 들고오기 contextApi
 

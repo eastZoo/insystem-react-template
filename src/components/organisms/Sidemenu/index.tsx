@@ -1,6 +1,6 @@
 import * as S from "./Sidemenu.style";
 // import { menuList } from "../../../data/menu";
-import { useRecoilValue } from "recoil";
+import { useAtomValue } from "jotai";
 import { menuState } from "@/store/menu";
 import type { MenuItem, MenuType } from "@/types/menu";
 import type { Permission } from "@/types/permission";
@@ -20,7 +20,7 @@ export const Sidemenu = ({
   permissions,
   onContextMenu,
 }: SidemenuProps) => {
-  const menuList = useRecoilValue<MenuType[]>(menuState);
+  const menuList = useAtomValue(menuState);
 
   const filterMenuByPermission = (
     menuList: any[],

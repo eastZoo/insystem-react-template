@@ -1,24 +1,28 @@
-import { useRecoilState, useSetRecoilState } from "recoil";
-import { memberState } from "@/store/member";
-import { logIdState } from "@/store/loginLog";
-import {
-  ACCESS_TOKEN,
-  RECOIL_PERSIST_KEY,
-  REFRESH_TOKEN,
-} from "@/lib/constants/sharedStrings";
+import { useLogout as useLogoutMutation } from "@/hooks/useAuth";
+import { logout as authLogout, isMockAuth } from "@/lib/functions/authFunctions";
 
+/**
+ * 로그아웃 함수를 반환합니다.
+ *
+ * - 실제 모드: POST /api/auth/logout → 완료 후 즉시 로컬 정리 + 페이지 이동
+ * - Mock 모드: API 호출 없이 즉시 로컬 정리
+ */
 export const useLogout = () => {
-  const setMember = useSetRecoilState(memberState);
-  const [logId, setLogId] = useRecoilState(logIdState);
+  const logoutMutation = useLogoutMutation();
 
-  const logout = () => {
-    setMember(null);
-    setLogId(null);
-    // request({ method: "POST", url: `/auth/logout/${logId}` }, false);
-    localStorage.removeItem(ACCESS_TOKEN);
-    localStorage.removeItem(REFRESH_TOKEN);
-    localStorage.removeItem(RECOIL_PERSIST_KEY);
-    window.location.href = "/";
+  const logout = async () => {
+    if (isMockAuth()) {
+      authLogout();
+      return;
+    }
+
+    try {
+      await logoutMutation.mutateAsync();
+    } catch {
+      // API 실패해도 로컬 정리는 반드시 실행
+    } finally {
+      authLogout();
+    }
   };
 
   return logout;

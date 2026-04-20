@@ -8,7 +8,7 @@ import { ControlText } from "../../../atoms/Controls/ControlText";
 import { ControlTextArea } from "../../../atoms/Controls/ControlTextArea";
 import { CreatePerformanceRecordsInputs } from "../../../containers/PerformanceRecords/PerformanceCreateModal";
 import { ModalFormBox, ModalFormDiv, ModalFormSection } from "../Modals.style";
-import { useRecoilValue } from "recoil";
+import { useAtomValue } from "jotai";
 import { userState } from "../../../../states/loginUser";
 import { ControlSelect } from "../../../atoms/Controls/ControlSelect";
 import { useQuery } from "@tanstack/react-query";
@@ -37,7 +37,7 @@ const ModalPerformance = ({
   updateModalShow,
   ...props
 }: ModalPerformanceRecordsProps) => {
-  const userInfo = useRecoilValue(userState);
+  const userInfo = useAtomValue(userState);
   const { data: assignedToOptions } = useQuery<SelectOption[]>({
     queryKey: [GET_PROJECT_PM],
     queryFn: () => {

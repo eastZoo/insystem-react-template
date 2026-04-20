@@ -4,8 +4,8 @@ import IconArrow from "@/styles/assets/svg/icon_sidemenu_arrow.svg?react";
 
 import * as S from "./SidemenuItem.style";
 import SidemenuList from "../../organisms/SidemenuList";
-import { useRecoilValue, useSetRecoilState } from "recoil";
-import { selectedMenuSelector, selectedMenuState } from "@/store/menu";
+import { useAtomValue } from "jotai";
+import { useSelectedMenu, selectedMenuState } from "@/store/menu";
 
 import IconMenu01 from "@/styles/assets/svg/icon_menu_01.svg?react";
 import { MenuIcon } from "./SidemenuItem.style";
@@ -26,8 +26,7 @@ export const SidemenuItem = ({ data, onContextMenu }: SidemenuItemProps) => {
   const location = useLocation();
   const [submenu, setSubmenu] = useState(false);
   const [initialized, setInitialized] = useState(false);
-  const setMenu = useSetRecoilState(selectedMenuSelector);
-  const selectedMenu = useRecoilValue(selectedMenuState);
+  const [selectedMenu, setMenu] = useSelectedMenu();
 
   const isMatch = data.oid === selectedMenu;
 

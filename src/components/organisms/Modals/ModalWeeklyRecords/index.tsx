@@ -5,7 +5,7 @@ import { Buttons } from "../../../atoms/Buttons";
 import { ControlText } from "../../../atoms/Controls/ControlText";
 import { ControlTextArea } from "../../../atoms/Controls/ControlTextArea";
 import { ModalFormBox, ModalFormDiv, ModalFormSection } from "../Modals.style";
-import { useRecoilValue } from "recoil";
+import { useAtomValue } from "jotai";
 import { userState } from "../../../../states/loginUser";
 import { CreateWeeklyInputs } from "../../../containers/WeeklyRecords/WeeklyCreateModal";
 import { weeklyRecords } from "../../../../common/types/weeklyRecords";
@@ -26,7 +26,7 @@ const ModalWeeklyRecords = ({
   selectedWeeklyRecords,
   ...props
 }: ModalWeeklyProps) => {
-  const userInfo = useRecoilValue(userState);
+  const userInfo = useAtomValue(userState);
   return (
     <Modals
       modalTitle={

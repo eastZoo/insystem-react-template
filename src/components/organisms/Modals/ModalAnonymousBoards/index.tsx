@@ -12,7 +12,7 @@ import { GET_ABOARD_CATEGORY } from "../../../../common/querykeys";
 import { request } from "../../../../common/api";
 import { CreateBoardsInputs } from "src/components/containers/AnonymousBoards/BoardsCreateModal";
 import { ControlCheckBox } from "src/components/atoms/Controls/ControlCheckBox";
-import { useRecoilValue } from "recoil";
+import { useAtomValue } from "jotai";
 import { userState } from "src/states/loginUser";
 
 interface ModalAnonymousBoardsProps extends ModalProps {
@@ -29,7 +29,7 @@ const ModalAnonymousBoards = ({
   updateModalShow,
   ...props
 }: ModalAnonymousBoardsProps) => {
-  const userInfo = useRecoilValue(userState);
+  const userInfo = useAtomValue(userState);
 
   const { data: anonymousBoardOptions } = useQuery<SelectOption[]>({
     queryKey: [GET_ABOARD_CATEGORY],

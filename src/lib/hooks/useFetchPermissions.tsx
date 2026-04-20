@@ -1,14 +1,14 @@
 import {  useQuery } from "@tanstack/react-query";
 import { request } from "../api";
 import type { Permission } from "@/types/permission";
-import { useSetRecoilState } from "recoil";
+import { useSetAtom } from "jotai";
 import { permissionsState } from "@/store/permission";
 import { readAccessToken } from "../functions/authFunctions";
 import { GET_GROUP_PERMISSIONS } from "../querykeys";
 import { permissionDummy } from "../data/permissionDummy";
 
 const useFetchPermissions = () => {
-  const setPermissions = useSetRecoilState(permissionsState);
+  const setPermissions = useSetAtom(permissionsState);
   setPermissions(permissionDummy);
   // const accessToken = readAccessToken();
   // const { data: permissions } = useQuery<any>({

@@ -1,30 +1,16 @@
-import React, { useEffect } from "react";
-import { useRecoilValue, useSetRecoilState } from "recoil";
+import { useEffect } from "react";
+import { useAtomValue } from "jotai";
 import { useNavigate } from "react-router-dom";
 import type { Tab } from "@/types/menu";
-import { openTabsState, selectedMenuSelector } from "@/store/menu";
+import { openTabsState, useSelectedMenu } from "@/store/menu";
 import styled from "styled-components";
 
 const TabBar = styled.div`
   display: flex;
   overflow-x: auto;
   white-space: nowrap;
-  /* border-bottom: 1px solid #ccc; */
   background-color: #D4D4D8;
-  /* background-color: #f9f9f9; */
   padding: 4px 4px 0 4px;
-
-  /* 스크롤바 숨기고 싶다면 아래 주석 해제 */
-  /* &::-webkit-scrollbar {
-    height: 6px;
-  } */
-  /* &::-webkit-scrollbar-thumb {
-    background-color: #ccc;
-    border-radius: 3px;
-  } */
-  /* &::-webkit-scrollbar-track {
-    background-color: transparent;
-  } */
 `;
 
 const TabButton = styled.div<{ $active: boolean }>`
@@ -32,13 +18,12 @@ const TabButton = styled.div<{ $active: boolean }>`
   align-items: center;
   margin-right: 3px;
   padding: 6px 12px;
-  /* border: 1px solid ${({ $active }) => ($active ? "#aaa" : "transparent")}; */
   background-color: ${({ $active }) => ($active ? "#f9f9f9" : "#eee")};
   border-radius: 6px 6px 0 0;
   cursor: pointer;
   font-size: 14px;
   color: ${({ $active }) => ($active ? "#0C4CA3" : "#99A1AF")};
-  
+
   &:hover {
     background-color: ${({ $active }) => ($active ? "#ccc" : "#ddd")};
   }
@@ -59,11 +44,10 @@ const TabClose = styled.span`
 `;
 
 const TabList = () => {
-  const openTabs = useRecoilValue(openTabsState);
-  const setMenu = useSetRecoilState(selectedMenuSelector);
+  const openTabs = useAtomValue(openTabsState);
+  const [, setMenu] = useSelectedMenu();
   const navigate = useNavigate();
 
-  // 선택된 탭이 바뀔 때마다 URL을 해당 탭의 path로 동기화
   useEffect(() => {
     const selectedTab = openTabs.find((tab) => tab.isSelected);
     if (selectedTab) {
@@ -72,7 +56,7 @@ const TabList = () => {
   }, [openTabs]);
 
   const onRemoveTab = (id: string) => {
-    setMenu({ id: id, isClose: true });
+    setMenu({ id, isClose: true });
   };
 
   if (!openTabs?.length) return null;

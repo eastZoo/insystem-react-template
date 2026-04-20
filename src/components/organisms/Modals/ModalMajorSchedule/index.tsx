@@ -1,5 +1,5 @@
 import { Control } from "react-hook-form";
-import { useRecoilState, useSetRecoilState } from "recoil";
+import { useAtom, useSetAtom } from "jotai";
 import {
   majorScheduleState,
   projectState,
@@ -27,10 +27,10 @@ const ModalMajorSchedule = ({
   updateModalShow,
   ...props
 }: ModalMajorScheduleProps) => {
-  const setMenu = useSetRecoilState(selectedMenuSelector);
+  const setMenu = useSetAtom(selectedMenuSelector);
   const [majorScheduleStateName, setMajorScheduleStateName] =
-    useRecoilState(majorScheduleState);
-  const [projectStateName, setProjectStateName] = useRecoilState(projectState);
+    useAtom(majorScheduleState);
+  const [projectStateName, setProjectStateName] = useAtom(projectState);
 
   const majorScheduleName = useWatch({
     control,

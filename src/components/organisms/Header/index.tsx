@@ -5,7 +5,7 @@ import { HeaderPopup } from "../HeaderPopup";
 import { useLogout } from "@/lib/hooks/useLogout";
 import IconMenu from "@/styles/assets/svg/icon_sidemenu.svg?react";
 
-import { useRecoilValue } from "recoil";
+import { useAtomValue } from "jotai";
 import { userState } from "@/store/loginUser";
 interface HeaderProps {
   asideToggle?: any;
@@ -17,7 +17,7 @@ export const Header = ({ asideOpen, asideToggle, innerWidth }: HeaderProps) => {
   const logout = useLogout();
   const popupRef = useRef<HTMLDivElement>(null);
   const [popupShow, setPopupShow] = useState(false);
-  const userInfo = useRecoilValue(userState);
+  const userInfo = useAtomValue(userState);
 
   // 페이지 새로고침 판별
   const [isRefresh, setIsRefresh] = useState<boolean>(false);

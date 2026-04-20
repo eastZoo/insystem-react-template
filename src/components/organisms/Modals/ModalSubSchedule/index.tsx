@@ -12,7 +12,7 @@ import { ControlTextArea } from "../../../atoms/Controls/ControlTextArea";
 import { CreateSubScheduleInputs } from "../../../containers/SubSchedule/SubScheduleCreateModal";
 import { ModalFormBox, ModalFormDiv, ModalFormSection } from "../Modals.style";
 import { SubSchedules } from "../../../../types/Subschedule";
-import { useRecoilValue } from "recoil";
+import { useAtomValue } from "jotai";
 import { userState } from "../../../../states/loginUser";
 import { se } from "date-fns/locale";
 
@@ -35,7 +35,7 @@ const ModalSubSchedule = ({
   setIsPerformance,
   ...props
 }: ModalSubScheduleProps) => {
-  const userInfo = useRecoilValue(userState);
+  const userInfo = useAtomValue(userState);
   const selectedProject = useWatch({
     control,
     name: "projectName",

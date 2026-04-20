@@ -12,7 +12,7 @@ import { request } from "../../../../common/api";
 import { CreateCalendarInputs } from "../../../../components/containers/EmployeeWork/EmployeeWorkCreateModal";
 import { ControlTagSelect } from "src/components/atoms/Controls/ControlTagAutocomplete";
 import { useState } from "react";
-import { useRecoilValue } from "recoil";
+import { useAtomValue } from "jotai";
 import { userState } from "src/states/loginUser";
 import { EmployeeWorkPrintPrepare } from "./EmployeeWorkPrintPrepare";
 
