@@ -3,7 +3,7 @@ import { ModalPassword } from "../../molecules/Modals/ModalPassword";
 import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import { useMutation } from "@tanstack/react-query";
-import { request } from "@/lib/api";
+import { request } from "@/lib/axios";
 import type { BaseResponse } from "@/types/baseRespones";
 import { showAlert } from "../Alert";
 import { useEffect } from "react";

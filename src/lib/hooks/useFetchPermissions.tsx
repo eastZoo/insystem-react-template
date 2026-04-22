@@ -1,5 +1,5 @@
-import {  useQuery } from "@tanstack/react-query";
-import { request } from "../api";
+import { useQuery } from "@tanstack/react-query";
+import { request } from "../axios";
 import type { Permission } from "@/types/permission";
 import { useSetRecoilState } from "recoil";
 import { permissionsState } from "@/store/permission";

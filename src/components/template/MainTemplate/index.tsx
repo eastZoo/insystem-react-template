@@ -1,11 +1,8 @@
 import * as S from "./MainTemplate.style";
-import { useRecoilValue } from "recoil";
 import { useEffect, useState } from "react";
-import ContextMenu from "@/components/molecules/ContextMenu";
 import useContextMenu from "@/lib/hooks/useContextMenu";
 
-import { Sidemenu } from "@/components/organisms/Sidemenu";
-import useMenuData from "@/lib/hooks/useMenuData";
+import { Sidemenu } from "@/components/molecules/Sidemenu";
 import { readAccessToken } from "@/lib/functions/authFunctions";
 import { Navigate } from "react-router-dom";
 
@@ -13,11 +10,8 @@ interface MainTemplateProps {
   children: React.ReactElement;
 }
 
-export const MainTemplate = ({
-  children,
-}: MainTemplateProps) => {
+export const MainTemplate = ({ children }: MainTemplateProps) => {
   const accessToken = readAccessToken();
-  useMenuData();
 
   const [asideOpen, setAsideOpen] = useState(true);
   const [innerWidth, setInnerWidth] = useState(window.innerWidth);
@@ -57,11 +51,9 @@ export const MainTemplate = ({
       <Sidemenu
         asideToggle={handleAsideOpen}
         onContextMenu={handleContextMenu}
-      // permissions={permissions ?? []}
+        // permissions={permissions ?? []}
       />
-      <S.ContentSection>
-        {children}
-      </S.ContentSection>
+      <S.ContentSection>{children}</S.ContentSection>
     </S.MainTemplate>
   );
 };

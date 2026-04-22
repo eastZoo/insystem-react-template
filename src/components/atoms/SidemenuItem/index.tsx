@@ -3,9 +3,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 // import { ReactComponent as IconSidemenuArrow } from "@/styles/assets/svg/icon_sidemenu_arrow.svg";
 import * as S from "./SidemenuItem.style";
 import SidemenuList from "../../molecules/SidemenuList";
-import { useRecoilValue, useSetRecoilState } from "recoil";
-import { selectedMenuSelector, selectedMenuState } from "@/store/menu";
-import { menuListDummy } from "@/lib/data/menuListDummy";
+import { useSelectedMenu } from "@/store/menu";
 
 interface SidemenuItemProps {
   data: any;
@@ -17,8 +15,7 @@ export const SidemenuItem = ({ data, onContextMenu }: SidemenuItemProps) => {
   const navigate = useNavigate();
   const [submenu, setSubmenu] = useState(false);
   const [initialized, setInitialized] = useState(false);
-  const setMenu = useSetRecoilState(selectedMenuSelector);
-  const selectedMenuId = useRecoilValue(selectedMenuState);
+  const [selectedMenuId, setMenu] = useSelectedMenu();
 
   const isMatch = () => {
     if (selectedMenuId && data.oid === selectedMenuId) {
@@ -75,12 +72,6 @@ export const SidemenuItem = ({ data, onContextMenu }: SidemenuItemProps) => {
       handleMenuClick();
     }
   };
-
-  useEffect(() => {
-    if (location.pathname === data.path && !data.submenu) {
-      setMenu({ id: data.oid });
-    }
-  }, [location.pathname, data.path, data.oid, data.submenu, setMenu]);
 
   return (
     <S.SidemenuItemBox

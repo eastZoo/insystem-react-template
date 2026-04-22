@@ -1,7 +1,7 @@
 import type { DefinedUseQueryResult } from "@tanstack/react-query";
 import { useQuery } from "@tanstack/react-query";
 import { GET_SCREEN_ROUTE } from "@/lib/querykeys";
-import { request } from "@/lib/api";
+import { request } from "@/lib/axios";
 import type { BaseResponse } from "@/types/baseRespones";
 import type { Screen } from "@/types/screen";
 

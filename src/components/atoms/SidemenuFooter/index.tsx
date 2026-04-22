@@ -1,16 +1,13 @@
-import { useRecoilValue } from "recoil";
-import { userState } from "@/store/loginUser";
-import { useLogout } from "@/lib/hooks/useLogout";
+import { useLogout } from "@/lib/hooks/useAuth";
 import * as S from "./SidemenuFooter.style";
 import IconUser from "@/styles/assets/svg/icon_user.svg";
 
 export const SidemenuFooter = () => {
-  const user = useRecoilValue(userState);
-  const logout = useLogout();
+  const logoutMutation = useLogout();
 
   // 사용자 정보가 없을 경우 기본값 사용
-  const userName = user?.userName || "홍길동";
-  const userEmail = user?.email || "admin@example.com";
+  const userName = "홍길동";
+  const userEmail = "admin@example.com";
 
   return (
     <S.SidemenuFooterContainer>
@@ -24,7 +21,9 @@ export const SidemenuFooter = () => {
           <S.UserEmail>{userEmail}</S.UserEmail>
         </S.UserText>
       </S.UserInfo>
-      <S.LogoutButton onClick={logout}>로그아웃</S.LogoutButton>
+      <S.LogoutButton onClick={() => logoutMutation.mutate()}>
+        로그아웃
+      </S.LogoutButton>
     </S.SidemenuFooterContainer>
   );
 };
