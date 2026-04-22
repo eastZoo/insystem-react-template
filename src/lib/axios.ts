@@ -17,6 +17,11 @@
  *     3. 새 Access Token을 메모리에 저장
  *     4. 실패했던 원래 요청을 새 토큰으로 재시도
  *     5. /refresh도 실패하면 → 로그아웃 처리
+ *
+ *   [동시 401 응답 처리]
+ *     여러 요청이 동시에 401을 받으면 첫 번째 refresh만 실행하고,
+ *     나머지 요청은 그 결과를 대기합니다.
+ *     이로써 Refresh Token Rotation으로 인한 레이스 컨디션을 방지합니다.
  * ─────────────────────────────────────────────────────────────────────────────
  */
 
@@ -32,6 +37,12 @@ import {
 import { queryClient } from "./queryClient";
 import { GET_AUTH_ME } from "./querykeys";
 import { showAlert } from "@/components/containers/Alert";
+
+/**
+ * 토큰 갱신 진행 중인 Promise.
+ * 여러 요청이 동시에 401을 받을 때 첫 번째 refresh만 실행하고 나머지는 대기.
+ */
+let _refreshPromise: Promise<string | null> | null = null;
 
 const api = axios.create({
   baseURL: import.meta.env.VITE_API_BASE_URL,
@@ -62,6 +73,57 @@ api.interceptors.request.use(
 
 // ── Response Interceptor (401 자동 갱신) ─────────────────────────────────────
 // Access Token이 만료되면 Refresh Token Cookie로 자동 갱신 후 재시도합니다.
+// 여러 요청이 동시에 401을 받으면 첫 번째 refresh만 실행하고 나머지는 대기합니다.
+
+/**
+ * 토큰 갱신 실행 — 실제 POST /api/auth/refresh 호출
+ * 이 함수는 직접 호출하지 않고 refreshTokenWithLock()을 통해 호출됩니다.
+ */
+const executeRefresh = async (): Promise<string | null> => {
+  try {
+    const base = import.meta.env.VITE_API_BASE_URL;
+    const { data: body } = await axios.post<ApiResponse<{ accessToken: string }>>(
+      `${base}/api/auth/refresh`,
+      undefined,
+      { withCredentials: true }
+    );
+
+    if (!body.success || !body.data) {
+      return null;
+    }
+
+    writeAccessToken(body.data.accessToken);
+    void queryClient.invalidateQueries({ queryKey: [GET_AUTH_ME] });
+    return body.data.accessToken;
+  } catch {
+    return null;
+  }
+};
+
+/**
+ * 토큰 갱신 (잠금 포함) — 동시 요청 시 첫 번째만 실행
+ *
+ * [동작 방식]
+ *   1. 첫 번째 호출: 실제 refresh API 호출
+ *   2. 두 번째+ 호출: 첫 번째 요청 결과를 대기
+ *   3. 모든 대기 요청이 같은 새 토큰을 받음
+ */
+const refreshTokenWithLock = async (): Promise<string | null> => {
+  // 이미 진행 중인 refresh가 있으면 대기
+  if (_refreshPromise) {
+    return _refreshPromise;
+  }
+
+  // 새 refresh 시작
+  _refreshPromise = executeRefresh();
+
+  try {
+    return await _refreshPromise;
+  } finally {
+    // refresh 완료 후 Promise 초기화
+    _refreshPromise = null;
+  }
+};
 
 api.interceptors.response.use(
   (response) => response,
@@ -76,7 +138,8 @@ api.interceptors.response.use(
     const isAuthPath =
       url.includes("/api/auth/login") ||
       url.includes("/api/auth/refresh") ||
-      url.includes("/api/auth/logout");
+      url.includes("/api/auth/logout") ||
+      url.includes("/api/auth/session");
 
     if (
       error.response?.status === 401 &&
@@ -85,38 +148,16 @@ api.interceptors.response.use(
     ) {
       originalRequest._retry = true;
 
-      try {
-        /**
-         * POST /api/auth/refresh
-         *
-         * body 없이 호출합니다.
-         * withCredentials: true 이므로 브라우저가 HttpOnly Cookie(refreshToken)를
-         * 자동으로 포함하여 전송합니다.
-         *
-         * 직접 axios를 사용하는 이유: api 인스턴스를 쓰면 이 interceptor가 재귀 호출될 수 있음
-         */
-        const base = import.meta.env.VITE_API_BASE_URL;
-        const { data: body } = await axios.post<ApiResponse<{ accessToken: string }>>(
-          `${base}/api/auth/refresh`,
-          undefined,
-          { withCredentials: true }
-        );
+      // 잠금이 있는 토큰 갱신 — 동시 401 대응
+      const newToken = await refreshTokenWithLock();
 
-        if (!body.success || !body.data) {
-          await showAlert(
-            body.success === false ? body.message : "토큰 갱신에 실패했습니다."
-          );
-          return logout();
-        }
-
-        // 새 Access Token을 메모리에 저장하고 원래 요청 재시도
-        writeAccessToken(body.data.accessToken);
-        void queryClient.invalidateQueries({ queryKey: [GET_AUTH_ME] });
-        return api(originalRequest);
-      } catch {
+      if (!newToken) {
         await showAlert("세션이 만료되었습니다. 다시 로그인해주세요.");
         return logout();
       }
+
+      // 새 토큰으로 원래 요청 재시도
+      return api(originalRequest);
     }
 
     return Promise.reject(error);

@@ -28,7 +28,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import styled from "styled-components";
-import { Badge, Input, IsButton, Label } from "insystem-atoms";
+import { IsButton, IsChip, IsInputText } from "insystem-atoms";
 import { Icon } from "@/components/atoms/Icon";
 import { useLogin } from "@/hooks/useAuth";
 import { readAccessToken } from "@/lib/functions/authFunctions";
@@ -195,9 +195,7 @@ export default function LoginPage() {
         <Card>
           <HeaderRow>
             <Title>로그인</Title>
-            <Badge variant="secondary" size="sm">
-              Eastzoo Template
-            </Badge>
+            <IsChip>Eastzoo Template</IsChip>
           </HeaderRow>
           <Subtitle>
             시드 계정으로 로그인하거나 아래 계정을 클릭해 자동 입력하세요.
@@ -211,33 +209,33 @@ export default function LoginPage() {
           >
             <FieldStack>
               <div>
-                <Label htmlFor="login-email" size="sm">
-                  이메일
-                </Label>
-                <Input
+                <IsInputText
                   id="login-email"
                   type="email"
                   autoComplete="username"
-                  placeholder="you@eastzoo.local"
+                  placeholderText="you@eastzoo.local"
                   value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                    setEmail(e.target.value)
+                  }
                   fullWidth
-                  size="md"
+                  label="이메일"
+                  size="medium"
                 />
               </div>
               <div>
-                <Label htmlFor="login-password" size="sm" required>
-                  비밀번호
-                </Label>
-                <Input
+                <IsInputText
                   id="login-password"
                   type="password"
                   autoComplete="current-password"
-                  placeholder="••••••••"
+                  placeholderText="••••••••"
                   value={password}
-                  onChange={(e) => setPassword(e.target.value)}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                    setPassword(e.target.value)
+                  }
                   fullWidth
-                  size="md"
+                  label="비밀번호"
+                  size="medium"
                 />
               </div>
             </FieldStack>
@@ -248,9 +246,9 @@ export default function LoginPage() {
               color="primary"
               interaction
               size="md"
-              leftIcon={true}
               leftIconSlot={<Icon name="login" />}
               disabled={loginMutation.isPending}
+              fullWidth
             >
               {loginMutation.isPending ? "로그인 중…" : "로그인"}
             </IsButton>

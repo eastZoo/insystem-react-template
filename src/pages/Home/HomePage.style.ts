@@ -143,8 +143,12 @@ export const Skeleton = styled.div<{ h?: string; w?: string }>`
   animation: shimmer 1.4s infinite;
 
   @keyframes shimmer {
-    0% { background-position: 200% 0; }
-    100% { background-position: -200% 0; }
+    0% {
+      background-position: 200% 0;
+    }
+    100% {
+      background-position: -200% 0;
+    }
   }
 `;
 
@@ -383,7 +387,8 @@ export const NotifRow = styled.li<{ $read?: boolean }>`
   padding: ${({ theme }) => theme.spacing(3)};
   border-radius: ${({ theme }) => theme.radius.md};
   background: ${({ $read }) => ($read ? "transparent" : "#eff6ff")};
-  border: 1px solid ${({ $read }) => ($read ? "rgba(107,114,128,0.08)" : "#bfdbfe")};
+  border: 1px solid
+    ${({ $read }) => ($read ? "rgba(107,114,128,0.08)" : "#bfdbfe")};
   font-size: 0.82rem;
   cursor: pointer;
   transition: background 0.12s;

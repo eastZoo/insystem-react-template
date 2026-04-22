@@ -17,6 +17,11 @@
  *      - authenticated: false: 비로그인 상태 (에러 아님)
  *   3. isRestoring: false → 라우터 렌더링 시작
  *
+ * [연속 새로고침 / 탭 전환 대응]
+ *   Refresh Token은 만료 전까지 동일한 값을 유지합니다 (Rotation 없음).
+ *   따라서 탭 전환, 새로고침 등 다양한 시나리오에서 안정적으로 동작합니다.
+ *   슬라이딩 만료(7일)와 절대 만료(30일) 기간 내에서 세션이 유지됩니다.
+ *
  * [StrictMode / 요청이 두 번 보일 때]
  *   개발 모드에서 main.tsx의 <StrictMode>는 effect를 mount → cleanup → 재실행합니다.
  *   아래 effect는 AbortController로 cleanup 시 진행 중인 요청을 취소해
