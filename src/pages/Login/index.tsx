@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { useForm } from "react-hook-form";
+import { useForm, type Control } from "react-hook-form";
 import { useNavigate, useLocation } from "react-router-dom";
 import styled from "styled-components";
 import { LoginForm } from "@/components/organisms/LoginForm";
@@ -125,7 +125,7 @@ export default function LoginPage() {
       <>
         <LoginForm
           onSubmit={handleSubmit(onSubmit)}
-          control={control}
+          control={control as Control<any>}
           isLoading={loginMutation.isPending}
         />
 

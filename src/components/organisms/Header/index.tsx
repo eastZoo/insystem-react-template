@@ -2,11 +2,11 @@ import * as S from "./Header.style";
 import { useEffect, useRef, useState } from "react";
 import { Buttons } from "../../atoms/Buttons";
 import { HeaderPopup } from "../HeaderPopup";
-import { useLogout } from "@/lib/hooks/useLogout";
 import IconMenu from "@/styles/assets/svg/icon_sidemenu.svg?react";
 
 import { useAtomValue } from "jotai";
 import { userState } from "@/store/loginUser";
+import { useLogout } from "@/hooks/useAuth";
 interface HeaderProps {
   asideToggle?: any;
   asideOpen?: boolean;
@@ -14,7 +14,7 @@ interface HeaderProps {
 }
 
 export const Header = ({ asideOpen, asideToggle, innerWidth }: HeaderProps) => {
-  const logout = useLogout();
+  const logoutMutation = useLogout();
   const popupRef = useRef<HTMLDivElement>(null);
   const [popupShow, setPopupShow] = useState(false);
   const userInfo = useAtomValue(userState);
@@ -49,27 +49,18 @@ export const Header = ({ asideOpen, asideToggle, innerWidth }: HeaderProps) => {
           )}
         </S.ShipModelTit>
         <S.HeaderBtnBox>
+          <Buttons type="button" size="md" layout="icon" onClick={() => {}} />
           <Buttons
             type="button"
             size="md"
             layout="icon"
-
-            onClick={() => { }}
-          />
-          <Buttons
-            type="button"
-            size="md"
-            layout="icon"
-
             onClick={() => {
               setPopupShow(!popupShow);
             }}
           >
             <>
               {/* 직책 : 사용자명 바인딩 */}
-              <span style={{ margin: "0 8px" }}>
-                {"사용자명" + " : "}
-              </span>
+              <span style={{ margin: "0 8px" }}>{"사용자명" + " : "}</span>
               <span>홍길동</span>
             </>
           </Buttons>
@@ -78,7 +69,7 @@ export const Header = ({ asideOpen, asideToggle, innerWidth }: HeaderProps) => {
       {/* 로그아웃 팝업 */}
       {popupShow && (
         <HeaderPopup
-          logout={logout}
+          logout={() => logoutMutation.mutate()}
           popupRef={popupRef}
           popupOutsideClick={popupOutsideClick}
         />

@@ -7,13 +7,10 @@ import { permissionsState } from "@/store/permission";
 import { Header } from "@/components/organisms/Header";
 import { Sidemenu } from "@/components/organisms/Sidemenu";
 import TabList from "@/components/containers/Tabs/TabList";
-import {
-  openTabsState,
-  useSelectedMenu,
-  flattenMenuTree,
-} from "@/store/menu";
-import HomePage from "@/pages/HomePage";
+import { openTabsState, useSelectedMenu, flattenMenuTree } from "@/store/menu";
+
 import { menuListDummy } from "@/lib/data/menuListDummy";
+import HomePage from "@/pages/Home";
 
 interface MainTemplateProps {
   children: React.ReactElement;
