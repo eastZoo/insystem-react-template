@@ -1,4 +1,10 @@
-import { lazy, Suspense, type ComponentType } from "react";
+import {
+  lazy,
+  Suspense,
+  useMemo,
+  type ComponentType,
+  type LazyExoticComponent,
+} from "react";
 import { useRoutes, Navigate } from "react-router-dom";
 import ProtectedRoute from "@/lib/core/routes/ProtectedRoute";
 import {
@@ -44,64 +50,74 @@ export function resolveRoutePageTsxPath(route: RouteConfig): string {
   );
 }
 
-function lazyPage(route: RouteConfig) {
-  const rel = resolveRoutePageTsxPath(route);
-  const key = toGlobKey(rel);
-  const loader = pageModules[key];
+/** 렌더마다 `lazy()` 를 새로 만들면 라우트 트리가 불안정해질 수 있어 페이지 단위로 캐시합니다. */
+const lazyPageCache = new Map<string, LazyExoticComponent<ComponentType>>();
 
-  if (!loader) {
-    throw new Error(
-      `[Routes] 페이지 모듈을 찾을 수 없습니다.\n` +
-        `  기대 키: ${key}\n` +
-        `  src/pages/${rel}\n` +
-        `  routes.config 에서 page / name 을 확인하거나 npm run sync:pages 를 실행하세요.`
-    );
+function getLazyPage(route: RouteConfig) {
+  const rel = resolveRoutePageTsxPath(route);
+  let Page = lazyPageCache.get(rel);
+  if (!Page) {
+    const key = toGlobKey(rel);
+    const loader = pageModules[key];
+
+    if (!loader) {
+      throw new Error(
+        `[Routes] 페이지 모듈을 찾을 수 없습니다.\n` +
+          `  기대 키: ${key}\n` +
+          `  src/pages/${rel}\n` +
+          `  routes.config 에서 page / name 을 확인하거나 npm run sync:pages 를 실행하세요.`
+      );
+    }
+
+    Page = lazy(loader);
+    lazyPageCache.set(rel, Page);
   }
 
-  return lazy(loader);
+  return Page;
 }
 
 export default function AppRoutes() {
-  const protectedChildren = ROUTE_CONFIGS.filter(
-    (route) => route.protected !== false
-  ).map((route) => {
-    const Page = lazyPage(route);
-    if (route.path === "/") {
-      return {
-        index: true,
-        element: <Page />,
-      };
-    }
-
-    return {
-      path: route.path.replace(/^\//, ""),
-      element: <Page />,
-    };
-  });
-
-  const publicRoutes = ROUTE_CONFIGS.filter(
-    (route) => route.protected === false
-  ).map((route) => {
-    const Page = lazyPage(route);
-    return {
-      path: route.path,
-      element: <Page />,
-    };
-  });
-
-  const routes = [
-    ...publicRoutes,
-    {
-      path: "/",
-      element: (
-        <ProtectedRoute>
-          <ProtectedLayout />
-        </ProtectedRoute>
+  const routes = useMemo(
+    () => [
+      ...ROUTE_CONFIGS.filter((route) => route.protected === false).map(
+        (route) => {
+          const Page = getLazyPage(route);
+          return {
+            path: route.path,
+            element: <Page />,
+          };
+        }
       ),
-      children: protectedChildren,
-    },
-    { path: "*", element: <Navigate to="/404" replace /> },
-  ];
+      /**
+       * path 없는 레이아웃 + 자식은 URL 전체 경로(`/sample` 등)를 쓰는 편이 RR v7 에서 안전합니다.
+       * 부모를 `path: "/"` 만 두고 자식만 `sample` 처럼 상대 경로로 두면 Outlet 이 갱신되지 않는 경우가 있습니다.
+       */
+      {
+        element: (
+          <ProtectedRoute>
+            <ProtectedLayout />
+          </ProtectedRoute>
+        ),
+        children: ROUTE_CONFIGS.filter((route) => route.protected !== false).map(
+          (route) => {
+            const Page = getLazyPage(route);
+            if (route.path === "/") {
+              return {
+                index: true,
+                element: <Page />,
+              };
+            }
+            return {
+              path: route.path,
+              element: <Page />,
+            };
+          }
+        ),
+      },
+      { path: "*", element: <Navigate to="/404" replace /> },
+    ],
+    []
+  );
 
   const element = useRoutes(routes);
 

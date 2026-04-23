@@ -1,9 +1,9 @@
 /**
- * 샘플 페이지3-1
+ * 1-1.샘플페이지
  *
  * routes.config.ts 에 의해 sync:pages 로 생성되었을 수 있습니다.
  */
-export default function SamplePage3Sub1Page() {
+export default function SamplePage1Sub1Page() {
 /** ============================= state 영역 ============================= */
 
 /** ============================= API 영역 ============================= */
@@ -16,10 +16,10 @@ export default function SamplePage3Sub1Page() {
 
   return (
     <>
-      <title>샘플 페이지3-1</title>
+      <title>1-1.샘플페이지</title>
       <div style={{ padding: "24px" }}>
-        <h1>샘플 페이지3-1</h1>
-        <p>SamplePage3Sub1Page — 내용을 작성하세요.</p>
+        <h1>1-1.샘플페이지</h1>
+        <p>SamplePage1Sub1Page — 내용을 작성하세요.</p>
       </div>
     </>
   );

@@ -88,8 +88,11 @@ export function useLogin() {
       onSuccessData: (data) => {
         writeAccessToken(data.accessToken);
         void queryClient.invalidateQueries();
+
+        window.location.replace("/");
       },
     }),
+    onSettled: () => {},
   });
 }
 

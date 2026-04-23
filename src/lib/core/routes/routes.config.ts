@@ -85,19 +85,19 @@ export const ROUTE_CONFIGS: RouteConfig[] = [
 
   {
     path: "/sample",
-    name: "SamplePage2",
+    name: "SamplePage1",
     title: "1.샘플 메뉴",
     protected: true,
   },
   {
     path: "/sample/1-1",
-    page: "SamplePage3/SamplePage3Sub1",
+    page: "SamplePage1/SamplePage1Sub1",
     title: "1-1.샘플페이지",
     protected: true,
   },
   {
     path: "/sample/1-2",
-    page: "SamplePage3/SamplePage3Sub2",
+    page: "SamplePage1/SamplePage1Sub2",
     title: "1-2.샘플페이지",
     protected: true,
   },
