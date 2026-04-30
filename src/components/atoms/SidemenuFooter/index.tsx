@@ -1,8 +1,10 @@
 import * as S from "./SidemenuFooter.style";
+import type { UserInfo } from "@/types/domain.types";
 
 interface SidemenuFooterProps {
   isCollapsed?: boolean;
   onLogout: () => void;
+  userInfo?: UserInfo;
 }
 
 /** 로그아웃 아이콘 - Figma stroke 스타일 */
@@ -35,23 +37,21 @@ const LogoutIcon = () => (
 export const SidemenuFooter = ({
   isCollapsed = false,
   onLogout,
+  userInfo,
 }: SidemenuFooterProps) => {
-  // 사용자 정보 - 실제 구현시 로그인 상태에서 가져옴
-  const userName = "김민준";
-  const userTeam = "개발팀";
-  const userRole = "일반사용자";
-
   // 이름의 첫 글자를 아바타에 표시
-  const avatarInitial = userName.charAt(0);
+  const avatarInitial = userInfo?.userName?.charAt(0) || "-";
 
   return (
     <S.SidemenuFooterContainer $isCollapsed={isCollapsed}>
       <S.UserInfo $isCollapsed={isCollapsed}>
         <S.UserAvatar $isCollapsed={isCollapsed}>{avatarInitial}</S.UserAvatar>
         <S.UserText $isCollapsed={isCollapsed}>
-          <S.UserName>{userName}</S.UserName>
+          <S.UserName>{userInfo?.userName || "-"}</S.UserName>
           <S.UserRole>
-            {userTeam} · {userRole}
+            {[userInfo?.userTeam, userInfo?.userRole]
+              .filter(Boolean)
+              .join(" · ") || "-"}
           </S.UserRole>
         </S.UserText>
       </S.UserInfo>

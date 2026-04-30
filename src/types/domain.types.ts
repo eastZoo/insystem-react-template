@@ -66,6 +66,24 @@ export interface MeData {
 }
 
 // ────────────────────────────────────────────────────────────
+// Permission — GET /api/permission/me
+// ────────────────────────────────────────────────────────────
+
+/**
+ * GET /api/permission/me 응답 data
+ *
+ * 사이드바 푸터에 표시할 사용자 기본 정보입니다.
+ */
+export interface UserInfo {
+  /** 사용자명 (sya_user.nm) */
+  userName: string;
+  /** 권한명 (sya_auth.auth_nm) */
+  userRole: string | null;
+  /** 부서명 (bs_dept.dept_nm) */
+  userTeam: string | null;
+}
+
+// ────────────────────────────────────────────────────────────
 // Menus — GET /api/permission/menu-list
 // ────────────────────────────────────────────────────────────
 

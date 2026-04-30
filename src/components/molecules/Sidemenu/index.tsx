@@ -6,12 +6,14 @@ import SidemenuList from "../SidemenuList";
 import { SidemenuFooter } from "../../atoms/SidemenuFooter";
 import { buildMenuTree } from "@/lib/utils/buildMenuTree";
 import { useUserMenus } from "@/lib/hooks/useUserMenus";
+import type { UserInfo } from "@/types/domain.types";
 
 interface SidemenuProps {
   isCollapsed?: boolean;
   asideToggle?: () => void;
   onContextMenu: (event: React.MouseEvent, target: any) => void;
   onLogout: () => void;
+  userInfo?: UserInfo;
 }
 
 const ROOT_PARENT = "0";
@@ -31,7 +33,8 @@ function mapApiMenusToMenuTypes(items: UserMenuItem[]): MenuType[] {
     title: m.menuName,
     icon: m.icon ?? undefined,
     depth: m.depth,
-    parentId: m.upMenuCd && m.upMenuCd !== ROOT_PARENT ? m.upMenuCd : ROOT_PARENT,
+    parentId:
+      m.upMenuCd && m.upMenuCd !== ROOT_PARENT ? m.upMenuCd : ROOT_PARENT,
     path: m.url ?? undefined,
     sortRef: m.sort,
   }));
@@ -42,6 +45,7 @@ export const Sidemenu = ({
   asideToggle,
   onContextMenu,
   onLogout,
+  userInfo,
 }: SidemenuProps) => {
   /**
    * 사용자 메뉴는 GET /api/app/permission/menu-list 에서 받아옵니다.
@@ -63,7 +67,7 @@ export const Sidemenu = ({
         onContextMenu={onContextMenu}
         isCollapsed={isCollapsed}
       />
-      <SidemenuFooter isCollapsed={isCollapsed} onLogout={onLogout} />
+      <SidemenuFooter isCollapsed={isCollapsed} onLogout={onLogout} userInfo={userInfo} />
     </S.SidemenuSection>
   );
 };

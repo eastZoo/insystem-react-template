@@ -3,7 +3,8 @@ export const QUERY_KEY = "QUERY_KEY";
 /** Auth */
 export const GET_AUTH_ME = "GET_AUTH_ME";
 
-/** Menus (사이드바 — 사용자별 허용 메뉴) */
+/** Permission (사용자 권한 정보) */
+export const GET_USER_INFO = "GET_USER_INFO";
 export const GET_USER_MENUS = "GET_USER_MENUS";
 
 /** Test API (/api/app/test/*) */

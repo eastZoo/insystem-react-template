@@ -89,6 +89,12 @@ export const ROUTE_CONFIGS: RouteConfig[] = [
     protected: true,
   },
   {
+    path: "/user-setup",
+    name: "UserSetup",
+    title: "환경설정",
+    protected: true,
+  },
+  {
     path: "/file-management/folder/:folderId",
     page: "FileManagement/FolderDetail",
     title: "폴더 상세",

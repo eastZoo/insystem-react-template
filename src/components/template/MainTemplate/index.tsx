@@ -6,6 +6,8 @@ import { Sidemenu } from "@/components/molecules/Sidemenu";
 import { readAccessToken } from "@/lib/functions/authFunctions";
 import { Navigate } from "react-router-dom";
 import { useLogout } from "@/lib/hooks/useAuth";
+import { useUserInfo } from "@/lib/hooks/useUserInfo";
+import type { UserInfo } from "@/types/domain.types";
 
 interface MainTemplateProps {
   children: React.ReactElement;
@@ -20,6 +22,9 @@ export const MainTemplate = ({ children }: MainTemplateProps) => {
 
   // 로그아웃 뮤테이션
   const logoutMutation = useLogout();
+
+  // 사용자 정보 조회
+  const { data: userInfo } = useUserInfo();
 
   const {
     contextMenu,
@@ -63,6 +68,10 @@ export const MainTemplate = ({ children }: MainTemplateProps) => {
         asideToggle={handleAsideToggle}
         onContextMenu={handleContextMenu}
         onLogout={() => logoutMutation.mutate()}
+        userInfo={
+          userInfo ??
+          ({ userName: "-", userRole: "-", userTeam: "-" } as UserInfo)
+        }
       />
       <S.ContentSection>{children}</S.ContentSection>
     </S.MainTemplate>
