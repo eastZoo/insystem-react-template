@@ -15,7 +15,7 @@ export interface PaginatedData<T> {
 // ────────────────────────────────────────────────────────────
 
 export interface LoginRequest {
-  email: string;
+  userId: string;
   password: string;
 }
 

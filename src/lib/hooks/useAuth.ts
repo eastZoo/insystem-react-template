@@ -59,7 +59,7 @@ export function useLogin() {
   return useMutation({
     mutationFn: async (body: LoginRequest) => {
       if (isMockAuth()) {
-        const normalizedEmail = body.email || "developer@eastzoo.local";
+        const normalizedUserId = body.userId || "developer";
         return {
           success: true,
           message: "Mock 로그인 성공",
@@ -67,8 +67,8 @@ export function useLogin() {
             accessToken: MOCK_ACCESS_TOKEN,
             user: {
               id: "mock-user-id",
-              email: normalizedEmail,
-              name: normalizedEmail.split("@")[0] ?? "developer",
+              email: normalizedUserId,
+              name: normalizedUserId,
               role: "DEVELOPER",
             },
           },

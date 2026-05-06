@@ -7,12 +7,12 @@ import { readAccessToken } from "@/lib/functions/authFunctions";
 import { useLocation, useNavigate } from "react-router-dom";
 
 const SEED_ACCOUNTS = [
-  { email: "admin@eastzoo.local", role: "ADMIN" },
-  { email: "manager@eastzoo.local", role: "MANAGER" },
-  { email: "developer@eastzoo.local", role: "DEVELOPER" },
+  { email: "inadmin", role: "ADMIN" },
+  { email: "admin", role: "MANAGER" },
+  { email: "intest", role: "DEVELOPER" },
 ] as const;
 
-const SEED_PASSWORD = "Admin123!";
+const SEED_PASSWORD = "1";
 
 /**
  * 로그인 페이지
@@ -50,7 +50,7 @@ export default function LoginPage() {
 
     try {
       const res = await loginMutation.mutateAsync({
-        email: userId,
+        userId,
         password,
       });
 
