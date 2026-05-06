@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "sync:pages": "node scripts/sync-pages.mjs",
+    "routes": "node scripts/sync-pages.mjs",
     "typecheck": "tsc --noEmit",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
