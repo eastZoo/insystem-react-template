@@ -22,12 +22,12 @@ export interface LoginInputs {
 // ── 시드 계정 ─────────────────────────────────────────────────
 
 const SEED_ACCOUNTS = [
-  { email: "admin@eastzoo.local", role: "ADMIN" },
-  { email: "manager@eastzoo.local", role: "MANAGER" },
-  { email: "developer@eastzoo.local", role: "DEVELOPER" },
+  { email: "inadmin", role: "ADMIN" },
+  { email: "intest", role: "MANAGER" },
+  { email: "admin", role: "DEVELOPER" },
 ] as const;
 
-const SEED_PASSWORD = "Admin123!";
+const SEED_PASSWORD = "1";
 
 /** 같은 오리진 SPA 경로만 허용 (오픈 리다이렉트 완화) */
 function safeAppPath(pathname: string): string {
@@ -110,7 +110,7 @@ export default function LoginPage() {
 
     try {
       const res = await loginMutation.mutateAsync({
-        email: formData.mbrUserId,
+        userId: formData.mbrUserId,
         password: formData.mbrUserPwd,
       });
       if (!isApiSuccess(res) || !readAccessToken()) return;
