@@ -3,13 +3,10 @@ import { useAtomValue } from "jotai";
 import { useEffect, useState } from "react";
 import { useLocation } from "react-router-dom";
 import useContextMenu from "@/lib/hooks/useContextMenu";
-import { permissionsState } from "@/store/permission";
 import { Header } from "@/components/organisms/Header";
 import { Sidemenu } from "@/components/organisms/Sidemenu";
 import TabList from "@/components/containers/Tabs/TabList";
-import { openTabsState, useSelectedMenu, flattenMenuTree } from "@/store/menu";
-
-import { menuListDummy } from "@/lib/data/menuListDummy";
+import { openTabsState, useSelectedMenu, M } from "@/store/menu";
 import HomePage from "@/pages/Home";
 
 interface MainTemplateProps {
@@ -26,16 +23,12 @@ export const MainTemplate = ({
 
   const [asideOpen, setAsideOpen] = useState(true);
   const [innerWidth, setInnerWidth] = useState(window.innerWidth);
-  const permissions = useAtomValue(permissionsState);
   const openTabs = useAtomValue(openTabsState);
   const hasActiveTabs = openTabs && openTabs.length > 0;
   const [homeTabInitialized, setHomeTabInitialized] = useState(false);
 
   const {
-    contextMenu,
     handleContextMenu,
-    handleOpenInNewTab,
-    handleOpenInNewWindow,
   } = useContextMenu();
 
   const resizeListener = () => {
@@ -51,10 +44,10 @@ export const MainTemplate = ({
     };
   }, [innerWidth]);
 
+  // 현재 경로에 맞는 메뉴를 자동으로 선택
   useEffect(() => {
-    if (!hasActiveTabs && !homeTabInitialized) {
-      const flatMenuList = flattenMenuTree(menuListDummy);
-      const matchedMenu = flatMenuList.find(
+    if (!hasActiveTabs && !homeTabInitialized && M.length > 0) {
+      const matchedMenu = M.find(
         (menu) => menu.path === location.pathname
       );
       if (matchedMenu) {
@@ -62,7 +55,7 @@ export const MainTemplate = ({
       }
       setHomeTabInitialized(true);
     }
-  }, [hasActiveTabs, homeTabInitialized, setMenu]);
+  }, [hasActiveTabs, homeTabInitialized, setMenu, location.pathname]);
 
   const handleAsideOpen = () => {
     setAsideOpen(!asideOpen);
@@ -78,7 +71,6 @@ export const MainTemplate = ({
       <Sidemenu
         asideToggle={handleAsideOpen}
         onContextMenu={handleContextMenu}
-        permissions={permissions ?? []}
       />
       <S.ContentSection>
         <TabList />

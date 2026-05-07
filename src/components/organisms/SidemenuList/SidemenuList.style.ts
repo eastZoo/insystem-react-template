@@ -9,22 +9,21 @@ export const SidemenuListBox = styled.ul<SidemenuListProps>`
   overflow-y: auto;
   display: flex;
   width: 100%;
-  padding: ${(props) => (props.$depth === 1 ? "16px 0" : "0")};
+  padding: ${(props) => (props.$depth === 1 ? "18px 16px" : "0")};
   flex-direction: column;
+  gap: 4px;
 
   &::-webkit-scrollbar {
+    width: 6px;
     outline: none;
-    border-radius: 10px;
-    border: 4px solid transparent;
   }
 
   &::-webkit-scrollbar-thumb {
-    background-color: ${(props) => props.theme.colors.white38};
-    border: 4px solid ${(props) => props.theme.colors.scrollTrack};
-    border-radius: 8px;
+    background-color: #D1D5DC;
+    border-radius: 3px;
   }
 
   &::-webkit-scrollbar-track {
-    background-color: ${(props) => props.theme.colors.scrollTrack};
+    background-color: #F3F4F6;
   }
 `;

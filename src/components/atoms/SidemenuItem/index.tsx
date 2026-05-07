@@ -1,11 +1,10 @@
 import { useEffect, useState } from "react";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import IconArrow from "@/styles/assets/svg/icon_sidemenu_arrow.svg?react";
 
 import * as S from "./SidemenuItem.style";
 import SidemenuList from "../../organisms/SidemenuList";
-import { useAtomValue } from "jotai";
-import { useSelectedMenu, selectedMenuState } from "@/store/menu";
+import { useSelectedMenu } from "@/store/menu";
 
 import IconMenu01 from "@/styles/assets/svg/icon_menu_01.svg?react";
 import { MenuIcon } from "./SidemenuItem.style";
@@ -21,14 +20,15 @@ interface SidemenuItemProps {
 }
 
 export const SidemenuItem = ({ data, onContextMenu }: SidemenuItemProps) => {
-
-
   const location = useLocation();
+  const navigate = useNavigate();
   const [submenu, setSubmenu] = useState(false);
   const [initialized, setInitialized] = useState(false);
   const [selectedMenu, setMenu] = useSelectedMenu();
 
-  const isMatch = data.oid === selectedMenu;
+  // buildMenuTree에서 id: item.oid로 변환되므로 data.id 사용
+  const menuId = data.id ?? data.oid;
+  const isMatch = menuId === selectedMenu;
 
   useEffect(() => {
     if (!initialized) {
@@ -71,8 +71,7 @@ export const SidemenuItem = ({ data, onContextMenu }: SidemenuItemProps) => {
             onClick={data.submenu && submenuToggle}
           >
             <S.SidemenuItemTit>
-              {data.depth === 1 && data.icon ? <MenuIcon><IconMenu01 /></MenuIcon> : null}
-              {data.depth !== 1 && "- "}
+              {data.icon && <MenuIcon><IconMenu01 /></MenuIcon>}
               <S.TitBox>{data.title}</S.TitBox>
             </S.SidemenuItemTit>
             {data.submenu && <IconArrow />}
@@ -89,13 +88,14 @@ export const SidemenuItem = ({ data, onContextMenu }: SidemenuItemProps) => {
           key={data.path}
           $depth={data.depth}
           onClick={() => {
-            console.log("data.id", data);
-            setMenu({ id: data.oid });
+            setMenu({ id: menuId });
+            if (data.path) {
+              navigate(data.path);
+            }
           }}
         >
           <S.SidemenuItemTit>
-            {data.depth === 1 && data.icon ? <MenuIcon><IconMenu01 /></MenuIcon> : null}
-            {data.depth !== 1 && "- "}
+            {data.icon && <MenuIcon><IconMenu01 /></MenuIcon>}
             <S.TitBox>{data.title}</S.TitBox>
           </S.SidemenuItemTit>
           {data.submenu && <IconArrow />}

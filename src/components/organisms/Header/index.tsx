@@ -1,12 +1,24 @@
 import * as S from "./Header.style";
-import { useEffect, useRef, useState } from "react";
-import { Buttons } from "../../atoms/Buttons";
+import { useRef, useState } from "react";
 import { HeaderPopup } from "../HeaderPopup";
-import IconMenu from "@/styles/assets/svg/icon_sidemenu.svg?react";
 
 import { useAtomValue } from "jotai";
 import { userState } from "@/store/loginUser";
 import { useLogout } from "@/hooks/useAuth";
+
+// 유저 아이콘 SVG
+const UserIcon = () => (
+  <svg width="20" height="22" viewBox="0 0 20 22" fill="none">
+    <circle cx="10" cy="6" r="4" stroke="currentColor" strokeWidth="1.5" />
+    <path
+      d="M2 20C2 16.6863 5.58172 14 10 14C14.4183 14 18 16.6863 18 20"
+      stroke="currentColor"
+      strokeWidth="1.5"
+      strokeLinecap="round"
+    />
+  </svg>
+);
+
 interface HeaderProps {
   asideToggle?: any;
   asideOpen?: boolean;
@@ -19,52 +31,30 @@ export const Header = ({ asideOpen, asideToggle, innerWidth }: HeaderProps) => {
   const [popupShow, setPopupShow] = useState(false);
   const userInfo = useAtomValue(userState);
 
-  // 페이지 새로고침 판별
-  const [isRefresh, setIsRefresh] = useState<boolean>(false);
-
   const popupOutsideClick = (e: any) => {
     if (popupRef.current === e.target) {
       setPopupShow(false);
     }
   };
 
-  useEffect(() => {
-    if (!isRefresh) {
-      setIsRefresh(true);
-    }
-  }, [isRefresh]);
+  // userInfo에서 사용자 정보 추출 (없으면 기본값)
+  const userRole = "관리자";
+  const userId = userInfo?.userId ?? "20241234";
 
   return (
     <>
       <S.HeaderSection>
-        <S.ShipModelTit>
-          {asideOpen === true ? (
-            "메인 타이틀"
-          ) : innerWidth < 1400 ? (
-            <S.HeaderSidemenuBtn type="button" onClick={asideToggle}>
-              <IconMenu />
-            </S.HeaderSidemenuBtn>
-          ) : (
-            "메인 타이틀"
-          )}
-        </S.ShipModelTit>
-        <S.HeaderBtnBox>
-          <Buttons type="button" size="md" layout="icon" onClick={() => {}} />
-          <Buttons
-            type="button"
-            size="md"
-            layout="icon"
-            onClick={() => {
-              setPopupShow(!popupShow);
-            }}
-          >
-            <>
-              {/* 직책 : 사용자명 바인딩 */}
-              <span style={{ margin: "0 8px" }}>{"사용자명" + " : "}</span>
-              <span>홍길동</span>
-            </>
-          </Buttons>
-        </S.HeaderBtnBox>
+        <S.HeaderTitle></S.HeaderTitle>
+        <S.HeaderUserInfo>
+          <S.UserInfoText>
+            <S.UserRole>{userRole}</S.UserRole>
+            <S.UserDivider />
+            <S.UserId>{userId}</S.UserId>
+          </S.UserInfoText>
+          <S.UserIcon onClick={() => setPopupShow(!popupShow)}>
+            <UserIcon />
+          </S.UserIcon>
+        </S.HeaderUserInfo>
       </S.HeaderSection>
       {/* 로그아웃 팝업 */}
       {popupShow && (

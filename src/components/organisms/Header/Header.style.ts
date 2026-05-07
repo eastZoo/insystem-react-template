@@ -3,43 +3,82 @@ import styled from "styled-components";
 export const HeaderSection = styled.header`
   grid-area: HD;
   display: flex;
-  padding: 0 20px;
-  background: ${(props) => props.theme.colors.white100};
-  border-bottom: 1px solid ${(props) => props.theme.colors.black10};
+  padding: 13px 16px;
+  background: #0C4CA3;
   align-items: center;
   justify-content: space-between;
-
-  // 화면크기(1400px 미만) 설정
-  @media (max-width: 1399px) {
-    background: ${(props) => props.theme.colors.primary100};
-  }
 `;
 
-export const ShipModelTit = styled.div`
+export const HeaderTitle = styled.h1`
+  font-family: "Pretendard", sans-serif;
+  font-weight: 600;
+  font-size: 24px;
+  line-height: 24px;
+  color: #FFFFFF;
+  text-transform: uppercase;
+  margin: 0;
+`;
+
+export const HeaderUserInfo = styled.div`
   display: flex;
-  color: ${(props) => props.theme.colors.black80};
-  font-size: 1.6rem;
   align-items: center;
-  gap: 4px;
+  gap: 10px;
+`;
+
+export const UserInfoText = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 6px;
+`;
+
+export const UserRole = styled.span`
+  font-family: "Pretendard", sans-serif;
+  font-weight: 500;
+  font-size: 14px;
+  line-height: 24px;
+  color: #FFFFFF;
+`;
+
+export const UserDivider = styled.span`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 1px;
+  height: 13px;
+  background: rgba(255, 255, 255, 0.5);
+`;
+
+export const UserId = styled.span`
+  font-family: "Pretendard", sans-serif;
+  font-weight: 500;
+  font-size: 14px;
+  line-height: 24px;
+  color: #FFFFFF;
+`;
+
+export const UserIcon = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  cursor: pointer;
 
   svg {
+    width: 20px;
+    height: 22px;
+
     path {
-      fill: ${(props) => props.theme.colors.black80};
+      fill: #FFFFFF;
     }
   }
 
-  // 화면크기(1400px 미만) 설정
-  @media (max-width: 1399px) {
-    color: ${(props) => props.theme.colors.white100};
-
-    svg {
-      path {
-        fill: ${(props) => props.theme.colors.white80};
-      }
-    }
+  &:hover {
+    opacity: 0.8;
   }
 `;
 
+// 레거시 지원용 (사이드메뉴 버튼)
 export const HeaderSidemenuBtn = styled.button`
   display: flex;
   width: 32px;
@@ -53,56 +92,13 @@ export const HeaderSidemenuBtn = styled.button`
   transition: background 0.2s ease;
   flex-shrink: 0;
 
-  &:hover {
-    background: ${(props) => props.theme.colors.black5};
-
-    svg {
-      path {
-        fill: ${(props) => props.theme.colors.primary100};
-      }
-    }
-  }
-
-  // 화면크기(1400px 미만) 설정
-  @media (max-width: 1399px) {
-    svg {
-      path {
-        fill: ${(props) => props.theme.colors.white100};
-      }
-    }
-
-    &:hover {
-      background: ${(props) => props.theme.colors.black38};
-
-      svg {
-        path {
-          fill: ${(props) => props.theme.colors.white100};
-        }
-      }
-    }
-  }
-`;
-
-export const HeaderBtnBox = styled.div`
-  display: flex;
-  gap: 4px;
-
   svg {
     path {
-      fill: ${(props) => props.theme.colors.black60};
-      fill-opacity: 1;
+      fill: #FFFFFF;
     }
   }
 
-  button {
-    &:hover {
-      background: ${(props) => props.theme.colors.black38};
-
-      svg {
-        path {
-          fill: ${(props) => props.theme.colors.white100};
-        }
-      }
-    }
+  &:hover {
+    background: rgba(255, 255, 255, 0.1);
   }
 `;

@@ -4,10 +4,10 @@ export const SidemenuTop = styled.div`
   overflow: hidden;
   display: flex;
   width: 100%;
-  padding: 0 13px;
-  background: ${(props) => props.theme.colors.primary100};
+  padding: 0 16px;
+  background: #0c4ca3;
   align-items: center;
-  gap: 4px;
+  gap: 8px;
 `;
 
 export const SidemenuBtn = styled.button`
@@ -23,14 +23,31 @@ export const SidemenuBtn = styled.button`
   transition: background 0.2s ease;
   flex-shrink: 0;
 
+  svg {
+    path {
+      fill: #ffffff;
+    }
+  }
+
   &:hover {
-    background: ${(props) => props.theme.colors.black30};
+    background: rgba(255, 255, 255, 0.1);
   }
 `;
 
 export const SidemenuTopSpan = styled.span`
-  color: ${(props) => props.theme.colors.white100};
-  font-size: 1.5rem;
+  color: #ffffff;
+  font-family: "Pretendard", sans-serif;
+  font-size: 15px;
   font-weight: 600;
   white-space: nowrap;
+`;
+
+export const HeaderTitle = styled.h1`
+  font-family: "Pretendard", sans-serif;
+  font-weight: 600;
+  font-size: 24px;
+  line-height: 24px;
+  color: #ffffff;
+  text-transform: uppercase;
+  margin: 0;
 `;

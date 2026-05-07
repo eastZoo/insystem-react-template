@@ -1,26 +1,5 @@
 /**
- * 공유재산 정보관리
- *
- * routes.config.ts 에 의해 sync:pages 로 생성되었을 수 있습니다.
+ * 공유재산 정보관리 페이지 re-export
+ * 실제 구현은 ./SharedAssetManagementPage/index.tsx 에 있습니다.
  */
-export default function SharedAssetManagementPage() {
-/** ============================= state 영역 ============================= */
-
-/** ============================= API 영역 ============================= */
-
-/** ============================= 비즈니스 로직 영역 ============================= */
-
-/** ============================= 컴포넌트 영역 ============================= */
-
-/** ============================= useEffect 영역 ============================= */
-
-  return (
-    <>
-      <title>공유재산 정보관리</title>
-      <div style={{ padding: "24px" }}>
-        <h1>공유재산 정보관리</h1>
-        <p>SharedAssetManagementPage — 내용을 작성하세요.</p>
-      </div>
-    </>
-  );
-}
+export { default } from "./SharedAssetManagementPage/index";

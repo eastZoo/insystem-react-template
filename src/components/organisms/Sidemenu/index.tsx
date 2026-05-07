@@ -1,53 +1,32 @@
 import * as S from "./Sidemenu.style";
-// import { menuList } from "../../../data/menu";
 import { useAtomValue } from "jotai";
 import { menuState } from "@/store/menu";
-import type { MenuItem, MenuType } from "@/types/menu";
-import type { Permission } from "@/types/permission";
 import { SidemenuTop } from "../../atoms/SidemenuTop";
 import SidemenuList from "../SidemenuList";
-import { menuListDummy } from "@/lib/data/menuListDummy";
-import { permissionDummy } from "@/lib/data/permissionDummy";
 
 interface SidemenuProps {
-  asideToggle?: any;
-  permissions: Permission[];
+  asideToggle?: () => void;
   onContextMenu: (event: React.MouseEvent, target: any) => void;
 }
 
+/**
+ * 사이드바 메뉴 컴포넌트
+ *
+ * - menuState atom에서 트리 구조의 메뉴 데이터를 가져옴
+ * - API에서 이미 권한 필터링된 메뉴만 내려오므로 추가 필터링 불필요
+ */
 export const Sidemenu = ({
   asideToggle,
-  permissions,
   onContextMenu,
 }: SidemenuProps) => {
+  // useMenuData 훅에서 API 데이터를 가져와 menuState에 저장함
   const menuList = useAtomValue(menuState);
-
-  const filterMenuByPermission = (
-    menuList: any[],
-    permissions: Permission[]
-  ): MenuItem[] => {
-    const hasPermission = (title: string) => {
-      const permission = permissions.find((p) => p.pmsMenuName === title);
-      return permission ? permission.pmsMenuActive === 1 : 0;
-    };
-
-    const filterSubmenu = (submenu: MenuItem[]): MenuItem[] => {
-      return submenu
-        .map((item) => ({
-          ...item,
-          submenu: item.submenu ? filterSubmenu(item.submenu) : undefined,
-        }))
-        .filter((item) => hasPermission(item.title));
-    };
-
-    return filterSubmenu(menuList);
-  };
 
   return (
     <S.SidemenuSection>
       <SidemenuTop asideToggle={asideToggle} />
       <SidemenuList
-        menuList={filterMenuByPermission(menuListDummy, permissionDummy as any)}
+        menuList={menuList}
         onContextMenu={onContextMenu}
       />
     </S.SidemenuSection>

@@ -5,6 +5,7 @@ export const SidemenuSection = styled.section`
   display: grid;
   width: 100%;
   height: 100svh;
-  background: ${(props) => props.theme.colors.black90};
+  background: #FFFFFF;
+  box-shadow: 8px 0px 20px 0px rgba(0, 0, 0, 0.05);
   grid-template-rows: 52px auto;
 `;

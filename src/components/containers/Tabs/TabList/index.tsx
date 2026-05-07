@@ -5,41 +5,67 @@ import type { Tab } from "@/types/menu";
 import { openTabsState, useSelectedMenu } from "@/store/menu";
 import styled from "styled-components";
 
+// 닫기 아이콘 SVG
+const CloseIcon = () => (
+  <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+    <path
+      d="M3 3L9 9M9 3L3 9"
+      stroke="currentColor"
+      strokeWidth="1.5"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+  </svg>
+);
+
 const TabBar = styled.div`
   display: flex;
+  align-items: center;
+  gap: 8px;
   overflow-x: auto;
   white-space: nowrap;
-  background-color: #D4D4D8;
-  padding: 4px 4px 0 4px;
+  background-color: #D1D5DC;
+  padding: 16px 16px 0 16px;
 `;
 
 const TabButton = styled.div<{ $active: boolean }>`
   display: flex;
   align-items: center;
-  margin-right: 3px;
-  padding: 6px 12px;
-  background-color: ${({ $active }) => ($active ? "#f9f9f9" : "#eee")};
-  border-radius: 6px 6px 0 0;
+  gap: 10px;
+  padding: 8px 8px 8px 16px;
+  background-color: ${({ $active }) => ($active ? "#FFFFFF" : "#E5E7EB")};
+  border-radius: 8px 8px 0 0;
   cursor: pointer;
-  font-size: 14px;
+  font-family: "Pretendard", sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: -0.26px;
   color: ${({ $active }) => ($active ? "#0C4CA3" : "#99A1AF")};
+  overflow: hidden;
+  flex-shrink: 0;
 
   &:hover {
-    background-color: ${({ $active }) => ($active ? "#ccc" : "#ddd")};
+    background-color: ${({ $active }) => ($active ? "#FFFFFF" : "#D1D5DC")};
   }
 `;
 
 const TabLabel = styled.span`
-  margin-right: 8px;
+  white-space: nowrap;
 `;
 
 const TabClose = styled.span`
-  color: #999;
-  font-weight: bold;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 12px;
+  height: 12px;
+  color: #99A1AF;
+  font-size: 14px;
+  line-height: 1;
   cursor: pointer;
 
   &:hover {
-    color: red;
+    color: #6A7282;
   }
 `;
 
@@ -76,7 +102,7 @@ const TabList = () => {
               onRemoveTab(tab.id);
             }}
           >
-            ×
+            <CloseIcon />
           </TabClose>
         </TabButton>
       ))}

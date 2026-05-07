@@ -9,26 +9,32 @@ interface SidemenuItemProps {
 
 export const SidemenuListItem = styled.div<SidemenuItemProps>`
   display: flex;
-  color: ${(props) => props.theme.colors.white60};
+  color: #99A1AF;
+  font-family: "Pretendard", sans-serif;
   font-weight: 500;
+  font-size: 14px;
+  letter-spacing: -0.28px;
   align-items: center;
   justify-content: space-between;
   cursor: pointer;
   transition: all 0.2s ease;
+  border-radius: 8px;
+  overflow: hidden;
 
   svg {
     path {
-      fill: ${(props) => props.theme.colors.white38};
+      fill: #99A1AF;
     }
   }
 
   &:hover {
-    color: ${(props) => props.theme.colors.white100};
-    font-weight: 600;
+    background: rgba(12, 76, 163, 0.05);
+    color: #0C4CA3;
+    font-weight: 700;
 
     svg {
       path {
-        fill: ${(props) => props.theme.colors.white100};
+        fill: #0C4CA3;
       }
     }
   }
@@ -36,38 +42,29 @@ export const SidemenuListItem = styled.div<SidemenuItemProps>`
   ${(props) =>
     props.$depth === 1 &&
     css`
-      height: 44px;
-      padding: 0 16px 0 20px;
-      font-size: 1.5rem;
+      height: 40px;
+      padding: 10px 12px 10px 16px;
     `}
 
   ${(props) =>
     props.$depth === 2 &&
     css`
-      height: 36px;
-      padding: 0 16px 0 42px;
-      font-size: 1.4rem;
+      height: 40px;
+      padding: 10px 12px 10px 32px;
     `}
 
-    ${(props) =>
+  ${(props) =>
     props.$depth === 3 &&
     css`
-      height: 36px;
-      padding: 0 16px 0 56px;
-      font-size: 1.4rem;
+      height: 40px;
+      padding: 10px 12px 10px 48px;
     `}
 `;
 
 export const SidemenuItemTit = styled.div`
   display: flex;
-  align-items: Center;
+  align-items: center;
   gap: 8px;
-
-  svg {
-    path {
-      fill: ${(props) => props.theme.colors.white60};
-    }
-  }
 `;
 
 export const TitBox = styled.div`
@@ -77,7 +74,10 @@ export const TitBox = styled.div`
 export const MenuIcon = styled.span`
   display: flex;
   align-items: center;
+  justify-content: center;
   flex-shrink: 0;
+  width: 18px;
+  height: 18px;
 
   svg {
     width: 18px;
@@ -114,15 +114,12 @@ export const SidemenuItemBox = styled.li<SidemenuItemProps>`
     props.$submenuToggle === true &&
     css`
       & > ${SidemenuListItem} {
-        & > ${SidemenuItemTit} {
-          color: ${(props) => props.theme.colors.white100};
-          font-weight: 600;
-        }
+        color: #0C4CA3;
+        font-weight: 700;
 
         svg {
           path {
-            fill: ${(props) => props.theme.colors.white100};
-            fill-opacity: 1;
+            fill: #0C4CA3;
           }
         }
       }
@@ -140,23 +137,20 @@ export const SidemenuItemBox = styled.li<SidemenuItemProps>`
         max-height: 0px;
         transition: max-height 0.2s ease-in-out;
       }
-    `} 
-    
+    `}
+
   // 해당 메뉴 ACTIVE/UNACTIVE
   ${(props) =>
     props.$menuActive === true &&
     css`
       & > ${SidemenuListItem} {
-        background: ${(props) => props.theme.colors.white12};
-
-        & > ${SidemenuItemTit} {
-          color: ${(props) => props.theme.colors.white100};
-          font-weight: 600;
-        }
+        background: rgba(12, 76, 163, 0.1);
+        color: #0C4CA3;
+        font-weight: 700;
 
         svg {
           path {
-            fill: ${(props) => props.theme.colors.white100};
+            fill: #0C4CA3;
           }
         }
       }

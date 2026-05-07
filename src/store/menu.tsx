@@ -1,7 +1,6 @@
 import { atom, useAtom, useAtomValue } from "jotai";
 import { useCallback } from "react";
 import type { MenuType, Tab, TabSelect } from "@/types/menu";
-import { menuListDummy } from "@/lib/data/menuListDummy";
 
 // ─── sessionStorage 헬퍼 ─────────────────────────────────────
 
@@ -128,10 +127,7 @@ export function useSelectedMenu() {
         writeSession("selectedMenu", chagedId);
         writeSession("openTabs", deletedMenuList);
       } else {
-        let flatMenuList = M.length > 0 ? flattenMenuTree(M) : flattenMenuTree(menuTree);
-        if (flatMenuList.length === 0) {
-          flatMenuList = flattenMenuTree(menuListDummy);
-        }
+        const flatMenuList = M.length > 0 ? flattenMenuTree(M) : flattenMenuTree(menuTree);
         const tmpOpenTabs = openTab(flatMenuList, openTabs, id);
         if (tmpOpenTabs) {
           setSelectedMenu(id);

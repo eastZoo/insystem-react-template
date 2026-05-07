@@ -1,32 +1,55 @@
-import type
-{
-  Feature,
-  Polygon,
-  MultiPolygon,
-  LineString,
-} from "geojson";
+import type { Feature, Polygon, MultiPolygon, LineString } from "geojson";
 
 import maplibregl from "maplibre-gl";
 import * as pmtiles from "pmtiles";
-import { featureCollection, union as turfUnion, centroid, area, bearing as turfBearing, destination, booleanIntersects as turfIntersects } from "@turf/turf"
+import {
+  featureCollection,
+  union as turfUnion,
+  centroid,
+  area,
+  bearing as turfBearing,
+  destination,
+  booleanIntersects as turfIntersects,
+} from "@turf/turf";
 import difference from "@turf/difference";
 import { useEffect, useRef, useState, useCallback } from "react";
-import { computeParcelsAreaExcludingRoadBuffer, formatNetArea, computeParcelArea, computeParcelsArea, formatArea, metersLabel, computeLineMeters } from "@/components/logics/AreaMod";
+import {
+  computeParcelsAreaExcludingRoadBuffer,
+  formatNetArea,
+  computeParcelArea,
+  computeParcelsArea,
+  formatArea,
+  metersLabel,
+  computeLineMeters,
+} from "@/components/logics/AreaMod";
 import { savePnus, loadPnus, deletePnus } from "@/components/logics/PnuStorage";
-import { saveDrawing,loadDrawing,deleteDrawing } from "@/components/logics/DrawingStorage";
-import { districts, type DistrictKey, type RoadsKey, type BuildsKey } from "@/components/logics/districts"
+import {
+  saveDrawing,
+  loadDrawing,
+  deleteDrawing,
+} from "@/components/logics/DrawingStorage";
+import {
+  districts,
+  type DistrictKey,
+  type RoadsKey,
+  type BuildsKey,
+} from "@/components/logics/districts";
 import { mountCadastre } from "@/components/logics/mountCadastre";
 import { mountRoads } from "@/components/logics/mountRoads";
 import { splitPolygonWithLines } from "@/components/logics/parcelSplit";
 import Toolbar from "@/components/ToolBar";
 import { mountBuilds } from "@/components/logics/mountBuilds";
-import { mountRoadBuffer, updateRoadBuffer } from "@/components/logics/roadBuffer";
-import { mountBuildBuffer,updateBuildBuffer } from "@/components/logics/buildBuffer";
+import {
+  mountRoadBuffer,
+  updateRoadBuffer,
+} from "@/components/logics/roadBuffer";
+import {
+  mountBuildBuffer,
+  updateBuildBuffer,
+} from "@/components/logics/buildBuffer";
 import { PageContent } from "@/components/organisms/PageContent";
 import * as S from "./MapPage.style";
 import { useAssetLocationPnuByDistrict } from "@/lib/hooks/useAssetLocationMapping";
-
-
 
 export default function MapPage() {
   const fixedLine = 20; // 선 놓기 선 길이
@@ -45,7 +68,7 @@ export default function MapPage() {
 
   // 내부 동작 플래그(ref로 관리)
   const fixedLineRef = useRef(false);
-  const fixedCenterRef = useRef<[number,number]|null>(null);
+  const fixedCenterRef = useRef<[number, number] | null>(null);
   const drawingRef = useRef(false);
   const lineCoordsRef = useRef<[number, number][]>([]);
   const showPopupRef = useRef(false);
@@ -66,9 +89,12 @@ export default function MapPage() {
     return ["in", ["get", "PNU"], ["literal", pnus]] as any;
   }, []);
 
-  useEffect(() => { districtRef.current = district; }, [district]); // 행정구역 변경용
+  useEffect(() => {
+    districtRef.current = district;
+  }, [district]); // 행정구역 변경용
 
-  useEffect(() => { // 도로 변경용
+  useEffect(() => {
+    // 도로 변경용
     roadBufferRef.current = roadBuffer;
   }, [roadBuffer]);
 
@@ -83,12 +109,17 @@ export default function MapPage() {
       // 1) 기존 선택/표시 리셋 (PNU가 지역마다 달라서 충돌 방지)
       selectedPnusRef.current.clear();
       if (map.getLayer("cadastre-highlight")) {
-        map.setFilter("cadastre-highlight", ["in", ["get", "PNU"], ["literal", []]]);
+        map.setFilter("cadastre-highlight", [
+          "in",
+          ["get", "PNU"],
+          ["literal", []],
+        ]);
       }
       setAreaText("면적: -");
       // 2) 분할 결과(인라인 소스 레이어)도 정리
-      map.getStyle().layers
-        .filter((l) => l.id.startsWith("parcel-slice-"))
+      map
+        .getStyle()
+        .layers.filter((l) => l.id.startsWith("parcel-slice-"))
         .forEach((l) => {
           if (map.getLayer(l.id)) map.removeLayer(l.id);
           if (map.getSource(l.id)) map.removeSource(l.id);
@@ -155,70 +186,77 @@ export default function MapPage() {
     else map.once("idle", apply);
   }, [district, road, build]);
 
-const SavedFeatures = useCallback((): GeoJSON.Feature[] => {
-const saved = loadDrawing(key); // 저장된 선들 불러오기
-return saved.map(coords => ({
-    type: "Feature",
-    properties: { temp: false },
-    geometry: { type: "LineString", coordinates: coords } as any,
-  })); // 배열들 객체 전환
-}, [key]);
+  const SavedFeatures = useCallback((): GeoJSON.Feature[] => {
+    const saved = loadDrawing(key); // 저장된 선들 불러오기
+    return saved.map((coords) => ({
+      type: "Feature",
+      properties: { temp: false },
+      geometry: { type: "LineString", coordinates: coords } as any,
+    })); // 배열들 객체 전환
+  }, [key]);
 
-
-// 도로,건물 제외 면적 합산
-function computeParcelAreaExcludingRoadBuffer(
-  map: maplibregl.Map,
-  parcel: Feature<Polygon | MultiPolygon>
-): number {
-  // road-buffer 레이어만 타겟
-  const bufferLayers = ["road-buffer-fill", "roads-fill","builds-fill","build-buffer-fill"];
-  const layers = bufferLayers.filter((id) => map.getLayer(id));
-  if (!layers.length) return area(parcel as any);
-  // console.log("레이어: ",layers)
-  // 화면에 표시된 도로버퍼만 수집
-  const roadFeats = map.queryRenderedFeatures({ layers }) as any[];
-  if (!roadFeats.length) return area(parcel as any);
-  // console.log("로드피츠: ",roadFeats)
-  // 필지와 실제 겹치는 버퍼만
-  const candidates = roadFeats.filter((rf) => {
-    try { return turfIntersects(parcel as any, rf as any); }
-    catch { return false; }
-  });
-  // console.log("후보들: ",candidates)
-  if (!candidates.length) return area(parcel as any);
-
-  // union
-  let unionGeom: Feature<Polygon | MultiPolygon> | null = null;
-
-  try {
-    if (candidates.length === 1) {
-      unionGeom = candidates[0] as any;
-    } else {
-      const fc = featureCollection(candidates as any);
-      unionGeom = turfUnion(fc as any) as any; // 단일 인자 union
-    }
-  } catch (e) {
-    console.warn("union fail, fallback piece-by-piece", e);
-    for (const rf of candidates) {
+  // 도로,건물 제외 면적 합산
+  function computeParcelAreaExcludingRoadBuffer(
+    map: maplibregl.Map,
+    parcel: Feature<Polygon | MultiPolygon>
+  ): number {
+    // road-buffer 레이어만 타겟
+    const bufferLayers = [
+      "road-buffer-fill",
+      "roads-fill",
+      "builds-fill",
+      "build-buffer-fill",
+    ];
+    const layers = bufferLayers.filter((id) => map.getLayer(id));
+    if (!layers.length) return area(parcel as any);
+    // console.log("레이어: ",layers)
+    // 화면에 표시된 도로버퍼만 수집
+    const roadFeats = map.queryRenderedFeatures({ layers }) as any[];
+    if (!roadFeats.length) return area(parcel as any);
+    // console.log("로드피츠: ",roadFeats)
+    // 필지와 실제 겹치는 버퍼만
+    const candidates = roadFeats.filter((rf) => {
       try {
-        unionGeom = unionGeom
-          ? (turfUnion(unionGeom as any, rf as any) as any)
-          : (rf as any);
-      } catch {}
+        return turfIntersects(parcel as any, rf as any);
+      } catch {
+        return false;
+      }
+    });
+    // console.log("후보들: ",candidates)
+    if (!candidates.length) return area(parcel as any);
+
+    // union
+    let unionGeom: Feature<Polygon | MultiPolygon> | null = null;
+
+    try {
+      if (candidates.length === 1) {
+        unionGeom = candidates[0] as any;
+      } else {
+        const fc = featureCollection(candidates as any);
+        unionGeom = turfUnion(fc as any) as any; // 단일 인자 union
+      }
+    } catch (e) {
+      console.warn("union fail, fallback piece-by-piece", e);
+      for (const rf of candidates) {
+        try {
+          unionGeom = unionGeom
+            ? (turfUnion(unionGeom as any, rf as any) as any)
+            : (rf as any);
+        } catch {}
+      }
+    }
+
+    if (!unionGeom) return area(parcel as any);
+
+    // 차집합
+    try {
+      const fc = featureCollection([parcel as any, unionGeom as any]);
+      const diff = difference(fc as any) as any;
+      return diff ? area(diff as any) : 0;
+    } catch {
+      return 0;
     }
   }
-
-  if (!unionGeom) return area(parcel as any);
-
-  // 차집합
-  try {
-    const fc = featureCollection([parcel as any, unionGeom as any]);
-    const diff = difference(fc as any) as any;
-    return diff ? area(diff as any) : 0;
-  } catch {
-    return 0;
-  }
-}
 
   // === ESC 버튼으로 종료하는 함수 ===
   const finishDrawing = useCallback(() => {
@@ -232,25 +270,23 @@ function computeParcelAreaExcludingRoadBuffer(
     const m = computeLineMeters(coords);
     if (m > 0) {
       setLineText(`길이: ${metersLabel(m)}`);
-    }
-    else {
+    } else {
       setLineText("길이: -");
-  }
-    if (coords.length>=2)
-    {
-      saveDrawing(key, coords);
-      console.log(key,coords);
     }
-    lineCoordsRef.current=[];
+    if (coords.length >= 2) {
+      saveDrawing(key, coords);
+      console.log(key, coords);
+    }
+    lineCoordsRef.current = [];
     const features = SavedFeatures();
-  (map.getSource("sketch") as maplibregl.GeoJSONSource|undefined)?.setData({
-    type : "FeatureCollection",
-    features,
-  } as any);
-  map.getCanvas().style.cursor = "";
-},[SavedFeatures]);
+    (map.getSource("sketch") as maplibregl.GeoJSONSource | undefined)?.setData({
+      type: "FeatureCollection",
+      features,
+    } as any);
+    map.getCanvas().style.cursor = "";
+  }, [SavedFeatures]);
 
- // 저장된 드로잉 초기 지도 로드시 자동 반영
+  // 저장된 드로잉 초기 지도 로드시 자동 반영
   useEffect(() => {
     const map = mapRef.current;
     if (!map) return;
@@ -263,9 +299,9 @@ function computeParcelAreaExcludingRoadBuffer(
   }, [SavedFeatures]);
 
   // 팝업 플래그 동기화
-  useEffect(() => { showPopupRef.current = showPopup; }, [showPopup]);
-
-
+  useEffect(() => {
+    showPopupRef.current = showPopup;
+  }, [showPopup]);
 
   // === ESC 키로 종료 ===
   useEffect(() => {
@@ -278,8 +314,11 @@ function computeParcelAreaExcludingRoadBuffer(
       if (ev.key === "Escape" && fixedLineRef.current) {
         fixedLineRef.current = false;
         fixedCenterRef.current = null;
-        (mapRef.current?.getSource("fixed-line-src") as maplibregl.GeoJSONSource)
-          ?.setData({ type:"FeatureCollection", features: [] } as any);
+        (
+          mapRef.current?.getSource(
+            "fixed-line-src"
+          ) as maplibregl.GeoJSONSource
+        )?.setData({ type: "FeatureCollection", features: [] } as any);
         mapRef.current?.getCanvas().style.removeProperty("cursor");
         return;
       }
@@ -288,7 +327,6 @@ function computeParcelAreaExcludingRoadBuffer(
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, [finishDrawing]);
-
 
   useEffect(() => {
     if (!containerRef.current) return;
@@ -307,7 +345,8 @@ function computeParcelAreaExcludingRoadBuffer(
             "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
           ],
           tileSize: 256,
-          attribution: "Esri, Maxar, Earthstar Geographics, and the GIS User Community",
+          attribution:
+            "Esri, Maxar, Earthstar Geographics, and the GIS User Community",
         },
         osm: {
           type: "raster",
@@ -315,11 +354,21 @@ function computeParcelAreaExcludingRoadBuffer(
           tileSize: 256,
           attribution: "© OpenStreetMap contributors",
         },
-
       },
       layers: [
-        { id: "sat-base", type: "raster", source: "sat", paint: { "raster-opacity": 1 } },
-        { id: "osm-base", type: "raster", source: "osm", layout: { visibility: "none" }, paint: { "raster-opacity": 0 } },
+        {
+          id: "sat-base",
+          type: "raster",
+          source: "sat",
+          paint: { "raster-opacity": 1 },
+        },
+        {
+          id: "osm-base",
+          type: "raster",
+          source: "osm",
+          layout: { visibility: "none" },
+          paint: { "raster-opacity": 0 },
+        },
       ],
     };
 
@@ -335,7 +384,10 @@ function computeParcelAreaExcludingRoadBuffer(
     });
     mapRef.current = map;
 
-    map.addControl(new maplibregl.NavigationControl({ visualizePitch: true }), "top-right");
+    map.addControl(
+      new maplibregl.NavigationControl({ visualizePitch: true }),
+      "top-right"
+    );
 
     map.addControl(
       new maplibregl.AttributionControl({
@@ -351,8 +403,14 @@ function computeParcelAreaExcludingRoadBuffer(
     // 맵 로드 될때
     map.on("load", () => {
       // 전환 애니메이션
-      map.setPaintProperty("sat-base", "raster-opacity-transition", { duration: 200, delay: 0 });
-      map.setPaintProperty("osm-base", "raster-opacity-transition", { duration: 200, delay: 0 });
+      map.setPaintProperty("sat-base", "raster-opacity-transition", {
+        duration: 200,
+        delay: 0,
+      });
+      map.setPaintProperty("osm-base", "raster-opacity-transition", {
+        duration: 200,
+        delay: 0,
+      });
       mountCadastre(map, district); // 지적도 레이어 붙이기
       if (road) {
         mountRoads(map, road);
@@ -363,7 +421,7 @@ function computeParcelAreaExcludingRoadBuffer(
         mountBuilds(map, build);
       }
 
-      console.log(districts)
+      console.log(districts);
 
       // 고정선 소스
       map.addSource("fixed-line-src", {
@@ -372,24 +430,34 @@ function computeParcelAreaExcludingRoadBuffer(
       });
 
       // 확정 라인(실선)
-      map.addLayer({
-        id: "fixed-line-solid",
-        type: "line",
-        source: "fixed-line-src",
-        filter: ["all", ["==", ["get","temp"], false]],
-        layout: { "line-cap": "round", "line-join": "round" },
-        paint: { "line-width": 4, "line-color": "#ff3b30" },
-      }, "cadastre-line");
+      map.addLayer(
+        {
+          id: "fixed-line-solid",
+          type: "line",
+          source: "fixed-line-src",
+          filter: ["all", ["==", ["get", "temp"], false]],
+          layout: { "line-cap": "round", "line-join": "round" },
+          paint: { "line-width": 4, "line-color": "#ff3b30" },
+        },
+        "cadastre-line"
+      );
 
       // 미리보기(점선)
-      map.addLayer({
-        id: "fixed-line-preview",
-        type: "line",
-        source: "fixed-line-src",
-        filter: ["all", ["==", ["get","temp"], true]],
-        layout: { "line-cap": "round", "line-join": "round" },
-        paint: { "line-width": 3, "line-color": "#ff9f0a", "line-dasharray": [2,2] },
-      }, "cadastre-line");
+      map.addLayer(
+        {
+          id: "fixed-line-preview",
+          type: "line",
+          source: "fixed-line-src",
+          filter: ["all", ["==", ["get", "temp"], true]],
+          layout: { "line-cap": "round", "line-join": "round" },
+          paint: {
+            "line-width": 3,
+            "line-color": "#ff9f0a",
+            "line-dasharray": [2, 2],
+          },
+        },
+        "cadastre-line"
+      );
 
       // ① 분할 결과 소스
       map.addSource("parcel-slices", {
@@ -426,7 +494,10 @@ function computeParcelAreaExcludingRoadBuffer(
       );
 
       // 스케치 소스/레이어
-      map.addSource("sketch", { type: "geojson", data: { type: "FeatureCollection", features: [] } });
+      map.addSource("sketch", {
+        type: "geojson",
+        data: { type: "FeatureCollection", features: [] },
+      });
 
       map.addLayer({
         id: "sketch-line",
@@ -434,16 +505,28 @@ function computeParcelAreaExcludingRoadBuffer(
         source: "sketch",
         filter: ["==", ["geometry-type"], "LineString"],
         layout: { "line-join": "round", "line-cap": "round" },
-        paint: { "line-color": "#00ff15ff", "line-width": 3, "line-opacity": 1 },
+        paint: {
+          "line-color": "#00ff15ff",
+          "line-width": 3,
+          "line-opacity": 1,
+        },
       });
 
       map.addLayer({
         id: "sketch-preview",
         type: "line",
         source: "sketch",
-        filter: ["all", ["==", ["geometry-type"], "LineString"], ["==", ["get", "temp"], true]],
+        filter: [
+          "all",
+          ["==", ["geometry-type"], "LineString"],
+          ["==", ["get", "temp"], true],
+        ],
         layout: { "line-join": "round", "line-cap": "round" },
-        paint: { "line-color": "#66a3ff", "line-width": 2, "line-dasharray": [2, 2] },
+        paint: {
+          "line-color": "#66a3ff",
+          "line-width": 2,
+          "line-dasharray": [2, 2],
+        },
       });
       const features = SavedFeatures(); // 저장된 선 불러와서 스케치 레이어에 뿌리기
       (map.getSource("sketch") as maplibregl.GeoJSONSource).setData({
@@ -457,8 +540,18 @@ function computeParcelAreaExcludingRoadBuffer(
       selectedPnusRef.current = new Set(initial);
 
       if (initial.length) {
-        map.setFilter("cadastre-highlight", ["in", ["get", "PNU"], ["literal", initial]]);
-        const totalSqm = computeParcelsArea(map, "cadastre", districts[district].layer, "PNU", initial);
+        map.setFilter("cadastre-highlight", [
+          "in",
+          ["get", "PNU"],
+          ["literal", initial],
+        ]);
+        const totalSqm = computeParcelsArea(
+          map,
+          "cadastre",
+          districts[district].layer,
+          "PNU",
+          initial
+        );
         const d = formatArea(totalSqm);
         setAreaText(`선택 ${initial.length}개 | ${d.label}`);
       } else {
@@ -467,174 +560,184 @@ function computeParcelAreaExcludingRoadBuffer(
 
       // 클릭 핸들러
       map.on("click", (e) => {
-  if (fixedLineRef.current) {
-    // === 고정선 모드 로직 (그대로) ===
-    const p: [number, number] = [e.lngLat.lng, e.lngLat.lat];
+        if (fixedLineRef.current) {
+          // === 고정선 모드 로직 (그대로) ===
+          const p: [number, number] = [e.lngLat.lng, e.lngLat.lat];
 
-    if (!fixedCenterRef.current) {
-      fixedCenterRef.current = p;
-      setFixedLineData(p, 90, true);
-      return;
-    }
+          if (!fixedCenterRef.current) {
+            fixedCenterRef.current = p;
+            setFixedLineData(p, 90, true);
+            return;
+          }
 
-    const center = fixedCenterRef.current;
-    const bearing = turfBearing(
-      { type: "Point", coordinates: center },
-      { type: "Point", coordinates: p }
-    );
-    setFixedLineData(center, bearing, false);
+          const center = fixedCenterRef.current;
+          const bearing = turfBearing(
+            { type: "Point", coordinates: center },
+            { type: "Point", coordinates: p }
+          );
+          setFixedLineData(center, bearing, false);
 
-    fixedLineRef.current = false;
-    fixedCenterRef.current = null;
-    mapRef.current?.getCanvas().style.removeProperty("cursor");
-    return;
-  }
+          fixedLineRef.current = false;
+          fixedCenterRef.current = null;
+          mapRef.current?.getCanvas().style.removeProperty("cursor");
+          return;
+        }
 
-  if (drawingRef.current) {
-    // === 드로잉 모드 로직 (그대로) ===
-    const p: [number, number] = [e.lngLat.lng, e.lngLat.lat];
-    lineCoordsRef.current.push(p);
-    const m = computeLineMeters(lineCoordsRef.current);
-    setLineText(`길이 : ${metersLabel(m)}`);
+        if (drawingRef.current) {
+          // === 드로잉 모드 로직 (그대로) ===
+          const p: [number, number] = [e.lngLat.lng, e.lngLat.lat];
+          lineCoordsRef.current.push(p);
+          const m = computeLineMeters(lineCoordsRef.current);
+          setLineText(`길이 : ${metersLabel(m)}`);
 
-    const features: GeoJSON.Feature[] = [...SavedFeatures()];
-    if (lineCoordsRef.current.length >= 2) {
-      features.push({
-        type: "Feature",
-        properties: { temp: false },
-        geometry: { type: "LineString", coordinates: lineCoordsRef.current },
-      } as any);
-    }
+          const features: GeoJSON.Feature[] = [...SavedFeatures()];
+          if (lineCoordsRef.current.length >= 2) {
+            features.push({
+              type: "Feature",
+              properties: { temp: false },
+              geometry: {
+                type: "LineString",
+                coordinates: lineCoordsRef.current,
+              },
+            } as any);
+          }
 
-    (map.getSource("sketch") as maplibregl.GeoJSONSource).setData({
-      type: "FeatureCollection",
-      features,
-    } as any);
+          (map.getSource("sketch") as maplibregl.GeoJSONSource).setData({
+            type: "FeatureCollection",
+            features,
+          } as any);
 
-    return;
-  }
+          return;
+        }
 
-  // ====== 여기부터: 일반 클릭 모드 ======
-const curDistrict = districtRef.current;
-const curLayer = districts[curDistrict].layer;
+        // ====== 여기부터: 일반 클릭 모드 ======
+        const curDistrict = districtRef.current;
+        const curLayer = districts[curDistrict].layer;
 
-// 1) 필지 선택/해제 처리
-const parcelFeats = map.queryRenderedFeatures(e.point, {
-  layers: ["cadastre-fill", "cadastre-line"],
-});
+        // 1) 필지 선택/해제 처리
+        const parcelFeats = map.queryRenderedFeatures(e.point, {
+          layers: ["cadastre-fill", "cadastre-line"],
+        });
 
-let pnu: string | undefined;
-let list: string[] = Array.from(selectedPnusRef.current);
+        let pnu: string | undefined;
+        let list: string[] = Array.from(selectedPnusRef.current);
 
-if (parcelFeats.length) {
-  const f: any = parcelFeats[0];
-  pnu = f.properties?.PNU as string | undefined;
+        if (parcelFeats.length) {
+          const f: any = parcelFeats[0];
+          pnu = f.properties?.PNU as string | undefined;
 
-  if (pnu) {
-    const set = selectedPnusRef.current;
-    if (set.has(pnu)) set.delete(pnu);
-    else set.add(pnu);
+          if (pnu) {
+            const set = selectedPnusRef.current;
+            if (set.has(pnu)) set.delete(pnu);
+            else set.add(pnu);
 
-    list = Array.from(set);
+            list = Array.from(set);
 
-    // 필지 하이라이트
-    map.setFilter("cadastre-highlight", [
-      "in",
-      ["get", "PNU"],
-      ["literal", list],
-    ]);
+            // 필지 하이라이트
+            map.setFilter("cadastre-highlight", [
+              "in",
+              ["get", "PNU"],
+              ["literal", list],
+            ]);
 
-    if (!list.length) {
-      setAreaText("면적: -");
-    } else {
-      // (A) 총 원면적 합계
-      const totalSqm = computeParcelsArea(
-        map,
-        "cadastre",
-        curLayer,
-        "PNU",
-        list
-      );
-      const d = formatArea(totalSqm);
+            if (!list.length) {
+              setAreaText("면적: -");
+            } else {
+              // (A) 총 원면적 합계
+              const totalSqm = computeParcelsArea(
+                map,
+                "cadastre",
+                curLayer,
+                "PNU",
+                list
+              );
+              const d = formatArea(totalSqm);
 
-      // (B) 선택 전체의 "도로 제외" 합산
-      //  - source 기준으로 재조회(렌더링 가시성/뷰포트에 안 걸리도록)
-      const selectedFeats = map.querySourceFeatures("cadastre", {
-        sourceLayer: curLayer,
-        filter: ["in", ["get", "PNU"], ["literal", list]] as any,
-      }) as any[];
+              // (B) 선택 전체의 "도로 제외" 합산
+              //  - source 기준으로 재조회(렌더링 가시성/뷰포트에 안 걸리도록)
+              const selectedFeats = map.querySourceFeatures("cadastre", {
+                sourceLayer: curLayer,
+                filter: ["in", ["get", "PNU"], ["literal", list]] as any,
+              }) as any[];
 
-      const selectedParcels = selectedFeats.map((sf) => ({
-        type: "Feature",
-        properties: { PNU: sf.properties?.PNU },
-        geometry: sf.geometry,
-      })) as Feature<Polygon | MultiPolygon>[];
+              const selectedParcels = selectedFeats.map((sf) => ({
+                type: "Feature",
+                properties: { PNU: sf.properties?.PNU },
+                geometry: sf.geometry,
+              })) as Feature<Polygon | MultiPolygon>[];
 
-      // 지적도 선택 필지 객체 로그 (소스 원본 + GeoJSON Feature)
-      console.log("[지적도 선택] PNU 목록:", list);
-      console.log("[지적도 선택] 소스 feature 객체:", selectedFeats);
-      console.log("[지적도 선택] GeoJSON Feature 배열:", selectedParcels);
+              // 지적도 선택 필지 객체 로그 (소스 원본 + GeoJSON Feature)
+              console.log("[지적도 선택] PNU 목록:", list);
+              console.log("[지적도 선택] 소스 feature 객체:", selectedFeats);
+              console.log(
+                "[지적도 선택] GeoJSON Feature 배열:",
+                selectedParcels
+              );
 
-      const totalNetSqm = computeParcelsAreaExcludingRoadBuffer(
-        map,
-        selectedParcels,
-        computeParcelAreaExcludingRoadBuffer // 단일 필지 → 도로제외 함수(형님이 위에 구현한 것)
-      );
-      const nd = formatNetArea(totalNetSqm);
+              const totalNetSqm = computeParcelsAreaExcludingRoadBuffer(
+                map,
+                selectedParcels,
+                computeParcelAreaExcludingRoadBuffer // 단일 필지 → 도로제외 함수(형님이 위에 구현한 것)
+              );
+              const nd = formatNetArea(totalNetSqm);
 
-      // (C) 라벨: nd.label 자체가 단위를 포함하므로 추가 단위 붙이지 마세요
-      setAreaText(
-        `선택 ${list.length}개 | ${d.label} | ${nd.label}`
-      );
-    }
-  }
-}
+              // (C) 라벨: nd.label 자체가 단위를 포함하므로 추가 단위 붙이지 마세요
+              setAreaText(`선택 ${list.length}개 | ${d.label} | ${nd.label}`);
+            }
+          }
+        }
 
-  // 2) 도로 클릭 하이라이트 처리
-  const roadFeats = map.queryRenderedFeatures(e.point, {
-    layers: ["roads-fill", "roads-line"], // mountRoads에서 만든 레이어
-  });
+        // 2) 도로 클릭 하이라이트 처리
+        const roadFeats = map.queryRenderedFeatures(e.point, {
+          layers: ["roads-fill", "roads-line"], // mountRoads에서 만든 레이어
+        });
 
-  if (roadFeats.length) {
-    const rf: any = roadFeats[0];
-    const sig = rf.properties?.SIG_CD;
-    const rw = rf.properties?.RW_SN;
+        if (roadFeats.length) {
+          const rf: any = roadFeats[0];
+          const sig = rf.properties?.SIG_CD;
+          const rw = rf.properties?.RW_SN;
 
-    if (sig && rw != null) {
-      const key = `${sig}:${rw}`; // SIG_CD:RW_SN
+          if (sig && rw != null) {
+            const key = `${sig}:${rw}`; // SIG_CD:RW_SN
 
-      const roadSet = selectedRoadRef.current;
-      if (roadSet.has(key)) roadSet.delete(key); // 토글: 있으면 제거
-      else roadSet.add(key);                     // 없으면 추가
+            const roadSet = selectedRoadRef.current;
+            if (roadSet.has(key))
+              roadSet.delete(key); // 토글: 있으면 제거
+            else roadSet.add(key); // 없으면 추가
 
-      const roadList = Array.from(roadSet);
+            const roadList = Array.from(roadSet);
 
-      // roads-highlight 필터 갱신
-      if (map.getLayer("roads-highlight")) {
-        map.setFilter("roads-highlight", [
-          "in",
-          ["concat", ["get", "SIG_CD"], ":", ["to-string", ["get", "RW_SN"]]],
-          ["literal", roadList],
-        ]);
-      }
-    }
-  }
+            // roads-highlight 필터 갱신
+            if (map.getLayer("roads-highlight")) {
+              map.setFilter("roads-highlight", [
+                "in",
+                [
+                  "concat",
+                  ["get", "SIG_CD"],
+                  ":",
+                  ["to-string", ["get", "RW_SN"]],
+                ],
+                ["literal", roadList],
+              ]);
+            }
+          }
+        }
 
-  // 3) 팝업 처리 (필지 클릭된 경우에만)
-  if (showPopupRef.current && e.lngLat && pnu) {
-    const singleSqm = computeParcelArea(
-      map,
-      "cadastre",
-      curLayer,
-      "PNU",
-      pnu
-    );
-    const ds = formatArea(singleSqm);
+        // 3) 팝업 처리 (필지 클릭된 경우에만)
+        if (showPopupRef.current && e.lngLat && pnu) {
+          const singleSqm = computeParcelArea(
+            map,
+            "cadastre",
+            curLayer,
+            "PNU",
+            pnu
+          );
+          const ds = formatArea(singleSqm);
 
-    new maplibregl.Popup()
-      .setLngLat(e.lngLat)
-      .setHTML(
-        `<div style="font-size:13px;line-height:1.4">
+          new maplibregl.Popup()
+            .setLngLat(e.lngLat)
+            .setHTML(
+              `<div style="font-size:13px;line-height:1.4">
           <div><b>PNU</b>: ${pnu}</div>
           <div><b>면적</b>: ${ds.m2} ㎡</div>
           <div>≈ ${ds.pyeong} 평</div>
@@ -642,32 +745,37 @@ if (parcelFeats.length) {
 
           ${
             list.length
-              ? `<hr style="opacity:.3" /><div><b>총 ${list.length}개</b></div><div>${formatArea(
-                  computeParcelsArea(
-                    map,
-                    "cadastre",
-                    districts[district].layer,
-                    "PNU",
-                    list
-                  )
-                ).label}</div>`
+              ? `<hr style="opacity:.3" /><div><b>총 ${list.length}개</b></div><div>${
+                  formatArea(
+                    computeParcelsArea(
+                      map,
+                      "cadastre",
+                      districts[district].layer,
+                      "PNU",
+                      list
+                    )
+                  ).label
+                }</div>`
               : ""
           }
         </div>`
-      )
-      .addTo(map);
-  }
-});
+            )
+            .addTo(map);
+        }
+      });
 
       // 이동 프리뷰 (그릴 때만, 마지막 점 ↔ 현재 마우스)
       map.on("mousemove", (e) => {
-          if (fixedLineRef.current && fixedCenterRef.current) {
-            const center = fixedCenterRef.current;
-            const cur: [number, number] = [e.lngLat.lng, e.lngLat.lat];
-            const bearing = turfBearing({ type:"Point", coordinates:center }, { type:"Point", coordinates:cur });
-            setFixedLineData(center, bearing, true); // temp=true (점선)
-            return; // 고정선 분기 끝
-          }
+        if (fixedLineRef.current && fixedCenterRef.current) {
+          const center = fixedCenterRef.current;
+          const cur: [number, number] = [e.lngLat.lng, e.lngLat.lat];
+          const bearing = turfBearing(
+            { type: "Point", coordinates: center },
+            { type: "Point", coordinates: cur }
+          );
+          setFixedLineData(center, bearing, true); // temp=true (점선)
+          return; // 고정선 분기 끝
+        }
         if (!drawingRef.current || lineCoordsRef.current.length === 0) return;
         const cur: [number, number] = [e.lngLat.lng, e.lngLat.lat];
 
@@ -676,16 +784,25 @@ if (parcelFeats.length) {
           features.push({
             type: "Feature",
             properties: { temp: false },
-            geometry: { type: "LineString", coordinates: lineCoordsRef.current },
+            geometry: {
+              type: "LineString",
+              coordinates: lineCoordsRef.current,
+            },
           } as any);
         }
 
         features.push({
           type: "Feature",
           properties: { temp: true },
-          geometry: { type: "LineString", coordinates: [lineCoordsRef.current[lineCoordsRef.current.length - 1], cur] },
+          geometry: {
+            type: "LineString",
+            coordinates: [
+              lineCoordsRef.current[lineCoordsRef.current.length - 1],
+              cur,
+            ],
+          },
         } as any);
-        const totalPreviewCoords = [...lineCoordsRef.current,cur];
+        const totalPreviewCoords = [...lineCoordsRef.current, cur];
         const mPreview = computeLineMeters(totalPreviewCoords);
         setLineText(`길이: ${metersLabel(mPreview)}`);
         (map.getSource("sketch") as maplibregl.GeoJSONSource).setData({
@@ -702,119 +819,140 @@ if (parcelFeats.length) {
     };
   }, []); // 초기 로드 전용
 
-const setFixedLineData = useCallback((
-  center: [number, number],
-  degree: number,
-  temp: boolean
-) => {
-  const a = destination({ type:"Point", coordinates:center }, fixedLine/2000, degree, { units:"kilometers" });
-  const b = destination({ type:"Point", coordinates:center }, fixedLine/2000, degree + 180, { units:"kilometers" });
+  const setFixedLineData = useCallback(
+    (center: [number, number], degree: number, temp: boolean) => {
+      const a = destination(
+        { type: "Point", coordinates: center },
+        fixedLine / 2000,
+        degree,
+        { units: "kilometers" }
+      );
+      const b = destination(
+        { type: "Point", coordinates: center },
+        fixedLine / 2000,
+        degree + 180,
+        { units: "kilometers" }
+      );
 
-  const fc: GeoJSON.FeatureCollection = {
-    type: "FeatureCollection",
-    features: [
-      {
-        type: "Feature",
-        properties: { temp },
-        geometry: { type: "LineString", coordinates: [
-          b.geometry.coordinates as [number,number],
-          a.geometry.coordinates as [number,number],
-        ]},
-      }
-    ]
-  };
+      const fc: GeoJSON.FeatureCollection = {
+        type: "FeatureCollection",
+        features: [
+          {
+            type: "Feature",
+            properties: { temp },
+            geometry: {
+              type: "LineString",
+              coordinates: [
+                b.geometry.coordinates as [number, number],
+                a.geometry.coordinates as [number, number],
+              ],
+            },
+          },
+        ],
+      };
 
-  (mapRef.current?.getSource("fixed-line-src") as maplibregl.GeoJSONSource)?.setData(fc);
-}, []);
-
-const handleClearFixedLine = useCallback(() => {
-  (mapRef.current?.getSource("fixed-line-src") as maplibregl.GeoJSONSource)
-    ?.setData({ type:"FeatureCollection", features: [] } as any);
-}, []);
-
-const handleSplitAndReport = useCallback(() => {
-  const map = mapRef.current;
-  if (!map) return;
-
-  // 1) 대상 필지: 1개만
-  const list = Array.from(selectedPnusRef.current);
-  if (list.length !== 1) {
-    alert("분리할 필지를 1개만 선택하세요.");
-    return;
-  }
-  const targetPnu = list[0];
-
-  // 2) 원본 폴리곤
-  const rendFeats = map.queryRenderedFeatures({
-    layers: ["cadastre-fill","cadastre-line"],
-    filter: ["==", ["get","PNU"], targetPnu]
-  });
-  if (!rendFeats.length) {
-    alert("선택한 필지를 찾을 수 없습니다.");
-    return;
-   }
-  const polygon = {
-    type: "Feature",
-    properties: { PNU: targetPnu },
-    geometry: rendFeats[0].geometry, // WGS84 경위도
-  } as Feature<Polygon | MultiPolygon>;
-
-
-  // 3) 잘라낼 선들: (현재 그리고 있는 선) + (저장된 모든 선)
-  const lineSets: [number, number][][] = [];
-  if (lineCoordsRef.current.length >= 2) lineSets.push([...lineCoordsRef.current]);
-
-  const saved = loadDrawing(key); // LineString[][]
-  for (const coords of saved) if (coords.length >= 2) lineSets.push(coords);
-
-  if (!lineSets.length) {
-    alert("분할에 사용할 선을 먼저 그려주세요.");
-    return;
-  }
-
-  const cutLines = lineSets.map((coords) => ({
-    type: "Feature",
-    properties: {},
-    geometry: { type: "LineString", coordinates: coords },
-  })) as Feature<LineString>[];
-
-  // 4) 실제 분리 (선 두께 여유: 0.3m → 필요시 0.5m)
-  const fc = splitPolygonWithLines(polygon, cutLines, 0.3);
-  if (!fc || !fc.features || fc.features.length < 2) {
-    alert("분리 실패.");
-    return;
-  }
-
-const colorList = ["#ff0019ff","#00ff37ff","#0091ffff","#ffff00ff","#ff8800ff","#00ffffff"];
-fc.features.forEach((f, i) => {
-  map.addLayer({
-    id: `parcel-slice-${i}`,
-    type: "fill",
-    source: {
-      type: "geojson",
-      data: f,
+      (
+        mapRef.current?.getSource("fixed-line-src") as maplibregl.GeoJSONSource
+      )?.setData(fc);
     },
-    paint: {
-      "fill-color": colorList[i % colorList.length],
-      "fill-opacity": 0.5,
-    },
-  });
+    []
+  );
 
-});
-  // 5) 조각별 면적 계산
-  const areas = fc.features.map((f, i) => ({
-    idx: i + 1,
-    sqm: area(f as any),
-  }));
-  const total = areas.reduce((a, b) => a + b.sqm, 0);
+  const handleClearFixedLine = useCallback(() => {
+    (
+      mapRef.current?.getSource("fixed-line-src") as maplibregl.GeoJSONSource
+    )?.setData({ type: "FeatureCollection", features: [] } as any);
+  }, []);
 
-  // 6) 표 HTML 구성
-  const htmlRows = areas
-    .map(({ idx, sqm }) => {
-      const d = formatArea(sqm);
-      const pct = total > 0 ? ((sqm / total) * 100).toFixed(1) : "0.0";
-      const color = colorList[(idx - 1) % colorList.length];
-      return `<tr>
+  const handleSplitAndReport = useCallback(() => {
+    const map = mapRef.current;
+    if (!map) return;
+
+    // 1) 대상 필지: 1개만
+    const list = Array.from(selectedPnusRef.current);
+    if (list.length !== 1) {
+      alert("분리할 필지를 1개만 선택하세요.");
+      return;
+    }
+    const targetPnu = list[0];
+
+    // 2) 원본 폴리곤
+    const rendFeats = map.queryRenderedFeatures({
+      layers: ["cadastre-fill", "cadastre-line"],
+      filter: ["==", ["get", "PNU"], targetPnu],
+    });
+    if (!rendFeats.length) {
+      alert("선택한 필지를 찾을 수 없습니다.");
+      return;
+    }
+    const polygon = {
+      type: "Feature",
+      properties: { PNU: targetPnu },
+      geometry: rendFeats[0].geometry, // WGS84 경위도
+    } as Feature<Polygon | MultiPolygon>;
+
+    // 3) 잘라낼 선들: (현재 그리고 있는 선) + (저장된 모든 선)
+    const lineSets: [number, number][][] = [];
+    if (lineCoordsRef.current.length >= 2)
+      lineSets.push([...lineCoordsRef.current]);
+
+    const saved = loadDrawing(key); // LineString[][]
+    for (const coords of saved) if (coords.length >= 2) lineSets.push(coords);
+
+    if (!lineSets.length) {
+      alert("분할에 사용할 선을 먼저 그려주세요.");
+      return;
+    }
+
+    const cutLines = lineSets.map((coords) => ({
+      type: "Feature",
+      properties: {},
+      geometry: { type: "LineString", coordinates: coords },
+    })) as Feature<LineString>[];
+
+    // 4) 실제 분리 (선 두께 여유: 0.3m → 필요시 0.5m)
+    const fc = splitPolygonWithLines(polygon, cutLines, 0.3);
+    if (!fc || !fc.features || fc.features.length < 2) {
+      alert("분리 실패.");
+      return;
+    }
+
+    const colorList = [
+      "#ff0019ff",
+      "#00ff37ff",
+      "#0091ffff",
+      "#ffff00ff",
+      "#ff8800ff",
+      "#00ffffff",
+    ];
+    fc.features.forEach((f, i) => {
+      map.addLayer({
+        id: `parcel-slice-${i}`,
+        type: "fill",
+        source: {
+          type: "geojson",
+          data: f,
+        },
+        paint: {
+          "fill-color": colorList[i % colorList.length],
+          "fill-opacity": 0.5,
+        },
+      });
+    });
+    // 5) 조각별 면적 계산
+    const areas = fc.features.map((f, i) => ({
+      idx: i + 1,
+      sqm: area(f as any),
+    }));
+    const total = areas.reduce((a, b) => a + b.sqm, 0);
+
+    // 6) 표 HTML 구성
+    const htmlRows = areas
+      .map(({ idx, sqm }) => {
+        const d = formatArea(sqm);
+        const pct = total > 0 ? ((sqm / total) * 100).toFixed(1) : "0.0";
+        const color = colorList[(idx - 1) % colorList.length];
+        return `<tr>
         <td>
           <div style="display:flex;align-items:center;gap:6px">
           <div style="width:14px;height:14px;background:${color};border-radius:3px;border:1px solid #555"></div>
@@ -825,20 +963,22 @@ fc.features.forEach((f, i) => {
         <td style="text-align:right">${d.pyeong} 평</td>
         <td style="text-align:right">${pct}%</td>
       </tr>`;
-    })
-    .join("");
-  const summary = formatArea(total).label;
+      })
+      .join("");
+    const summary = formatArea(total).label;
 
-  // 7) 팝업 위치(폴리곤 중심) + 좌표 가드
-  const c = centroid(polygon as any);
-  const coords = c?.geometry?.type === "Point" ? c.geometry.coordinates : null;
-  if (!coords || !Number.isFinite(coords[0]) || !Number.isFinite(coords[1])) {
-    console.warn("centroid 계산 실패. 화면 중심에 표시합니다.");
-    const center = map.getCenter();
-    coords && console.debug("centroid:", coords);
-    new maplibregl.Popup({ maxWidth: "320px" })
-      .setLngLat([center.lng, center.lat])
-      .setHTML(`
+    // 7) 팝업 위치(폴리곤 중심) + 좌표 가드
+    const c = centroid(polygon as any);
+    const coords =
+      c?.geometry?.type === "Point" ? c.geometry.coordinates : null;
+    if (!coords || !Number.isFinite(coords[0]) || !Number.isFinite(coords[1])) {
+      console.warn("centroid 계산 실패. 화면 중심에 표시합니다.");
+      const center = map.getCenter();
+      coords && console.debug("centroid:", coords);
+      new maplibregl.Popup({ maxWidth: "320px" })
+        .setLngLat([center.lng, center.lat])
+        .setHTML(
+          `
         <div style="font-size:13px;line-height:1.4">
         <div><b>PNU</b>: ${targetPnu}</div>
         <div style="margin:6px 0 8px;"><b>분할 ${areas.length}조각</b> | 총 ${summary}</div>
@@ -847,12 +987,14 @@ fc.features.forEach((f, i) => {
         <tbody>${htmlRows}</tbody>
         </table>
         </div>
-      `)
-      .addTo(map);
-  } else {
-    new maplibregl.Popup({ maxWidth: "320px" })
-      .setLngLat([coords[0], coords[1]])
-      .setHTML(`
+      `
+        )
+        .addTo(map);
+    } else {
+      new maplibregl.Popup({ maxWidth: "320px" })
+        .setLngLat([coords[0], coords[1]])
+        .setHTML(
+          `
         <div style="font-size:13px;line-height:1.4">
           <div><b>PNU</b>: ${targetPnu}</div>
           <div style="margin:6px 0 8px;"><b>분할 ${areas.length}조각</b> | 총 ${summary}</div>
@@ -865,64 +1007,67 @@ fc.features.forEach((f, i) => {
             <tbody>${htmlRows}</tbody>
           </table>
         </div>
-      `)
-      .addTo(map);
-  }
+      `
+        )
+        .addTo(map);
+    }
 
-  // 상단 라벨 갱신 + 디버그 출력
-  setAreaText(`분할 ${areas.length}조각 | 총 ${summary}`);
-  console.table(areas.map(a => ({ piece: a.idx, sqm: Math.round(a.sqm) })));
-}, []);
+    // 상단 라벨 갱신 + 디버그 출력
+    setAreaText(`분할 ${areas.length}조각 | 총 ${summary}`);
+    console.table(areas.map((a) => ({ piece: a.idx, sqm: Math.round(a.sqm) })));
+  }, []);
 
+  const handleToggleRoadBuffer = useCallback(() => {
+    const map = mapRef.current;
+    if (!map) return;
 
-const handleToggleRoadBuffer = useCallback(() => {
-  const map = mapRef.current;
-  if (!map) return;
+    setRoadBuffer((prev) => {
+      const next = !prev;
+      if (road) updateRoadBuffer(map, next, road);
+      if (build) updateBuildBuffer(map, next, build);
+      return next;
+    });
+  }, [road, build]);
 
-  setRoadBuffer((prev) => {
-    const next = !prev;
-    if (road) updateRoadBuffer(map, next, road);
-    if (build) updateBuildBuffer(map, next, build);
-    return next;
-  });
-}, [road, build]);
-
-const handlePlaceFixedLine = useCallback(() => {
-  fixedLineRef.current = true;
-  fixedCenterRef.current = null;
-  // 미리보기 지우기
-  (mapRef.current?.getSource("fixed-line-src") as maplibregl.GeoJSONSource)
-    ?.setData({ type:"FeatureCollection", features: [] } as any);
-  mapRef.current?.getCanvas().style.setProperty("cursor", "crosshair");
-  alert("지도에서 첫 번째 클릭: 중심점 선택 → 마우스를 움직여 방향 지정 → 두 번째 클릭으로 확정");
-}, []);
+  const handlePlaceFixedLine = useCallback(() => {
+    fixedLineRef.current = true;
+    fixedCenterRef.current = null;
+    // 미리보기 지우기
+    (
+      mapRef.current?.getSource("fixed-line-src") as maplibregl.GeoJSONSource
+    )?.setData({ type: "FeatureCollection", features: [] } as any);
+    mapRef.current?.getCanvas().style.setProperty("cursor", "crosshair");
+    alert(
+      "지도에서 첫 번째 클릭: 중심점 선택 → 마우스를 움직여 방향 지정 → 두 번째 클릭으로 확정"
+    );
+  }, []);
 
   // 드로잉 저장 핸들러
   const handleSaveDrawing = useCallback(() => {
-  const coords = lineCoordsRef.current;
-  saveDrawing(key, coords);
-  alert(`드로잉 저장`);
-}, []);
+    const coords = lineCoordsRef.current;
+    saveDrawing(key, coords);
+    alert(`드로잉 저장`);
+  }, []);
 
   //드로잉 불러오기 핸들러
   const handleLoadDrawing = useCallback(() => {
-  const map = mapRef.current;
-  if (!map) return;
-  const features = SavedFeatures();
-  (map.getSource("sketch") as maplibregl.GeoJSONSource)?.setData({
-    type: "FeatureCollection",
-    features,
-  });
-  alert(`저장된 드로잉 불러옴`);
-}, [SavedFeatures]);
+    const map = mapRef.current;
+    if (!map) return;
+    const features = SavedFeatures();
+    (map.getSource("sketch") as maplibregl.GeoJSONSource)?.setData({
+      type: "FeatureCollection",
+      features,
+    });
+    alert(`저장된 드로잉 불러옴`);
+  }, [SavedFeatures]);
 
   const handleChangeLineColor = useCallback((color: string) => {
-  const map = mapRef.current;
-  if (!map) return;
-  if (map.getLayer("cadastre-line")) {
-    map.setPaintProperty("cadastre-line", "line-color", color);
-  }
-}, []);
+    const map = mapRef.current;
+    if (!map) return;
+    if (map.getLayer("cadastre-line")) {
+      map.setPaintProperty("cadastre-line", "line-color", color);
+    }
+  }, []);
 
   const handleDeleteDrawing = useCallback(() => {
     deleteDrawing(key);
@@ -962,20 +1107,23 @@ const handlePlaceFixedLine = useCallback(() => {
   const handleTogglePopup = useCallback(() => {
     setShowPopup((prev) => {
       const next = !prev;
-      if (!next) document.querySelectorAll(".maplibregl-popup").forEach((el) => el.remove());
+      if (!next)
+        document
+          .querySelectorAll(".maplibregl-popup")
+          .forEach((el) => el.remove());
       return next;
     });
   }, []);
   useEffect(() => {
-  const handleKeyDown = (e: KeyboardEvent) => {
-    if (e.key === "q" || e.key === "Q") {
-      handleTogglePopup();
-    }
-  };
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "q" || e.key === "Q") {
+        handleTogglePopup();
+      }
+    };
 
-  window.addEventListener("keydown", handleKeyDown);
-  return () => window.removeEventListener("keydown", handleKeyDown);
-}, [handleTogglePopup]);
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [handleTogglePopup]);
   // 선긋기 핸들러
   const handleStartDraw = useCallback(() => {
     const map = mapRef.current;
@@ -988,15 +1136,15 @@ const handlePlaceFixedLine = useCallback(() => {
   }, []);
 
   useEffect(() => {
-  const handleKeyDown = (e: KeyboardEvent) => {
-    if (e.key === "d" || e.key === "D") {
-      handleStartDraw();
-    }
-  };
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "d" || e.key === "D") {
+        handleStartDraw();
+      }
+    };
 
-  window.addEventListener("keydown", handleKeyDown);
-  return () => window.removeEventListener("keydown", handleKeyDown);
-}, [handleStartDraw]);
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [handleStartDraw]);
 
   const handleStopDraw = useCallback(() => {
     finishDrawing();
@@ -1011,39 +1159,46 @@ const handlePlaceFixedLine = useCallback(() => {
     lineCoordsRef.current = [];
     selectedPnusRef.current.clear();
     selectedRoadRef.current.clear();
-    (map.getSource("sketch") as any)?.setData({ type: "FeatureCollection", features: [] });
+    (map.getSource("sketch") as any)?.setData({
+      type: "FeatureCollection",
+      features: [],
+    });
     map.doubleClickZoom.enable();
     if (map.getLayer("cadastre-highlight")) {
-      map.setFilter("cadastre-highlight", ["in", ["get", "PNU"], ["literal", []]]);
+      map.setFilter("cadastre-highlight", [
+        "in",
+        ["get", "PNU"],
+        ["literal", []],
+      ]);
     }
-      if (map.getLayer("roads-highlight")) {
-        map.setFilter("roads-highlight", [
-          "in",
-          ["concat", ["get", "SIG_CD"], ":", ["to-string", ["get", "RW_SN"]]],
-          ["literal",[]],
-        ]);
-      };
+    if (map.getLayer("roads-highlight")) {
+      map.setFilter("roads-highlight", [
+        "in",
+        ["concat", ["get", "SIG_CD"], ":", ["to-string", ["get", "RW_SN"]]],
+        ["literal", []],
+      ]);
+    }
     map.getCanvas().style.cursor = "";
     handleClearFixedLine();
     setShowDrawing(false);
     setAreaText("면적: -");
     setLineText("길이: -");
     document.querySelectorAll(".maplibregl-popup").forEach((el) => el.remove());
-    deleteDrawing(key)
-      map.getStyle().layers
-    .filter(l => l.id.startsWith("parcel-slice-"))
-    .forEach(l => {
-      if (map.getLayer(l.id)) map.removeLayer(l.id);
-      if (map.getSource(l.id)) map.removeSource(l.id); // 인라인 소스 정리
-    });
-
+    deleteDrawing(key);
+    map
+      .getStyle()
+      .layers.filter((l) => l.id.startsWith("parcel-slice-"))
+      .forEach((l) => {
+        if (map.getLayer(l.id)) map.removeLayer(l.id);
+        if (map.getSource(l.id)) map.removeSource(l.id); // 인라인 소스 정리
+      });
   }, []);
 
   // 저장 핸들러
   const handleSavePnus = useCallback(() => {
     const set = selectedPnusRef.current;
     savePnus(key, set);
-    console.log(key,set);
+    console.log(key, set);
     alert(`선택된 필지 ${set.size}개 저장`);
   }, []);
 
@@ -1056,12 +1211,22 @@ const handlePlaceFixedLine = useCallback(() => {
     selectedPnusRef.current = new Set(list);
 
     if (map.getLayer("cadastre-highlight")) {
-      map.setFilter("cadastre-highlight", ["in", ["get", "PNU"], ["literal", list]]);
+      map.setFilter("cadastre-highlight", [
+        "in",
+        ["get", "PNU"],
+        ["literal", list],
+      ]);
     }
     if (!list.length) {
       setAreaText("면적: -");
     } else {
-      const totalSqm = computeParcelsArea(map, "cadastre", districts[district].layer, "PNU", list);
+      const totalSqm = computeParcelsArea(
+        map,
+        "cadastre",
+        districts[district].layer,
+        "PNU",
+        list
+      );
       const d = formatArea(totalSqm);
       setAreaText(`선택 ${list.length}개 | ${d.label}`);
     }
@@ -1076,14 +1241,22 @@ const handlePlaceFixedLine = useCallback(() => {
 
   return (
     <PageContent
-      depth01Title="지도 >  "
+      depth01Title="지도"
       depth02Title="지도맵"
       $height="100%"
       $gap="0"
     >
       <S.MapContainer>
         <S.MapWrapper>
-          <div ref={containerRef} style={{ position: "absolute", inset: 0, width: "100%", height: "100%" }} />
+          <div
+            ref={containerRef}
+            style={{
+              position: "absolute",
+              inset: 0,
+              width: "100%",
+              height: "100%",
+            }}
+          />
         </S.MapWrapper>
         <Toolbar
           onToggleRoadBuffer={handleToggleRoadBuffer}
@@ -1114,4 +1287,4 @@ const handlePlaceFixedLine = useCallback(() => {
       </S.MapContainer>
     </PageContent>
   );
-};
+}
