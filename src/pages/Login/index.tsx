@@ -23,11 +23,11 @@ export interface LoginInputs {
 
 const SEED_ACCOUNTS = [
   { email: "inadmin", role: "ADMIN" },
-  { email: "intest", role: "MANAGER" },
-  { email: "admin", role: "DEVELOPER" },
+  { email: "inmanager", role: "MANAGER" },
+  { email: "indeveloper", role: "DEVELOPER" },
 ] as const;
 
-const SEED_PASSWORD = "1";
+const SEED_PASSWORD = "qwer1234";
 
 /** 같은 오리진 SPA 경로만 허용 (오픈 리다이렉트 완화) */
 function safeAppPath(pathname: string): string {

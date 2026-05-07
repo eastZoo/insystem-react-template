@@ -108,6 +108,26 @@ export const ROUTE_CONFIGS: RouteConfig[] = [
     protected: true,
   },
 
+  // ── 공유재산 관리 (govmap) ────────────────────────────────────
+  {
+    path: "/govmap/map",
+    page: "govmap/MapPage",
+    title: "지도",
+    protected: true,
+  },
+  {
+    path: "/govmap/asset-location",
+    page: "govmap/SharedAssetLocationPage",
+    title: "공유재산 위치표시",
+    protected: true,
+  },
+  {
+    path: "/govmap/asset-management",
+    page: "govmap/SharedAssetManagementPage",
+    title: "공유재산 정보관리",
+    protected: true,
+  },
+
   // ── 시스템 ──────────────────────────────────────────────────
   {
     path: "/404",

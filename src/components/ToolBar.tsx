@@ -1,4 +1,4 @@
-type DistrictKey = "allbusan"|"gimhae"|"changwon";
+type DistrictKey = "allbusan"|"gimhae"|"changwon"|"sacheon"|"changnyeong"|"goseong";
 type RoadsKey = "gimhae_road"|"changwon_road"|"busan_road";
 type BuildsKey = "gimhae_builds"|"busan_builds"|"changwon_builds";
 type ToolbarProps = {
@@ -9,8 +9,8 @@ type ToolbarProps = {
   onClickOsm: () => void;
   onSelectAll?: () => void;
   onSetDistrict: (d: DistrictKey) => void;
-  onSetRoad:(r: RoadsKey) => void,
-  onSetBuild:(b: BuildsKey) => void,
+  onSetRoad:(r?: RoadsKey) => void,
+  onSetBuild:(b?: BuildsKey) => void,
   onTogglePopup: () => void;
   onStartDraw: () => void;
   onClear: () => void;
@@ -27,10 +27,10 @@ type ToolbarProps = {
   district: DistrictKey;
   showPopup: boolean;
   showDrawing: boolean;
-  
+
 };
 
-export default function   Toolbar({
+export default function Toolbar({
   onToggleRoadBuffer,
   onPlaceFixedLine,
   onSplitByDrawing,
@@ -73,6 +73,21 @@ export default function   Toolbar({
       ><button onClick={onToggleRoadBuffer}>끄기 켜기</button>
         <button onClick={onClickSat}>위성</button>
         <button onClick={onClickOsm}>오픈맵</button>
+        <button onClick={() => {
+          onSetDistrict("sacheon");
+          onSetBuild(undefined);
+          onSetRoad(undefined);
+        }}>사천</button>
+        <button onClick={() => {
+          onSetDistrict("changnyeong");
+          onSetBuild(undefined);
+          onSetRoad(undefined);
+        }}>창녕</button>
+        <button onClick={() => {
+          onSetDistrict("goseong");
+          onSetBuild(undefined);
+          onSetRoad(undefined);
+        }}>고성</button>
         <button onClick={() => {
           onSetDistrict("changwon");
           onSetBuild("changwon_builds");
