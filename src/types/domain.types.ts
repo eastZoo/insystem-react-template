@@ -15,7 +15,7 @@ export interface PaginatedData<T> {
 // ────────────────────────────────────────────────────────────
 
 export interface LoginRequest {
-  email: string;
+  userId: string;
   password: string;
 }
 
@@ -33,10 +33,10 @@ export interface LoginData {
 
 /** POST /api/auth/login 응답의 user 필드 */
 export interface LoginUser {
-  id: string;       // UUID
-  email: string;
+  id: string; // UUID
+  userId: string;
   name: string;
-  role: string;     // 'ADMIN' | 'MANAGER' | 'DEVELOPER'
+  role: string; // 'ADMIN' | 'MANAGER' | 'DEVELOPER'
 }
 
 /**
@@ -46,7 +46,7 @@ export interface LoginUser {
  */
 export interface MeData {
   id: string;
-  email: string;
+  userId: string;
   name: string;
   role: string;
   roleDescription?: string;

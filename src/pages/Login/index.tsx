@@ -135,12 +135,12 @@ const SeedAccount = styled.button`
 // ── 시드 계정 (seed.ts와 동기화) ──────────────────────────────────────────────
 
 const SEED_ACCOUNTS = [
-  { email: "admin@eastzoo.local", role: "ADMIN" },
-  { email: "manager@eastzoo.local", role: "MANAGER" },
-  { email: "developer@eastzoo.local", role: "DEVELOPER" },
+  { userId: "inadmin", role: "ADMIN" },
+  { userId: "inmanager", role: "MANAGER" },
+  { userId: "indeveloper", role: "DEVELOPER" },
 ] as const;
 
-const SEED_PASSWORD = "Admin123!";
+const SEED_PASSWORD = "qwer1234";
 
 /** 같은 오리진 SPA 경로만 허용 (오픈 리다이렉트 완화) */
 function safeAppPath(pathname: string): string {
@@ -162,7 +162,7 @@ export default function LoginPage() {
     (location.state as { from?: { pathname: string } } | null)?.from
       ?.pathname ?? "/";
 
-  const [email, setEmail] = useState<string>(SEED_ACCOUNTS[0].email);
+  const [userId, setUserId] = useState<string>(SEED_ACCOUNTS[0].userId);
   const [password, setPassword] = useState<string>(SEED_PASSWORD);
 
   const loginMutation = useLogin();
@@ -180,7 +180,10 @@ export default function LoginPage() {
 
   const handleLogin = async () => {
     try {
-      const res = await loginMutation.mutateAsync({ email, password });
+      const res = await loginMutation.mutateAsync({
+        userId: userId,
+        password: password,
+      });
       if (!isApiSuccess(res) || !readAccessToken()) return;
       navigate(safeAppPath(from), { replace: true });
     } catch {
@@ -211,15 +214,15 @@ export default function LoginPage() {
               <div>
                 <IsInputText
                   id="login-email"
-                  type="email"
+                  type="text"
                   autoComplete="username"
-                  placeholderText="you@eastzoo.local"
-                  value={email}
+                  placeholderText="아이디를 입력하세요"
+                  value={userId}
                   onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                    setEmail(e.target.value)
+                    setUserId(e.target.value)
                   }
                   fullWidth
-                  label="이메일"
+                  label="아이디"
                   size="medium"
                 />
               </div>
@@ -257,16 +260,16 @@ export default function LoginPage() {
           {/* ── 시드 계정 빠른 입력 ── */}
           <SeedHint>
             <SeedHintTitle>시드 계정 (비밀번호: {SEED_PASSWORD})</SeedHintTitle>
-            {SEED_ACCOUNTS.map(({ email: seedEmail, role }) => (
+            {SEED_ACCOUNTS.map(({ userId: seedUserId, role }) => (
               <SeedAccount
-                key={seedEmail}
+                key={seedUserId}
                 type="button"
                 onClick={() => {
-                  setEmail(seedEmail);
+                  setUserId(seedUserId);
                   setPassword(SEED_PASSWORD);
                 }}
               >
-                {seedEmail} — {role}
+                {seedUserId} — {role}
               </SeedAccount>
             ))}
           </SeedHint>
