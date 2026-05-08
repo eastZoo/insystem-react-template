@@ -17,7 +17,7 @@ export function useAssetLocationLegalDongCodes(enabled = true) {
     queryFn: async () => {
       const response: BaseResponse<string[]> = await request({
         method: "GET",
-        url: "/asset-location-mapping/legal-dong-codes",
+        url: "/api/app/govmap/mappings/legal-dong-codes",
       });
       return response.data || [];
     },
@@ -42,7 +42,7 @@ export function useAssetLocationPnuByDistrict(
       if (si?.trim()) params.set("si", si.trim());
       const response: BaseResponse<string[]> = await request({
         method: "GET",
-        url: `/asset-location-mapping/pnu-by-district?${params.toString()}`,
+        url: `/api/app/govmap/mappings/pnu?${params.toString()}`,
       });
       return response.data || [];
     },
@@ -61,7 +61,7 @@ export function useCreateAssetLocationMappings() {
     mutationFn: async (mappings) => {
       const response: BaseResponse<BulkCreateResult> = await request({
         method: "POST",
-        url: "/asset-location-mapping/bulk",
+        url: "/api/app/govmap/mappings/bulk",
         data: { mappings },
       });
       return response.data!;
@@ -82,7 +82,7 @@ export function useDeleteAllAssetLocationMappings() {
     mutationFn: async () => {
       await request({
         method: "DELETE",
-        url: "/asset-location-mapping/all",
+        url: "/api/app/govmap/mappings",
       });
     },
     onSuccess: () => {

@@ -8,6 +8,7 @@ export const PageContainer = styled.div`
   width: 100%;
   height: 100%;
   padding: 0;
+  background-color: #f9f9f9;
 `;
 
 export const PageTitle = styled.div`
@@ -153,6 +154,7 @@ export const InputGroupFlex = styled.div`
 `;
 
 export const SelectInput = styled.div`
+  position: relative;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -163,6 +165,17 @@ export const SelectInput = styled.div`
   border-radius: 6px;
   padding: 0 8px 0 12px;
   cursor: pointer;
+
+  select {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0;
+    cursor: pointer;
+    z-index: 1;
+  }
 `;
 
 export const SelectValue = styled.span`
@@ -233,7 +246,7 @@ export const OutlineButton = styled.button`
   justify-content: center;
   gap: 6px;
   height: 36px;
-  padding: 0 12px 0 12px;
+  padding: 0 8px 0 12px;
   background: transparent;
   border: 1.5px solid #0c4ca3;
   border-radius: 4px;
@@ -264,7 +277,7 @@ export const PrimaryButton = styled.button`
   justify-content: center;
   gap: 6px;
   height: 36px;
-  padding: 0 12px 0 12px;
+  padding: 0 8px 0 12px;
   background: #0c4ca3;
   border: none;
   border-radius: 4px;
@@ -298,6 +311,13 @@ export const DisabledButton = styled(PrimaryButton)`
   background: #b4c8e2;
   cursor: not-allowed;
 
+  svg {
+    path {
+      fill: #f9fafb;
+      stroke: #f9fafb;
+    }
+  }
+
   &:hover {
     background: #b4c8e2;
   }
@@ -305,36 +325,51 @@ export const DisabledButton = styled(PrimaryButton)`
 
 // ─── 처리 섹션 컨테이너 ──────────────────────────────────────────
 export const ProcessContainer = styled.div`
-  display: flex;
+  display: inline-flex;
   align-items: center;
+  justify-content: flex-start;
+  gap: 10px;
+  width: 100%;
   background: #ffffff;
   border: 1px solid #d1d5dc;
   border-radius: 6px;
   padding: 16px;
-  overflow: hidden;
 `;
 
 export const ProcessContent = styled.div`
-  display: flex;
+  display: inline-flex;
   flex-direction: column;
+  align-items: flex-start;
+  justify-content: flex-start;
   gap: 16px;
 `;
 
 export const ProcessRow = styled.div`
-  display: flex;
+  display: inline-flex;
   align-items: center;
+  justify-content: flex-start;
   gap: 16px;
+  align-self: stretch;
 `;
 
 export const ProcessInputButton = styled.div`
   display: flex;
   align-items: center;
+  justify-content: flex-start;
   gap: 12px;
+`;
+
+export const ProcessLabelWrapper = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
 `;
 
 export const ProcessLabel = styled.div`
   display: flex;
   align-items: center;
+  justify-content: flex-start;
   gap: 2px;
   width: 80px;
   font-family: "Pretendard", sans-serif;
@@ -349,14 +384,15 @@ export const ProcessLabel = styled.div`
 export const ResultList = styled.div`
   display: flex;
   align-items: flex-start;
+  justify-content: flex-start;
   gap: 8px;
 `;
 
 export const ResultLabel = styled.div`
   display: flex;
   align-items: center;
+  justify-content: flex-end;
   gap: 2px;
-  width: 55px;
   overflow: hidden;
   font-family: "Pretendard", sans-serif;
   font-weight: 400;
@@ -370,6 +406,7 @@ export const ResultLabel = styled.div`
 export const ResultItem = styled.div`
   display: flex;
   align-items: center;
+  justify-content: flex-start;
   gap: 8px;
   font-family: "Pretendard", sans-serif;
   font-weight: 400;
@@ -383,13 +420,22 @@ export const ResultItem = styled.div`
 export const ResultCount = styled.span`
   display: flex;
   align-items: center;
+  justify-content: flex-start;
   gap: 1px;
 `;
 
 export const CountValue = styled.span`
   font-family: "Pretendard", sans-serif;
   font-weight: 700;
+  font-size: 14px;
   color: #0c4ca3;
+`;
+
+export const CountUnit = styled.span`
+  font-family: "Pretendard", sans-serif;
+  font-weight: 400;
+  font-size: 14px;
+  color: #4a5565;
 `;
 
 export const Divider = styled.span`
@@ -401,7 +447,11 @@ export const Divider = styled.span`
   color: #d1d5dc;
 `;
 
-export const CompletedText = styled.span`
+export const CompletedText = styled.div`
+  display: flex;
+  align-items: flex-start;
+  justify-content: flex-start;
+  gap: 8px;
   font-family: "Pretendard", sans-serif;
   font-weight: 700;
   font-size: 14px;

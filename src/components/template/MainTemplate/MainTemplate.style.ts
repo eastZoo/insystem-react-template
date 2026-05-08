@@ -36,7 +36,16 @@ export const MainTemplate = styled.div<MainBoxProps>`
         }
       }
 
+      ${SidemenuListBox} {
+        padding-left: 4px;
+        padding-right: 4px;
+      }
+
       ${SidemenuListItem} {
+        padding: 10px 0;
+        justify-content: center;
+        overflow: visible;
+
         ${TitBox} {
           display: none;
         }

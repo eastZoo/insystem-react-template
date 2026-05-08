@@ -6,7 +6,9 @@ export const PageWrapper = styled.div`
   gap: 24px;
   width: 100%;
   height: 100%;
-  align-items: flex-end;
+  padding: 0;
+  align-items: flex-start;
+  background-color: #f9f9f9;
 `;
 
 export const PageHeader = styled.div`
@@ -21,7 +23,8 @@ export const PageTitle = styled.h1`
   font-weight: 700;
   font-size: 20px;
   color: #101828;
-  letter-spacing: -0.4px;
+  margin: 0;
+  word-wrap: break-word;
 `;
 
 export const HeaderButtons = styled.div`
@@ -35,7 +38,7 @@ export const PrimaryButton = styled.button`
   justify-content: center;
   gap: 6px;
   height: 36px;
-  padding: 0 12px;
+  padding: 0 8px 0 12px;
   background-color: #0c4ca3;
   border: none;
   border-radius: 4px;
@@ -46,14 +49,16 @@ export const PrimaryButton = styled.button`
     font-weight: 600;
     font-size: 14px;
     color: #f9fafb;
-    letter-spacing: -0.28px;
-    white-space: nowrap;
+    word-wrap: break-word;
   }
 
   svg {
     width: 18px;
     height: 18px;
-    color: #f9fafb;
+
+    path {
+      fill: #f9fafb;
+    }
   }
 
   &:hover {
@@ -74,8 +79,8 @@ export const SectionTitle = styled.h2`
   font-weight: 700;
   font-size: 16px;
   color: #364153;
-  letter-spacing: -0.32px;
-  white-space: nowrap;
+  margin: 0;
+  word-wrap: break-word;
 `;
 
 export const Container = styled.div`
@@ -132,8 +137,7 @@ export const Label = styled.label`
     font-weight: 400;
     font-size: 14px;
     color: #364153;
-    letter-spacing: -0.28px;
-    white-space: nowrap;
+    word-wrap: break-word;
   }
 `;
 
@@ -160,6 +164,7 @@ export const RadioItem = styled.div<{ $active?: boolean }>`
     align-items: center;
     justify-content: center;
     background: white;
+    flex-shrink: 0;
   }
 
   .radio-inner {
@@ -174,8 +179,7 @@ export const RadioItem = styled.div<{ $active?: boolean }>`
     font-weight: 500;
     font-size: 14px;
     color: #364153;
-    letter-spacing: -0.28px;
-    white-space: nowrap;
+    word-wrap: break-word;
   }
 `;
 
@@ -189,7 +193,7 @@ export const DateRangeGroup = styled.div`
     font-weight: 400;
     font-size: 12px;
     color: black;
-    letter-spacing: -0.24px;
+    word-wrap: break-word;
   }
 `;
 
@@ -209,7 +213,7 @@ export const SelectInput = styled.div`
     font-weight: 400;
     font-size: 12px;
     color: #101828;
-    letter-spacing: -0.24px;
+    word-wrap: break-word;
   }
 
   select {
@@ -221,7 +225,6 @@ export const SelectInput = styled.div`
     font-weight: 400;
     font-size: 12px;
     color: #101828;
-    letter-spacing: -0.24px;
     cursor: pointer;
     outline: none;
   }
@@ -237,9 +240,8 @@ export const TextInput = styled.input`
   border-radius: 6px;
   font-family: "Pretendard", sans-serif;
   font-weight: 400;
-  font-size: 12px;
+  font-size: 14px;
   color: #101828;
-  letter-spacing: -0.24px;
 
   &::placeholder {
     color: #99a1af;
@@ -275,14 +277,16 @@ export const OutlineButton = styled.button`
     font-weight: 600;
     font-size: 14px;
     color: #0c4ca3;
-    letter-spacing: -0.28px;
-    white-space: nowrap;
+    word-wrap: break-word;
   }
 
   svg {
     width: 18px;
     height: 18px;
-    color: #0c4ca3;
+
+    path {
+      stroke: #0c4ca3;
+    }
   }
 
   &:hover {
@@ -294,7 +298,7 @@ export const ListSection = styled.div`
   display: flex;
   flex-direction: column;
   gap: 16px;
-  align-items: flex-end;
+  align-items: flex-start;
   width: 100%;
 `;
 
@@ -302,7 +306,6 @@ export const ListHeader = styled.div`
   display: flex;
   justify-content: space-between;
   align-items: center;
-  height: 36px;
   width: 100%;
 `;
 
@@ -317,7 +320,7 @@ export const ListTitle = styled.span`
   font-weight: 700;
   font-size: 16px;
   color: #1e2939;
-  letter-spacing: -0.32px;
+  word-wrap: break-word;
 `;
 
 export const ListCount = styled.span`
@@ -325,10 +328,12 @@ export const ListCount = styled.span`
   font-weight: 500;
   font-size: 16px;
   color: #364153;
-  letter-spacing: -0.32px;
+  word-wrap: break-word;
 
   strong {
+    font-family: "Pretendard", sans-serif;
     font-weight: 700;
+    font-size: 16px;
     color: #0c4ca3;
   }
 `;
@@ -359,6 +364,7 @@ export const GridContainer = styled.div`
     font-weight: 400;
     font-size: 12px;
     color: white;
+    word-wrap: break-word;
   }
 
   .ag-row {
@@ -379,6 +385,23 @@ export const GridContainer = styled.div`
     font-size: 14px;
     color: black;
     border-right: 1px solid rgba(12, 76, 163, 0.05);
+    word-wrap: break-word;
+  }
+
+  /* No. 컬럼 (숫자) */
+  .ag-cell[col-id="id"] {
+    font-size: 12px;
+    font-weight: 400;
+  }
+
+  /* 재산구분 컬럼 */
+  .ag-cell[col-id="type"] {
+    font-weight: 500;
+  }
+
+  /* 분류처리여부 컬럼 (O/X) */
+  .ag-cell[col-id="isClassified"] {
+    font-weight: 500;
   }
 `;
 

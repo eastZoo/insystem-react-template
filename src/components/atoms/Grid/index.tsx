@@ -1,5 +1,5 @@
 import * as S from "./Grid.style";
-import type { ColDef, ColGroupDef } from "ag-grid-community";
+import type { ColDef, ColGroupDef, SelectionChangedEvent } from "ag-grid-community";
 import { AgGridReact } from "ag-grid-react";
 import { ModuleRegistry, AllCommunityModule } from "ag-grid-community";
 import { forwardRef } from "react";
@@ -21,6 +21,7 @@ interface GridProps {
   loading?: boolean;
   onRowClicked?: (event: any) => void;
   onGridReady?: (e: any) => void;
+  onSelectionChanged?: (event: SelectionChangedEvent) => void;
 }
 
 const Grid = forwardRef<any, GridProps>(
@@ -37,6 +38,7 @@ const Grid = forwardRef<any, GridProps>(
       loading = false,
       onRowClicked,
       onGridReady,
+      onSelectionChanged,
     },
     ref
   ) => {
@@ -65,6 +67,7 @@ const Grid = forwardRef<any, GridProps>(
                 suppressAutoSize={true}
                 onRowClicked={onRowClicked}
                 onGridReady={onGridReady}
+                onSelectionChanged={onSelectionChanged}
                 suppressRowClickSelection={suppressRowClickSelection}
               />
             </div>

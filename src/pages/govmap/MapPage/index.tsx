@@ -22,7 +22,11 @@ import {
   metersLabel,
   computeLineMeters,
 } from "@/components/logics/AreaMod";
-import { savePnus, loadPnus, deletePnus } from "@/components/logics/PnuStorage";
+import {
+  useSelectedPnuList,
+  useSaveSelectedPnus,
+  useDeleteSelectedPnus,
+} from "@/lib/hooks/useSelectedPnu";
 import {
   saveDrawing,
   loadDrawing,
@@ -78,10 +82,22 @@ export default function MapPage() {
   const selectedRoadRef = useRef<Set<string>>(new Set());
   const districtRef = useRef<DistrictKey>(district);
   const roadBufferRef = useRef(roadBuffer);
+  const mapLoadedRef = useRef(false); // 맵 초기 로드 완료 여부
+  const initialPnuLoadedRef = useRef(false); // 초기 PNU 로드 완료 여부
 
   const { sido, si } = districts[district];
   /** 현재 지역(도·시) 기준 저장된 PNU 목록 (지적도 하이라이트용, 쿼리 최소화) */
   const { data: pnuList = [] } = useAssetLocationPnuByDistrict(sido, si);
+
+  // 지도에서 직접 선택한 PNU 저장/불러오기 (DB 기반)
+  const { data: savedPnuList = [], refetch: refetchSavedPnus } = useSelectedPnuList(
+    key,
+    sido,
+    si,
+    true
+  );
+  const saveSelectedPnusMutation = useSaveSelectedPnus();
+  const deleteSelectedPnusMutation = useDeleteSelectedPnus();
 
   /** PNU 목록으로 cadastre 하이라이트 필터 (정확 PNU 매칭) */
   const buildPnuHighlightFilter = useCallback((pnus: string[]) => {
@@ -108,6 +124,7 @@ export default function MapPage() {
       }
       // 1) 기존 선택/표시 리셋 (PNU가 지역마다 달라서 충돌 방지)
       selectedPnusRef.current.clear();
+      initialPnuLoadedRef.current = false; // 지역 변경 시 초기 로드 플래그 리셋
       if (map.getLayer("cadastre-highlight")) {
         map.setFilter("cadastre-highlight", [
           "in",
@@ -157,6 +174,50 @@ export default function MapPage() {
     if (!map?.getLayer("cadastre-db-highlight")) return;
     map.setFilter("cadastre-db-highlight", buildPnuHighlightFilter(pnuList));
   }, [pnuList, buildPnuHighlightFilter]);
+
+  /** DB에서 저장된 PNU 불러오기 (초기 로드 및 데이터 변경 시 자동 반영) */
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || !savedPnuList.length) return;
+
+    // 맵이 아직 로드되지 않았으면 idle 이벤트 대기
+    const applyPnuHighlight = () => {
+      if (!map.getLayer("cadastre-highlight")) return;
+
+      // 초기 로드가 아닌 경우 (사용자가 이미 선택한 필지가 있는 경우) 덮어쓰지 않음
+      // 단, 초기 로드 시에는 무조건 적용
+      if (initialPnuLoadedRef.current && selectedPnusRef.current.size > 0) {
+        return;
+      }
+
+      selectedPnusRef.current = new Set(savedPnuList);
+      initialPnuLoadedRef.current = true;
+
+      map.setFilter("cadastre-highlight", [
+        "in",
+        ["get", "PNU"],
+        ["literal", savedPnuList],
+      ]);
+
+      const totalSqm = computeParcelsArea(
+        map,
+        "cadastre",
+        districts[district].layer,
+        "PNU",
+        savedPnuList
+      );
+      const d = formatArea(totalSqm);
+      setAreaText(`선택 ${savedPnuList.length}개 | ${d.label}`);
+    };
+
+    // 맵이 로드된 상태인지 확인
+    if (mapLoadedRef.current && map.isStyleLoaded()) {
+      applyPnuHighlight();
+    } else {
+      // 맵이 아직 로드되지 않았으면 idle 이벤트 대기
+      map.once("idle", applyPnuHighlight);
+    }
+  }, [savedPnuList, district]);
 
   // 도로·건물 레이어: road/build 값이 있으면 마운트, 없으면(빈문자열·undefined) 제거만 (cadastre만 표시)
   useEffect(() => {
@@ -534,29 +595,12 @@ export default function MapPage() {
         features,
       } as any);
 
-      // 저장된 선택 불러오기
-      const initial = loadPnus(key);
+      // 저장된 선택은 useEffect에서 savedPnuList 변경 시 자동 로드
+      selectedPnusRef.current = new Set();
+      setAreaText("면적: -");
 
-      selectedPnusRef.current = new Set(initial);
-
-      if (initial.length) {
-        map.setFilter("cadastre-highlight", [
-          "in",
-          ["get", "PNU"],
-          ["literal", initial],
-        ]);
-        const totalSqm = computeParcelsArea(
-          map,
-          "cadastre",
-          districts[district].layer,
-          "PNU",
-          initial
-        );
-        const d = formatArea(totalSqm);
-        setAreaText(`선택 ${initial.length}개 | ${d.label}`);
-      } else {
-        setAreaText("면적: -");
-      }
+      // 맵 로드 완료 표시 (savedPnuList useEffect에서 사용)
+      mapLoadedRef.current = true;
 
       // 클릭 핸들러
       map.on("click", (e) => {
@@ -1194,20 +1238,37 @@ export default function MapPage() {
       });
   }, []);
 
-  // 저장 핸들러
+  // 저장 핸들러 (DB에 저장)
   const handleSavePnus = useCallback(() => {
     const set = selectedPnusRef.current;
-    savePnus(key, set);
-    console.log(key, set);
-    alert(`선택된 필지 ${set.size}개 저장`);
-  }, []);
+    const pnuArray = Array.from(set);
+    if (!pnuArray.length) {
+      alert("선택된 필지가 없습니다.");
+      return;
+    }
+    saveSelectedPnusMutation.mutate(
+      { pnus: pnuArray, storageKey: key, sido, si },
+      {
+        onSuccess: (result) => {
+          console.log("저장 결과:", result);
+          alert(`선택된 필지 ${pnuArray.length}개 저장 (새로 저장: ${result.created}, 기존: ${result.skipped})`);
+          refetchSavedPnus();
+        },
+        onError: (error) => {
+          console.error("저장 실패:", error);
+          alert("필지 저장에 실패했습니다.");
+        },
+      }
+    );
+  }, [sido, si, saveSelectedPnusMutation, refetchSavedPnus]);
 
-  // 불러오기 핸들러
-  const handleLoadPnus = useCallback(() => {
+  // 불러오기 핸들러 (DB에서 불러오기)
+  const handleLoadPnus = useCallback(async () => {
     const map = mapRef.current;
     if (!map) return;
 
-    const list = loadPnus(key);
+    // 최신 데이터 다시 불러오기
+    const { data: list = [] } = await refetchSavedPnus();
     selectedPnusRef.current = new Set(list);
 
     if (map.getLayer("cadastre-highlight")) {
@@ -1231,13 +1292,21 @@ export default function MapPage() {
       setAreaText(`선택 ${list.length}개 | ${d.label}`);
     }
     alert(`저장된 필지 ${list.length}개 불러옴`);
-  }, []);
+  }, [district, refetchSavedPnus]);
 
-  // 삭제 핸들러
+  // 삭제 핸들러 (DB에서 삭제)
   const handleDeletePnus = useCallback(() => {
-    deletePnus(key);
-    alert("저장된 필지 선택을 삭제했어요.");
-  }, []);
+    deleteSelectedPnusMutation.mutate(key, {
+      onSuccess: () => {
+        alert("저장된 필지 선택을 삭제했어요.");
+        refetchSavedPnus();
+      },
+      onError: (error) => {
+        console.error("삭제 실패:", error);
+        alert("필지 삭제에 실패했습니다.");
+      },
+    });
+  }, [deleteSelectedPnusMutation, refetchSavedPnus]);
 
   return (
     <PageContent
