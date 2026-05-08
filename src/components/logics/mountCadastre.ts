@@ -43,7 +43,7 @@ export function mountCadastre(map: maplibregl.Map, d: DistrictKey) {
       type: "fill",
       source: "cadastre",
       "source-layer": layer,
-      paint: { "fill-color": "#0bf926ff", "fill-opacity": 0.5 },
+      paint: { "fill-color": "#00FF88", "fill-opacity": 0.7 },
       filter: ["in", ["get", "PNU"], ["literal", []]],
     },
     "cadastre-line"

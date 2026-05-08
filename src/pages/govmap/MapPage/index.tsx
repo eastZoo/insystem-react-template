@@ -1,6 +1,7 @@
 import type { Feature, Polygon, MultiPolygon, LineString } from "geojson";
 
 import maplibregl from "maplibre-gl";
+import "maplibre-gl/dist/maplibre-gl.css";
 import * as pmtiles from "pmtiles";
 import {
   featureCollection,
@@ -151,7 +152,7 @@ export default function MapPage() {
           type: "fill",
           source: "cadastre",
           "source-layer": curLayer,
-          paint: { "fill-color": "#006AFF", "fill-opacity": 0.35 },
+          paint: { "fill-color": "#FF6B00", "fill-opacity": 0.65 },
           filter: buildPnuHighlightFilter(pnuList),
         },
         "cadastre-line"
@@ -1238,6 +1239,52 @@ export default function MapPage() {
       });
   }, []);
 
+  // 화면에 보이는 필지 전체 선택
+  const handleSelectAll = useCallback(() => {
+    const map = mapRef.current;
+    if (!map) return;
+
+    // 현재 화면에 보이는 모든 cadastre 필지 쿼리
+    const features = map.queryRenderedFeatures({
+      layers: ["cadastre-fill"],
+    });
+
+    if (!features.length) {
+      alert("선택할 필지가 없습니다. 지도를 이동하거나 줌 레벨을 조정해주세요.");
+      return;
+    }
+
+    // 중복 제거하며 PNU 수집
+    const newPnus = new Set<string>();
+    features.forEach((f) => {
+      const pnu = f.properties?.PNU;
+      if (pnu) newPnus.add(pnu);
+    });
+
+    // 기존 선택에 추가
+    newPnus.forEach((pnu) => selectedPnusRef.current.add(pnu));
+
+    // 하이라이트 업데이트
+    const allSelected = Array.from(selectedPnusRef.current);
+    if (map.getLayer("cadastre-highlight")) {
+      map.setFilter("cadastre-highlight", [
+        "in",
+        ["get", "PNU"],
+        ["literal", allSelected],
+      ]);
+    }
+
+    // 면적 계산
+    const selectedFeatures = map.queryRenderedFeatures({
+      layers: ["cadastre-fill"],
+      filter: ["in", ["get", "PNU"], ["literal", allSelected]],
+    });
+    const totalArea = computeParcelsArea(selectedFeatures);
+    setAreaText(`면적: ${formatArea(totalArea)} (${allSelected.length}필지)`);
+
+    alert(`${newPnus.size}개 필지 추가 선택됨 (총 ${allSelected.length}개)`);
+  }, []);
+
   // 저장 핸들러 (DB에 저장)
   const handleSavePnus = useCallback(() => {
     const set = selectedPnusRef.current;
@@ -1336,6 +1383,7 @@ export default function MapPage() {
           onStartDraw={handleStartDraw}
           onStopDraw={handleStopDraw}
           onClear={handleClear}
+          onSelectAll={handleSelectAll}
           onSavePnus={handleSavePnus}
           onLoadPnus={handleLoadPnus}
           onDeletePnus={handleDeletePnus}
