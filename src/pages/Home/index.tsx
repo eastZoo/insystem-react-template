@@ -65,7 +65,7 @@ export default function HomePage() {
                   <>
                     <S.UserName>{me?.name ?? "—"}</S.UserName>
                     <S.UserMeta>
-                      {me?.email} · {me?.role}
+                      {me?.userId} · {me?.role}
                     </S.UserMeta>
                   </>
                 )}
