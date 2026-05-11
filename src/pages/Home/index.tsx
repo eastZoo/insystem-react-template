@@ -1,14 +1,7 @@
 import { IsButton, IsChip } from "insystem-atoms";
 import * as S from "./HomePage.style";
 import { useGetMe, useLogout } from "@/hooks/useAuth";
-import {
-  useTestPing,
-  useTestUsers,
-  useTestMenus,
-  useTestPermissions,
-  useTestOrders,
-  useTestStocks,
-} from "@/hooks/useTest";
+import { useTestPing, useTestUsers, useTestMenus } from "@/hooks/useTest";
 
 /**
  * HomePage — API 연동 테스트 샘플
