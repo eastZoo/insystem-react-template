@@ -39,15 +39,8 @@ export default function HomePage() {
   // ── Test APIs ─────────────────────────────────────────────
   const { data: usersData, isLoading: usersLoading } = useTestUsers(1, 5);
   const { data: menus, isLoading: menusLoading } = useTestMenus();
-  const { data: permissions, isLoading: permissionsLoading } =
-    useTestPermissions();
-  const { data: orders, isLoading: ordersLoading } = useTestOrders();
-  const { data: stocks, isLoading: stocksLoading } = useTestStocks();
 
   const menusList = Array.isArray(menus) ? menus : [];
-  const permissionsList = Array.isArray(permissions) ? permissions : [];
-  const ordersList = Array.isArray(orders) ? orders : [];
-  const stocksList = Array.isArray(stocks) ? stocks : [];
 
   return (
     <>
@@ -197,133 +190,6 @@ export default function HomePage() {
                         </S.ItemSub>
                       </S.ItemMain>
                       <S.CategoryPill>sortRef: {menu.sortRef}</S.CategoryPill>
-                    </S.ItemRow>
-                  ))}
-                </S.ItemList>
-              )}
-            </S.SectionCard>
-          </S.SectionGrid>
-
-          {/* ── Row 2: 권한 / 재고 ── */}
-          <S.SectionGrid cols={2}>
-            {/* 권한 목록 */}
-            <S.SectionCard>
-              <S.SectionHeader>
-                <div>
-                  <S.SectionTitle>역할별 권한</S.SectionTitle>
-                  <S.HookTag>useTestPermissions()</S.HookTag>
-                </div>
-                <S.StatSub>{permissionsList.length}건</S.StatSub>
-              </S.SectionHeader>
-              {permissionsLoading ? (
-                <S.SkeletonGroup>
-                  {Array.from({ length: 3 }).map((_, i) => (
-                    <S.Skeleton key={i} h="48px" />
-                  ))}
-                </S.SkeletonGroup>
-              ) : permissionsList.length === 0 ? (
-                <S.EmptyState>권한 없음</S.EmptyState>
-              ) : (
-                <S.ItemList>
-                  {permissionsList.map((perm) => (
-                    <S.ItemRow key={perm.id}>
-                      <S.ItemMain>
-                        <S.ItemTitle>{perm.menuKey}</S.ItemTitle>
-                        <S.ItemSub>
-                          R:{perm.canRead ? "O" : "X"} C:
-                          {perm.canCreate ? "O" : "X"} U:
-                          {perm.canUpdate ? "O" : "X"} D:
-                          {perm.canDelete ? "O" : "X"}
-                        </S.ItemSub>
-                      </S.ItemMain>
-                      <S.RolePill>role: {perm.roleId.slice(0, 8)}…</S.RolePill>
-                    </S.ItemRow>
-                  ))}
-                </S.ItemList>
-              )}
-            </S.SectionCard>
-
-            {/* 재고 현황 */}
-            <S.SectionCard>
-              <S.SectionHeader>
-                <div>
-                  <S.SectionTitle>상품 재고</S.SectionTitle>
-                  <S.HookTag>useTestStocks()</S.HookTag>
-                </div>
-                <S.StatSub>{stocksList.length}건</S.StatSub>
-              </S.SectionHeader>
-              {stocksLoading ? (
-                <S.SkeletonGroup>
-                  {Array.from({ length: 3 }).map((_, i) => (
-                    <S.Skeleton key={i} h="48px" />
-                  ))}
-                </S.SkeletonGroup>
-              ) : stocksList.length === 0 ? (
-                <S.EmptyState>재고 없음</S.EmptyState>
-              ) : (
-                <S.ItemList>
-                  {stocksList.map((stock) => (
-                    <S.ItemRow key={stock.id}>
-                      <S.ItemMain>
-                        <S.ItemTitle>{stock.productName}</S.ItemTitle>
-                        <S.ItemSub>{stock.productKey}</S.ItemSub>
-                      </S.ItemMain>
-                      <S.ItemEnd>
-                        <div>재고: {stock.quantity}개</div>
-                        <S.PricePill>
-                          ₩{stock.price.toLocaleString()}
-                        </S.PricePill>
-                      </S.ItemEnd>
-                    </S.ItemRow>
-                  ))}
-                </S.ItemList>
-              )}
-            </S.SectionCard>
-          </S.SectionGrid>
-
-          {/* ── Row 3: 주문 목록 ── */}
-          <S.SectionGrid cols={1}>
-            <S.SectionCard>
-              <S.SectionHeader>
-                <div>
-                  <S.SectionTitle>주문 목록</S.SectionTitle>
-                  <S.HookTag>useTestOrders()</S.HookTag>
-                </div>
-                <S.StatSub>{ordersList.length}건</S.StatSub>
-              </S.SectionHeader>
-              {ordersLoading ? (
-                <S.SkeletonGroup>
-                  {Array.from({ length: 3 }).map((_, i) => (
-                    <S.Skeleton key={i} h="48px" />
-                  ))}
-                </S.SkeletonGroup>
-              ) : ordersList.length === 0 ? (
-                <S.EmptyState>
-                  주문 없음 — Swagger에서 POST /api/app/orders로 주문을
-                  생성해보세요
-                </S.EmptyState>
-              ) : (
-                <S.ItemList>
-                  {ordersList.map((order) => (
-                    <S.ItemRow key={order.id}>
-                      <S.ItemMain>
-                        <S.ItemTitle>주문 #{order.id.slice(0, 8)}…</S.ItemTitle>
-                        <S.ItemSub>
-                          {order.items
-                            .map((i) => `${i.productName} x${i.quantity}`)
-                            .join(", ")}
-                        </S.ItemSub>
-                      </S.ItemMain>
-                      <S.ItemEnd>
-                        <div>₩{order.totalAmount.toLocaleString()}</div>
-                        <IsChip
-                          color={
-                            order.status === "CANCELLED" ? "danger" : "success"
-                          }
-                        >
-                          {order.status}
-                        </IsChip>
-                      </S.ItemEnd>
                     </S.ItemRow>
                   ))}
                 </S.ItemList>
