@@ -1,3 +1,7 @@
+/**
+ * 휴지통 그리드 컬럼 정의
+ * @description AG-Grid 컬럼 정의 및 셀 렌더러
+ */
 import { useState, useRef, useEffect, useMemo, useCallback } from "react";
 import { createPortal } from "react-dom";
 import styled from "styled-components";
@@ -6,38 +10,53 @@ import {
   FileIconSmall,
   FolderIconSmall,
   MoreVerticalIcon,
-  EditIcon,
-  MoveIcon,
+  RestoreIcon,
   TrashIcon,
-  StatusDot,
 } from "@/styles/icons";
 
-/** 파일 관리 그리드 행 타입 */
-export interface FileItem {
+/** 공개 범위 타입 */
+export type VisibilityType = "public" | "team" | "private" | "pending";
+
+/** 벡터화 상태 타입 */
+export type VectorStatusType = "complete" | "pending" | "error";
+
+/** 휴지통 그리드 행 타입 */
+export interface RecycleBinItem {
   select?: boolean;
   id: string;
   name: string;
   type: "file" | "folder";
+  /** 수정 날짜 */
   modifiedDate: string;
-  visibility: "private" | "team" | "public" | "pending";
-  /** 전체 공개 승인 상태 */
-  approvalStatus?: "none" | "pending" | "approved";
+  /** 공개 범위 */
+  visibility: VisibilityType;
+  /** 벡터화 상태 */
+  vectorStatus: VectorStatusType;
+  /** 파일 크기 */
   size: string;
+  /** 삭제 날짜 (기존 호환) */
+  deletedDate?: string;
+  /** 원래 위치 (기존 호환) */
+  originalLocation?: string;
   /** 폴더 코드 (API 호출용) */
   fld_cd?: string;
   /** 파일 ID (API 호출용) */
   file_id?: string;
   /** 파일 SEQ (API 호출용) */
   file_seq?: number;
+  /** 컬렉션 명 (API 호출용) */
+  collection_nm?: string;
+  /** 임베딩 모델 (API 호출용) */
+  embd_model?: string;
+  /** 삭제 예정일 (30일 후 자동 삭제) */
+  autoDeleteDate?: string;
 }
 
-/** 액션 메뉴·이름 셀에서 사용하는 ag-grid context */
-export interface FileManagementGridContext {
-  onEdit?: (file: FileItem) => void;
-  onMove?: (file: FileItem) => void;
-  onDelete?: (file: FileItem) => void;
-  /** 폴더 이름 클릭 시 상세로 이동 */
-  onOpenFolder?: (file: FileItem) => void;
+/** 액션 메뉴에서 사용하는 ag-grid context */
+export interface RecycleBinGridContext {
+  onRestore?: (item: RecycleBinItem) => void;
+  onPermanentDelete?: (item: RecycleBinItem) => void;
+  onMove?: (item: RecycleBinItem) => void;
 }
 
 const cellStyleFlexCenter: CellStyle = {
@@ -50,91 +69,87 @@ const cellStyleTextRight: CellStyle = {
   textAlign: "right",
 };
 
+/** 이름 셀 렌더러 */
 const NameCellRenderer = (
-  props: ICellRendererParams<FileItem, unknown, FileManagementGridContext>
+  props: ICellRendererParams<RecycleBinItem, unknown, RecycleBinGridContext>
 ) => {
   const data = props.data;
-  const ctx = props.context;
   if (!data) return null;
-
-  /** 파일 클릭 시 새 탭에서 열기 */
-  const handleFileClick = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    if (data.file_id && data.file_seq !== undefined) {
-      const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || "";
-      const viewerUrl = `${apiBaseUrl}/api/app/collection/file/view?fileId=${data.file_id}&fileSeq=${data.file_seq}`;
-      window.open(viewerUrl, "_blank");
-    }
-  };
 
   return (
     <NameCell>
       <IconWrapper>
         {data.type === "folder" ? <FolderIconSmall /> : <FileIconSmall />}
       </IconWrapper>
-      {data.type === "folder" ? (
-        <FolderNameButton
-          type="button"
-          onClick={(e) => {
-            e.stopPropagation();
-            ctx?.onOpenFolder?.(data);
-          }}
-        >
-          {data.name}
-        </FolderNameButton>
-      ) : (
-        <FileNameButton type="button" onClick={handleFileClick}>
-          {data.name}
-        </FileNameButton>
-      )}
+      <FileNameText>{data.name}</FileNameText>
     </NameCell>
   );
 };
 
-const VisibilityBadgeRenderer = (
-  props: ICellRendererParams<FileItem, unknown, FileManagementGridContext>
+/** 공개 범위 셀 렌더러 */
+const VisibilityCellRenderer = (
+  props: ICellRendererParams<RecycleBinItem, unknown, RecycleBinGridContext>
 ) => {
   const data = props.data;
   if (!data) return null;
 
-  const badgeConfig: Record<
-    string,
-    { label: string; bg: string; color: string }
-  > = {
-    private: {
-      label: "나만 보기",
-      bg: "rgba(112, 115, 124, 0.12)",
-      color: "rgba(55, 56, 60, 0.61)",
-    },
-    team: {
-      label: "팀 공개",
-      bg: "rgba(0, 189, 222, 0.12)",
-      color: "#00BDDE",
-    },
-    public: {
-      label: "전체공개",
-      bg: "rgba(0, 191, 64, 0.12)",
-      color: "#00BF40",
-    },
-    pending: {
-      label: "승인요청",
-      bg: "rgba(255, 146, 0, 0.12)",
-      color: "#FF9200",
-    },
+  const getVisibilityConfig = (visibility: VisibilityType) => {
+    switch (visibility) {
+      case "public":
+        return { label: "전체공개", color: "#00bf40", bg: "rgba(0, 191, 64, 0.12)" };
+      case "team":
+        return { label: "팀 공개", color: "#00bdde", bg: "rgba(0, 189, 222, 0.12)" };
+      case "private":
+        return { label: "나만 보기", color: "rgba(55, 56, 60, 0.61)", bg: "rgba(112, 115, 124, 0.12)" };
+      case "pending":
+        return { label: "승인대기", color: "#ff9200", bg: "rgba(255, 146, 0, 0.12)" };
+      default:
+        return { label: "-", color: "#70737c", bg: "transparent" };
+    }
   };
 
-  const config = badgeConfig[data.visibility];
-  if (!config) return <span>—</span>;
+  const config = getVisibilityConfig(data.visibility);
 
   return (
-    <Badge $bg={config.bg} $color={config.color}>
+    <VisibilityBadge $color={config.color} $bg={config.bg}>
       {config.label}
-    </Badge>
+    </VisibilityBadge>
   );
 };
 
+/** 벡터화 상태 셀 렌더러 */
+const VectorStatusCellRenderer = (
+  props: ICellRendererParams<RecycleBinItem, unknown, RecycleBinGridContext>
+) => {
+  const data = props.data;
+  if (!data) return null;
+
+  const getStatusConfig = (status: VectorStatusType) => {
+    switch (status) {
+      case "complete":
+        return { label: "완료", color: "#00bf40" };
+      case "pending":
+        return { label: "대기중", color: "#ff9200" };
+      case "error":
+        return { label: "오류", color: "#ff4242" };
+      default:
+        return { label: "-", color: "#70737c" };
+    }
+  };
+
+  const config = getStatusConfig(data.vectorStatus);
+
+  return (
+    <VectorStatusCell>
+      <VectorStatusDot $color={config.color} />
+      <VectorStatusText>{config.label}</VectorStatusText>
+    </VectorStatusCell>
+  );
+};
+
+/** 액션 메뉴 렌더러 */
 const ActionMenuRenderer = (
-  props: ICellRendererParams<FileItem, unknown, FileManagementGridContext>
+  props: ICellRendererParams<RecycleBinItem, unknown, RecycleBinGridContext>
 ) => {
   const data = props.data;
   const [showMenu, setShowMenu] = useState(false);
@@ -147,7 +162,7 @@ const ActionMenuRenderer = (
       const rect = buttonRef.current.getBoundingClientRect();
       setMenuPosition({
         top: rect.bottom + 4,
-        left: rect.right - 140, // menu min-width is 140px, align to right
+        left: rect.right - 140,
       });
     }
   }, []);
@@ -187,19 +202,14 @@ const ActionMenuRenderer = (
 
   if (!data) return null;
 
-  const handleEdit = () => {
+  const handleRestore = () => {
     setShowMenu(false);
-    props.context?.onEdit?.(data);
+    props.context?.onRestore?.(data);
   };
 
-  const handleMove = () => {
+  const handlePermanentDelete = () => {
     setShowMenu(false);
-    props.context?.onMove?.(data);
-  };
-
-  const handleDelete = () => {
-    setShowMenu(false);
-    props.context?.onDelete?.(data);
+    props.context?.onPermanentDelete?.(data);
   };
 
   return (
@@ -221,25 +231,18 @@ const ActionMenuRenderer = (
             ref={menuRef}
             style={{ top: menuPosition.top, left: menuPosition.left }}
           >
-            <GridMenuItem type="button" onClick={handleEdit}>
+            <GridMenuItem type="button" onClick={handleRestore}>
               <GridMenuIcon>
-                <EditIcon />
+                <RestoreIcon />
               </GridMenuIcon>
-              <GridMenuLabel>수정하기</GridMenuLabel>
+              <GridMenuLabel>복원하기</GridMenuLabel>
             </GridMenuItem>
             <GridMenuDivider />
-            <GridMenuItem type="button" onClick={handleMove}>
-              <GridMenuIcon>
-                <MoveIcon />
-              </GridMenuIcon>
-              <GridMenuLabel>이동하기</GridMenuLabel>
-            </GridMenuItem>
-            <GridMenuDivider />
-            <GridMenuItem type="button" onClick={handleDelete}>
-              <GridMenuIcon>
+            <GridMenuItem type="button" onClick={handlePermanentDelete} $danger>
+              <GridMenuIcon $danger>
                 <TrashIcon />
               </GridMenuIcon>
-              <GridMenuLabel>삭제하기</GridMenuLabel>
+              <GridMenuLabel $danger>영구 삭제</GridMenuLabel>
             </GridMenuItem>
           </ActionMenuPortal>,
           document.body
@@ -248,36 +251,49 @@ const ActionMenuRenderer = (
   );
 };
 
-/** 파일 관리 화면용 ag-grid 컬럼 정의 (정적이므로 useMemo deps 없이 한 번만 생성해도 됨) */
-export function createFileManagementColumnDefs(): ColDef<FileItem>[] {
+/** 휴지통 화면용 ag-grid 컬럼 정의 */
+export function createRecycleBinColumnDefs(): ColDef<RecycleBinItem>[] {
   return [
     {
       headerName: "이름",
       field: "name",
-      flex: 1,
-      minWidth: 200,
+      flex: 2,
+      minWidth: 300,
       cellRenderer: NameCellRenderer,
       sortable: true,
     },
     {
       headerName: "수정 날짜",
       field: "modifiedDate",
-      width: 120,
+      flex: 1,
+      minWidth: 120,
+      cellStyle: { ...cellStyleFlexCenter },
       sortable: true,
     },
     {
       headerName: "공개 범위",
       field: "visibility",
-      width: 120,
-      cellRenderer: VisibilityBadgeRenderer,
+      flex: 1,
+      minWidth: 100,
+      cellRenderer: VisibilityCellRenderer,
+      cellStyle: cellStyleFlexCenter,
+      sortable: false,
+    },
+    {
+      headerName: "벡터화 상태",
+      field: "vectorStatus",
+      flex: 1,
+      minWidth: 100,
+      cellRenderer: VectorStatusCellRenderer,
       cellStyle: cellStyleFlexCenter,
       sortable: false,
     },
     {
       headerName: "크기",
       field: "size",
-      width: 100,
-      cellStyle: cellStyleTextRight,
+      flex: 1,
+      minWidth: 80,
+      cellStyle: { ...cellStyleFlexCenter },
       sortable: false,
     },
     {
@@ -294,9 +310,13 @@ export function createFileManagementColumnDefs(): ColDef<FileItem>[] {
 }
 
 /** 컬럼 정의는 불변이라 한 번만 메모이제이션 */
-export function useFileManagementColumnDefs(): ColDef<FileItem>[] {
-  return useMemo(() => createFileManagementColumnDefs(), []);
+export function useRecycleBinColumnDefs(): ColDef<RecycleBinItem>[] {
+  return useMemo(() => createRecycleBinColumnDefs(), []);
 }
+
+/* ========================================
+   스타일 컴포넌트
+   ======================================== */
 
 const NameCell = styled.div`
   display: flex;
@@ -313,59 +333,58 @@ const IconWrapper = styled.div`
   color: #1b2a6b;
 `;
 
-const FileNameButton = styled.button`
-  flex: 1;
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  padding: 0;
-  border: none;
-  background: transparent;
-  cursor: pointer;
-  text-align: left;
-  font: inherit;
+const FileNameText = styled.span`
   font-size: 12px;
   font-weight: 500;
   color: #1b2a6b;
-
-  &:hover {
-    text-decoration: underline;
-    color: #2ec4a0;
-  }
-`;
-
-const FolderNameButton = styled.button`
-  flex: 1;
-  min-width: 0;
+  white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  white-space: nowrap;
-  padding: 0;
-  border: none;
-  background: transparent;
-  cursor: pointer;
-  text-align: left;
-  font: inherit;
-  font-size: 12px;
-  font-weight: 500;
-  color: #1b2a6b;
-
-  &:hover {
-    text-decoration: underline;
-  }
 `;
 
-const Badge = styled.span<{ $bg: string; $color: string }>`
+const VisibilityBadge = styled.div<{ $color: string; $bg: string }>`
   display: inline-flex;
   align-items: center;
   justify-content: center;
   padding: 5px 8px;
+  min-width: 59px;
   background: ${({ $bg }) => $bg};
   border-radius: 4px;
+  font-family: "Pretendard Variable", "Pretendard", sans-serif;
   font-size: 11px;
   font-weight: 600;
+  line-height: 1.273;
+  letter-spacing: 0.342px;
   color: ${({ $color }) => $color};
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+`;
+
+const VectorStatusCell = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 4px 0;
+`;
+
+const VectorStatusDot = styled.div<{ $color: string }>`
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: ${({ $color }) => $color};
+  flex-shrink: 0;
+`;
+
+const VectorStatusText = styled.span`
+  font-family: "Pretendard Variable", "Pretendard", sans-serif;
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 1.334;
+  letter-spacing: 0.302px;
+  color: rgba(46, 47, 51, 0.88);
+  text-align: center;
   white-space: nowrap;
 `;
 
@@ -408,7 +427,7 @@ const ActionMenuPortal = styled.div`
   z-index: 9999;
 `;
 
-const GridMenuItem = styled.button`
+const GridMenuItem = styled.button<{ $danger?: boolean }>`
   display: flex;
   align-items: center;
   gap: 8px;
@@ -420,17 +439,18 @@ const GridMenuItem = styled.button`
   transition: background 0.15s ease;
 
   &:hover {
-    background: rgba(23, 23, 25, 0.075);
+    background: ${({ $danger }) =>
+      $danger ? "rgba(239, 68, 68, 0.08)" : "rgba(23, 23, 25, 0.075)"};
   }
 `;
 
-const GridMenuIcon = styled.span`
+const GridMenuIcon = styled.span<{ $danger?: boolean }>`
   display: flex;
   align-items: center;
   justify-content: center;
   width: 20px;
   height: 20px;
-  color: rgba(46, 47, 51, 0.88);
+  color: ${({ $danger }) => ($danger ? "#ef4444" : "rgba(46, 47, 51, 0.88)")};
   flex-shrink: 0;
 
   svg {
@@ -439,13 +459,13 @@ const GridMenuIcon = styled.span`
   }
 `;
 
-const GridMenuLabel = styled.span`
+const GridMenuLabel = styled.span<{ $danger?: boolean }>`
   font-family: "Pretendard Variable", "Pretendard", sans-serif;
   font-size: 12px;
   font-weight: 500;
   line-height: 1.334;
   letter-spacing: 0.302px;
-  color: rgba(46, 47, 51, 0.88);
+  color: ${({ $danger }) => ($danger ? "#ef4444" : "rgba(46, 47, 51, 0.88)")};
 `;
 
 const GridMenuDivider = styled.div`

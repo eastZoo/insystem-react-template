@@ -47,6 +47,10 @@ export interface LoginUser {
   name: string;
   /** sya_user.email — 없을 수 있음 */
   email: string | null;
+  /** sya_user.co_cd (법인코드) — 파일 채번 등에 사용 */
+  coCd: string | null;
+  /** sya_user.bplc_cd (사업장코드) — 파일 채번 등에 사용 */
+  bplcCd: string | null;
 }
 
 /**

@@ -3,18 +3,20 @@ import styled from "styled-components";
 import { Modal } from "../../atoms/Modal";
 import { Alert } from "../../atoms/Alert";
 
-/** 공개 설정 타입 */
-type VisibilityType = "private" | "team" | "public";
+/** 공개 설정 타입 - auth_level 코드 값 */
+export type AuthLevelType = "SY02000001" | "SY02000002" | "SY02000003" | "SY02000004";
 
 export interface UploadModalProps {
   /** 모달 표시 여부 */
   isOpen: boolean;
   /** 모달 닫기 핸들러 */
   onClose: () => void;
-  /** 업로드 핸들러 */
-  onUpload: (files: File[], visibility: VisibilityType) => void;
+  /** 업로드 핸들러 - auth_level 코드값 및 fld_cd 전달 */
+  onUpload: (files: File[], authLevel: AuthLevelType, fldCd?: string) => void;
   /** 모달 타입 (file: 파일, folder: 폴더) */
   type?: "file" | "folder";
+  /** 폴더코드 (선택적, 미지정시 기본 폴더에 업로드) */
+  fldCd?: string;
 }
 
 /** ============================= Icons ============================= */
@@ -57,10 +59,11 @@ export const UploadModal = ({
   onClose,
   onUpload,
   type = "file",
+  fldCd,
 }: UploadModalProps) => {
   /** ============================= state 영역 ============================= */
   const [files, setFiles] = useState<File[]>([]);
-  const [visibility, setVisibility] = useState<VisibilityType>("private");
+  const [authLevel, setAuthLevel] = useState<AuthLevelType>("SY02000002"); // 기본값: 해당부서
   const [isDragging, setIsDragging] = useState(false);
   const [showPublicAlert, setShowPublicAlert] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -96,18 +99,18 @@ export const UploadModal = ({
 
   const handleUpload = () => {
     // 전체 공개 선택 시 경고 모달 표시
-    if (visibility === "public") {
+    if (authLevel === "SY02000001") {
       setShowPublicAlert(true);
       return;
     }
-    onUpload(files, visibility);
+    onUpload(files, authLevel, fldCd);
     handleClose();
   };
 
   /** 전체 공개 승인 요청 확인 */
   const handlePublicConfirm = () => {
     setShowPublicAlert(false);
-    onUpload(files, visibility);
+    onUpload(files, authLevel, fldCd);
     handleClose();
   };
 
@@ -118,32 +121,37 @@ export const UploadModal = ({
 
   const handleClose = () => {
     setFiles([]);
-    setVisibility("private");
+    setAuthLevel("SY02000002");
     onClose();
   };
 
-  /** 공개 설정 옵션 */
-  const visibilityOptions: {
-    value: VisibilityType;
+  /** 공개 설정 옵션 - auth_level 코드 매핑 */
+  const authLevelOptions: {
+    value: AuthLevelType;
     title: string;
     description: string;
     badge?: string;
   }[] = [
     {
-      value: "private",
-      title: "나만보기",
-      description: "내 AI 채팅에서만 답변 출처로 사용됩니다.",
-    },
-    {
-      value: "team",
-      title: "팀 공유",
-      description: "팀원의 AI 채팅에서도 답변 출처로 사용됩니다.",
-    },
-    {
-      value: "public",
-      title: "전체 공개",
+      value: "SY02000001",
+      title: "전체",
       description: "사내 모든 구성원의 AI 채팅에서 답변 출처로 사용됩니다.",
       badge: "승인 필요",
+    },
+    {
+      value: "SY02000002",
+      title: "해당부서",
+      description: "해당 부서원의 AI 채팅에서 답변 출처로 사용됩니다.",
+    },
+    {
+      value: "SY02000003",
+      title: "해당부서 및 하위부서",
+      description: "해당 부서 및 하위 부서원의 AI 채팅에서 답변 출처로 사용됩니다.",
+    },
+    {
+      value: "SY02000004",
+      title: "비공개",
+      description: "내 AI 채팅에서만 답변 출처로 사용됩니다.",
     },
   ];
 
@@ -153,9 +161,7 @@ export const UploadModal = ({
         {/* Content */}
       <Content>
         {/* Title */}
-        <Title>
-          {type === "folder" ? "폴더 업로드" : "파일 또는 폴더 업로드"}
-        </Title>
+        <Title>PDF 파일 업로드</Title>
 
         {/* Custom Drag Drop Area */}
         <DragDropArea
@@ -176,14 +182,14 @@ export const UploadModal = ({
             </TextRow>
             <InfoText>
               {files.length > 0
-                ? `${files.length}개 파일 선택됨`
-                : ".pdf 파일 또는 .pdf만 포함된 .zip 파일 지원"}
+                ? `${files.length}개 PDF 파일 선택됨`
+                : ".pdf 파일만 지원 (여러 파일 선택 가능)"}
             </InfoText>
           </DragDropContent>
           <HiddenInput
             ref={fileInputRef}
             type="file"
-            accept=".pdf,.zip"
+            accept=".pdf"
             multiple
             onChange={handleFileChange}
           />
@@ -199,14 +205,14 @@ export const UploadModal = ({
           </SectionHeader>
 
           <RadioGroup>
-            {visibilityOptions.map((option) => (
+            {authLevelOptions.map((option) => (
               <RadioItem
                 key={option.value}
-                $active={visibility === option.value}
-                onClick={() => setVisibility(option.value)}
+                $active={authLevel === option.value}
+                onClick={() => setAuthLevel(option.value)}
               >
                 <RadioButton>
-                  {visibility === option.value ? (
+                  {authLevel === option.value ? (
                     <RadioCheckedIcon />
                   ) : (
                     <RadioUncheckedIcon />

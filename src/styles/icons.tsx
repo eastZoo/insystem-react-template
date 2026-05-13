@@ -462,3 +462,122 @@ export const ChevronRightIcon = () => (
     />
   </svg>
 );
+
+/** Restore Icon - Undo/restore from trash */
+export const RestoreIcon = () => (
+  <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+    <path
+      d="M3.33333 3.33333V7.5H7.5"
+      stroke="currentColor"
+      strokeWidth="1.2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+    <path
+      d="M5.24999 12.5C5.7784 13.8239 6.73614 14.9265 7.97071 15.6345C9.20528 16.3425 10.6457 16.6146 12.0578 16.4063C13.47 16.1979 14.7713 15.5215 15.7553 14.4858C16.7393 13.4502 17.3486 12.1155 17.4845 10.6948C17.6204 9.27411 17.2749 7.85044 16.5028 6.65547C15.7308 5.4605 14.5777 4.56224 13.2285 4.1034C11.8793 3.64456 10.4167 3.65197 9.07218 4.12447C7.72768 4.59697 6.58337 5.5071 5.82333 6.71"
+      stroke="currentColor"
+      strokeWidth="1.2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+  </svg>
+);
+
+/** Trash Empty Icon - Empty trash/recycle bin */
+export const TrashEmptyIcon = () => (
+  <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+    <path
+      d="M2.5 5H17.5"
+      stroke="currentColor"
+      strokeWidth="1.2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+    <path
+      d="M15.8333 5V16.6667C15.8333 17.5 15 18.3333 14.1667 18.3333H5.83333C5 18.3333 4.16667 17.5 4.16667 16.6667V5"
+      stroke="currentColor"
+      strokeWidth="1.2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+    <path
+      d="M6.66667 5V3.33333C6.66667 2.5 7.5 1.66667 8.33333 1.66667H11.6667C12.5 1.66667 13.3333 2.5 13.3333 3.33333V5"
+      stroke="currentColor"
+      strokeWidth="1.2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+  </svg>
+);
+
+/** Calendar Icon - Date picker icon */
+export const CalendarIcon = () => (
+  <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+    <rect
+      x="2"
+      y="3"
+      width="12"
+      height="11"
+      rx="2"
+      stroke="currentColor"
+      strokeWidth="1.2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+    <path
+      d="M11 1V3"
+      stroke="currentColor"
+      strokeWidth="1.2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+    <path
+      d="M5 1V3"
+      stroke="currentColor"
+      strokeWidth="1.2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+    <path
+      d="M2 7H14"
+      stroke="currentColor"
+      strokeWidth="1.2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+  </svg>
+);
+
+/** Refresh Icon - Reset/refresh action */
+export const RefreshIcon = () => (
+  <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+    <path
+      d="M2.66667 2.66667V6H6"
+      stroke="currentColor"
+      strokeWidth="1.2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+    <path
+      d="M13.3333 13.3333V10H10"
+      stroke="currentColor"
+      strokeWidth="1.2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+    <path
+      d="M11.9333 5.99999C11.6844 5.20489 11.2246 4.49225 10.6024 3.93667C9.98026 3.38109 9.21857 3.00346 8.39946 2.84436C7.58034 2.68526 6.73453 2.75073 5.94904 3.03372C5.16355 3.3167 4.46747 3.80674 3.93333 4.45333L2.66667 6"
+      stroke="currentColor"
+      strokeWidth="1.2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+    <path
+      d="M4.06667 10C4.31556 10.7951 4.77539 11.5078 5.39757 12.0633C6.01976 12.6189 6.78144 12.9965 7.60056 13.1556C8.41968 13.3147 9.26548 13.2493 10.051 12.9663C10.8365 12.6833 11.5325 12.1933 12.0667 11.5467L13.3333 10"
+      stroke="currentColor"
+      strokeWidth="1.2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+  </svg>
+);

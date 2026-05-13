@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import styled from "styled-components";
+import { IsInputSearch } from "insystem-atoms";
 import { Modal } from "../Modal";
 import { Alert } from "../Alert";
 
@@ -28,6 +29,7 @@ export interface EditFileModalProps {
 }
 
 /** ============================= Icons ============================= */
+
 const RadioCheckedIcon = () => (
   <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
     <circle cx="10" cy="10" r="10" fill="#0066FF" />
@@ -51,17 +53,6 @@ const RadioUncheckedIcon = () => (
       stroke="rgba(112, 115, 124, 0.22)"
       strokeWidth="1.5"
       fill="none"
-    />
-  </svg>
-);
-
-const ClearIcon = () => (
-  <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-    <path
-      d="M4.5 4.5L11.5 11.5M4.5 11.5L11.5 4.5"
-      stroke="rgba(112, 115, 124, 0.52)"
-      strokeWidth="1.5"
-      strokeLinecap="round"
     />
   </svg>
 );
@@ -237,21 +228,18 @@ export const EditFileModal = ({
           {/* File/Folder Name Input */}
           <InputSection>
             <InputLabel>{isFolder ? "폴더 명" : "파일 명"}</InputLabel>
-            <InputField>
-              <Input
-                type="text"
-                value={fileName}
-                onChange={handleFileNameChange}
-                placeholder={
-                  isFolder ? "폴더명을 입력하세요" : "파일명을 입력하세요"
-                }
-              />
-              {fileName && (
-                <ClearButton type="button" onClick={handleClearFileName}>
-                  <ClearIcon />
-                </ClearButton>
-              )}
-            </InputField>
+            <IsInputSearch
+              labelShow={false}
+              value={fileName}
+              onChange={handleFileNameChange}
+              placeholder={
+                isFolder ? "폴더명을 입력하세요" : "파일명을 입력하세요"
+              }
+              clearable
+              onClear={handleClearFileName}
+              fullWidth
+              disabled={!isFolder}
+            />
           </InputSection>
 
           {/* 폴더인 경우 안내 문구 표시 */}
@@ -430,58 +418,6 @@ const InputLabel = styled.label`
   line-height: 1.429;
   letter-spacing: 0.203px;
   color: rgba(46, 47, 51, 0.88);
-`;
-
-const InputField = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  height: 40px;
-  padding: 9px 8px;
-  background: white;
-  border: 1px solid rgba(112, 115, 124, 0.22);
-  border-radius: 8px;
-  transition: border-color 0.15s ease;
-
-  &:focus-within {
-    border-color: #0066ff;
-  }
-`;
-
-const Input = styled.input`
-  flex: 1;
-  min-width: 0;
-  border: none;
-  outline: none;
-  background: transparent;
-  font-family: "Pretendard Variable", "Pretendard", sans-serif;
-  font-size: 14px;
-  font-weight: 500;
-  line-height: 1.429;
-  letter-spacing: 0.203px;
-  color: rgba(46, 47, 51, 0.88);
-
-  &::placeholder {
-    color: rgba(55, 56, 60, 0.61);
-  }
-`;
-
-const ClearButton = styled.button`
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-  width: 16px;
-  height: 16px;
-  padding: 0;
-  background: transparent;
-  border: none;
-  cursor: pointer;
-  transition: opacity 0.15s ease;
-
-  &:hover {
-    opacity: 0.7;
-  }
 `;
 
 /* ===== Visibility Section ===== */

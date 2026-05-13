@@ -20,7 +20,7 @@ const SEED_ACCOUNTS = [
   { userId: "developer", role: "DEVELOPER" },
 ] as const;
 
-const SEED_PASSWORD = "Admin123!";
+const SEED_PASSWORD = "1";
 
 /* ========================================
    아이콘 컴포넌트

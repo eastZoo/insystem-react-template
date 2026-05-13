@@ -9,18 +9,31 @@ import styled from "styled-components";
    타입 정의
    ======================================== */
 
-interface PaginationProps {
+interface PaginationBaseProps {
   /** 현재 페이지 (1부터 시작) */
   currentPage: number;
-  /** 전체 아이템 개수 */
-  totalItems: number;
-  /** 페이지당 아이템 개수 */
-  itemsPerPage: number;
   /** 페이지 변경 핸들러 */
   onPageChange: (page: number) => void;
   /** 표시할 페이지 버튼 개수 (기본값: 5) */
   visiblePages?: number;
 }
+
+interface PaginationWithTotalItems extends PaginationBaseProps {
+  /** 전체 아이템 개수 */
+  totalItems: number;
+  /** 페이지당 아이템 개수 */
+  itemsPerPage: number;
+  totalPages?: never;
+}
+
+interface PaginationWithTotalPages extends PaginationBaseProps {
+  /** 전체 페이지 수 (직접 전달) */
+  totalPages: number;
+  totalItems?: never;
+  itemsPerPage?: never;
+}
+
+type PaginationProps = PaginationWithTotalItems | PaginationWithTotalPages;
 
 /* ========================================
    아이콘 컴포넌트
@@ -183,18 +196,23 @@ const Ellipsis = styled.span`
 /**
  * 페이지네이션 컴포넌트
  */
-export function Pagination({
-  currentPage,
-  totalItems,
-  itemsPerPage,
-  onPageChange,
-  visiblePages = 5,
-}: PaginationProps) {
+export function Pagination(props: PaginationProps) {
+  const {
+    currentPage,
+    onPageChange,
+    visiblePages = 5,
+  } = props;
+
   /** 전체 페이지 수 계산 */
-  const totalPages = useMemo(
-    () => Math.ceil(totalItems / itemsPerPage),
-    [totalItems, itemsPerPage]
-  );
+  const totalPages = useMemo(() => {
+    if ("totalPages" in props && props.totalPages !== undefined) {
+      return props.totalPages;
+    }
+    if ("totalItems" in props && "itemsPerPage" in props) {
+      return Math.ceil(props.totalItems / props.itemsPerPage);
+    }
+    return 1;
+  }, [props]);
 
   /** 표시할 페이지 번호 배열 생성 */
   const pageNumbers = useMemo(() => {

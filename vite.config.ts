@@ -33,5 +33,6 @@ export default defineConfig({
   server: {
     port: 3000, // 필요시 변경
     open: true,
+    host: true, // 같은 네트워크 내 다른 기기에서 접속 허용 (0.0.0.0 바인딩)
   },
 });

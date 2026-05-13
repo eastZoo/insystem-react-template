@@ -84,6 +84,19 @@ import {
   FileListIcon,
   FileListName,
 } from "./index.style";
+import {
+  useUploadFiles,
+  useFileList,
+  useCollectionStats,
+  useCreateFolder,
+  useMoveItem,
+  useDeleteItem,
+  useFolderTree,
+  useUpdateFolder,
+  useUpdateFile,
+  type FileListItem as ApiFileListItem,
+} from "@/lib/hooks/useCollection";
+import type { AuthLevelType } from "@/components/molecules/UploadModal";
 
 /* ========================================
    필터 옵션 상수
@@ -124,264 +137,6 @@ const VECTOR_OPTIONS = [
 ];
 
 /* ========================================
-   샘플 데이터 (API 연동 전 임시)
-   ======================================== */
-
-/** 샘플 파일 목록 */
-const SAMPLE_FILES: FileItem[] = [
-  {
-    id: "1",
-    name: "개발팀 설계/기획 문서",
-    type: "folder",
-    modifiedDate: "2026.04.22",
-    visibility: "private",
-    approvalStatus: "none",
-    vectorStatus: "none",
-    size: "10.19KB",
-  },
-  {
-    id: "2",
-    name: "2024 4분기 프로젝트 보고서.pdf",
-    type: "file",
-    modifiedDate: "2026.04.22",
-    visibility: "team",
-    approvalStatus: "none",
-    vectorStatus: "complete",
-    size: "5.52MB",
-  },
-  {
-    id: "3",
-    name: "시스템 아키텍처 설계서.hwp",
-    type: "file",
-    modifiedDate: "2026.01.23",
-    visibility: "private",
-    approvalStatus: "none",
-    vectorStatus: "complete",
-    size: "1.8MB",
-  },
-  {
-    id: "4",
-    name: "보안 정책 가이드라인 v2.pdf",
-    type: "file",
-    modifiedDate: "2025.12.28",
-    visibility: "pending",
-    approvalStatus: "pending",
-    vectorStatus: "pending",
-    size: "3.2MB",
-  },
-  {
-    id: "5",
-    name: "API 연동 명세서.pdf",
-    type: "file",
-    modifiedDate: "2025.09.02",
-    visibility: "team",
-    approvalStatus: "none",
-    vectorStatus: "complete",
-    size: "2.1MB",
-  },
-  {
-    id: "6",
-    name: "개발 환경 세팅 가이드.docx",
-    type: "file",
-    modifiedDate: "2025.03.16",
-    visibility: "public",
-    approvalStatus: "approved",
-    vectorStatus: "complete",
-    size: "2KB",
-  },
-  {
-    id: "7",
-    name: "마케팅팀 자료",
-    type: "folder",
-    modifiedDate: "2026.04.20",
-    visibility: "team",
-    approvalStatus: "none",
-    vectorStatus: "none",
-    size: "25.4KB",
-  },
-  {
-    id: "8",
-    name: "데이터베이스 ERD 설계서.pdf",
-    type: "file",
-    modifiedDate: "2026.04.18",
-    visibility: "team",
-    approvalStatus: "none",
-    vectorStatus: "complete",
-    size: "4.7MB",
-  },
-  {
-    id: "9",
-    name: "2025년 사업계획서.pptx",
-    type: "file",
-    modifiedDate: "2026.04.15",
-    visibility: "private",
-    approvalStatus: "none",
-    vectorStatus: "pending",
-    size: "12.3MB",
-  },
-  {
-    id: "10",
-    name: "고객사 미팅 회의록.docx",
-    type: "file",
-    modifiedDate: "2026.04.12",
-    visibility: "team",
-    approvalStatus: "none",
-    vectorStatus: "complete",
-    size: "856KB",
-  },
-  {
-    id: "11",
-    name: "인사팀 문서",
-    type: "folder",
-    modifiedDate: "2026.04.10",
-    visibility: "private",
-    approvalStatus: "none",
-    vectorStatus: "none",
-    size: "8.2KB",
-  },
-  {
-    id: "12",
-    name: "서버 운영 매뉴얼.pdf",
-    type: "file",
-    modifiedDate: "2026.04.08",
-    visibility: "team",
-    approvalStatus: "approved",
-    vectorStatus: "complete",
-    size: "6.1MB",
-  },
-  {
-    id: "13",
-    name: "UI/UX 디자인 가이드.pdf",
-    type: "file",
-    modifiedDate: "2026.04.05",
-    visibility: "public",
-    approvalStatus: "approved",
-    vectorStatus: "complete",
-    size: "18.5MB",
-  },
-  {
-    id: "14",
-    name: "보안 점검 체크리스트.xlsx",
-    type: "file",
-    modifiedDate: "2026.04.01",
-    visibility: "private",
-    approvalStatus: "none",
-    vectorStatus: "complete",
-    size: "245KB",
-  },
-  {
-    id: "15",
-    name: "프로젝트 일정표.xlsx",
-    type: "file",
-    modifiedDate: "2026.03.28",
-    visibility: "team",
-    approvalStatus: "none",
-    vectorStatus: "complete",
-    size: "512KB",
-  },
-  {
-    id: "16",
-    name: "재무팀 보고서",
-    type: "folder",
-    modifiedDate: "2026.03.25",
-    visibility: "private",
-    approvalStatus: "none",
-    vectorStatus: "none",
-    size: "15.7KB",
-  },
-  {
-    id: "17",
-    name: "코드 리뷰 가이드라인.md",
-    type: "file",
-    modifiedDate: "2026.03.20",
-    visibility: "public",
-    approvalStatus: "approved",
-    vectorStatus: "complete",
-    size: "28KB",
-  },
-  {
-    id: "18",
-    name: "테스트 케이스 문서.xlsx",
-    type: "file",
-    modifiedDate: "2026.03.15",
-    visibility: "team",
-    approvalStatus: "none",
-    vectorStatus: "pending",
-    size: "1.2MB",
-  },
-  {
-    id: "19",
-    name: "배포 프로세스 문서.pdf",
-    type: "file",
-    modifiedDate: "2026.03.10",
-    visibility: "team",
-    approvalStatus: "none",
-    vectorStatus: "complete",
-    size: "2.8MB",
-  },
-  {
-    id: "20",
-    name: "클라우드 인프라 구성도.png",
-    type: "file",
-    modifiedDate: "2026.03.05",
-    visibility: "private",
-    approvalStatus: "pending",
-    vectorStatus: "pending",
-    size: "4.5MB",
-  },
-  {
-    id: "21",
-    name: "회의록 아카이브",
-    type: "folder",
-    modifiedDate: "2026.03.01",
-    visibility: "team",
-    approvalStatus: "none",
-    vectorStatus: "none",
-    size: "32.1KB",
-  },
-  {
-    id: "22",
-    name: "신규 기능 요구사항.docx",
-    type: "file",
-    modifiedDate: "2026.02.25",
-    visibility: "team",
-    approvalStatus: "none",
-    vectorStatus: "complete",
-    size: "1.5MB",
-  },
-  {
-    id: "23",
-    name: "성능 테스트 결과보고서.pdf",
-    type: "file",
-    modifiedDate: "2026.02.20",
-    visibility: "team",
-    approvalStatus: "approved",
-    vectorStatus: "complete",
-    size: "3.4MB",
-  },
-  {
-    id: "24",
-    name: "외부 API 연동 가이드.pdf",
-    type: "file",
-    modifiedDate: "2026.02.15",
-    visibility: "public",
-    approvalStatus: "approved",
-    vectorStatus: "complete",
-    size: "2.9MB",
-  },
-];
-
-/** 샘플 폴더 목록 (이동 모달용) */
-const SAMPLE_FOLDERS: FolderItem[] = [
-  { id: "folder-1", name: "개발팀 설계/기획 문서" },
-  { id: "folder-2", name: "마케팅팀 자료" },
-  { id: "folder-3", name: "인사팀 문서" },
-  { id: "folder-4", name: "재무팀 보고서" },
-  { id: "folder-5", name: "프로젝트 A 관련 자료" },
-  { id: "folder-6", name: "회의록 아카이브" },
-];
-
-/* ========================================
    컴포넌트
    ======================================== */
 
@@ -390,6 +145,9 @@ const SAMPLE_FOLDERS: FolderItem[] = [
  */
 export default function FileManagementPage() {
   const navigate = useNavigate();
+
+  // 현재 폴더 코드 상태
+  const [currentFolderCode, setCurrentFolderCode] = useState("ROOT");
 
   /* ===== 상태 관리 ===== */
 
@@ -443,28 +201,176 @@ export default function FileManagementPage() {
   const uploadButtonRef = useRef<HTMLDivElement>(null);
   const gridRef = useRef<AgGridReact>(null);
 
+  /* ===== API 훅 ===== */
+
+  // 파일/폴더 목록 조회
+  const {
+    data: fileListData = [],
+    isLoading: isLoadingFiles,
+    refetch: refetchFiles,
+  } = useFileList(currentFolderCode);
+
+  // 통계 조회
+  const { data: statsData } = useCollectionStats();
+
+  // 폴더 트리 조회 (이동 모달용)
+  const { data: folderTreeData = [] } = useFolderTree();
+
+  // 폴더 생성
+  const { mutate: createFolderMutation } = useCreateFolder();
+
+  // 항목 이동
+  const { mutate: moveItemMutation } = useMoveItem();
+
+  // 항목 삭제
+  const { mutate: deleteItemMutation } = useDeleteItem();
+
+  // 폴더 수정
+  const { mutate: updateFolderMutation } = useUpdateFolder();
+
+  // 파일 수정
+  const { mutate: updateFileMutation } = useUpdateFile();
+
   /* ===== 데이터 ===== */
 
   const columnDefs = useFileManagementColumnDefs();
-  const [files] = useState<FileItem[]>(SAMPLE_FILES);
-  const folders = useMemo<FolderItem[]>(() => SAMPLE_FOLDERS, []);
+
+  // API 데이터를 FileItem 형식으로 변환
+  const files: FileItem[] = useMemo(() => {
+    return fileListData.map((item: ApiFileListItem) => ({
+      id: item.id,
+      name: item.name,
+      type: item.type,
+      modifiedDate: item.modifiedDate,
+      visibility: item.visibility,
+      approvalStatus: "none" as const,
+      size: item.size,
+      // 추가 정보 (API 호출에 필요)
+      fld_cd: item.fld_cd,
+      file_id: item.file_id,
+      file_seq: item.file_seq,
+    }));
+  }, [fileListData]);
+
+  // 폴더 목록 (이동 모달용)
+  const folders: FolderItem[] = useMemo(() => {
+    return folderTreeData.map((item: any) => ({
+      id: item.fld_cd,
+      name: item.fld_nm,
+    }));
+  }, [folderTreeData]);
 
   /** 통계 데이터 */
   const stats = useMemo(
     () => ({
-      totalFiles: files.length > 0 ? 24 : 0,
-      myFiles: files.length > 0 ? 21 : 0,
-      pendingApproval:
-        files.filter((f) => f.visibility === "pending").length || 2,
+      totalFiles: statsData?.totalFiles ?? 0,
+      myFiles: statsData?.myFiles ?? 0,
+      pendingApproval: statsData?.pendingApproval ?? 0,
     }),
-    [files]
+    [statsData]
   );
+
+  /** 필터링된 파일 목록 */
+  const filteredFiles = useMemo(() => {
+    let result = [...files];
+
+    // 1. 검색 키워드 필터
+    if (searchKeyword.trim()) {
+      const keyword = searchKeyword.toLowerCase().trim();
+      result = result.filter((file) =>
+        file.name.toLowerCase().includes(keyword)
+      );
+    }
+
+    // 2. 파일 유형 필터
+    if (fileType) {
+      result = result.filter((file) => {
+        if (file.type === "folder") return false; // 폴더는 파일 유형 필터에서 제외
+
+        const ext = file.name.split(".").pop()?.toLowerCase() || "";
+        switch (fileType) {
+          case "pdf":
+            return ext === "pdf";
+          case "doc":
+            return ext === "doc" || ext === "docx";
+          case "img":
+            return ["jpg", "jpeg", "png", "gif", "bmp", "webp"].includes(ext);
+          case "etc":
+            return !["pdf", "doc", "docx", "jpg", "jpeg", "png", "gif", "bmp", "webp"].includes(ext);
+          default:
+            return true;
+        }
+      });
+    }
+
+    // 3. 날짜 필터
+    if (dateFilter && dateFilter !== "all") {
+      const now = new Date();
+      const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+
+      result = result.filter((file) => {
+        // modifiedDate 형식: "2024.05.13" 또는 Date 객체
+        const dateStr = file.modifiedDate;
+        let fileDate: Date;
+
+        if (typeof dateStr === "string") {
+          // "2024.05.13" 형식 파싱
+          const parts = dateStr.split(".");
+          if (parts.length === 3) {
+            fileDate = new Date(
+              parseInt(parts[0]),
+              parseInt(parts[1]) - 1,
+              parseInt(parts[2])
+            );
+          } else {
+            return true; // 파싱 실패시 포함
+          }
+        } else {
+          fileDate = new Date(dateStr);
+        }
+
+        switch (dateFilter) {
+          case "today":
+            return fileDate >= today;
+          case "week": {
+            const weekAgo = new Date(today);
+            weekAgo.setDate(weekAgo.getDate() - 7);
+            return fileDate >= weekAgo;
+          }
+          case "month": {
+            const monthAgo = new Date(today);
+            monthAgo.setDate(monthAgo.getDate() - 30);
+            return fileDate >= monthAgo;
+          }
+          default:
+            return true;
+        }
+      });
+    }
+
+    // 4. 공개 범위 필터
+    if (scopeFilter) {
+      result = result.filter((file) => file.visibility === scopeFilter);
+    }
+
+    // 5. 벡터화 상태 필터 (현재 데이터에 없으므로 주석 처리)
+    // if (vectorFilter) {
+    //   result = result.filter((file) => file.vectorStatus === vectorFilter);
+    // }
+
+    return result;
+  }, [files, searchKeyword, fileType, dateFilter, scopeFilter, vectorFilter]);
 
   /** 페이지네이션된 파일 목록 */
   const paginatedFiles = useMemo(() => {
     const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
-    return files.slice(startIndex, startIndex + ITEMS_PER_PAGE);
-  }, [files, currentPage]);
+    return filteredFiles.slice(startIndex, startIndex + ITEMS_PER_PAGE);
+  }, [filteredFiles, currentPage]);
+
+  /** 필터 변경 시 페이지 리셋 */
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchKeyword, fileType, dateFilter, scopeFilter, vectorFilter]);
 
   /** 페이지 변경 핸들러 */
   const handlePageChange = useCallback((page: number) => {
@@ -498,34 +404,62 @@ export default function FileManagementPage() {
     setShowCreateFolderModal(true);
   }, []);
 
+  // 업로드 훅
+  const { mutate: uploadFilesMutation, isPending: isUploading } =
+    useUploadFiles();
+
   /* ===== 모달 제출 핸들러 ===== */
 
   /** 업로드 모달 제출 */
   const handleUploadSubmit = useCallback(
-    (uploadedFiles: File[], visibility: string) => {
-      console.log("업로드 제출:", {
-        uploadedFiles,
-        visibility,
-        type: uploadModalType,
-      });
-      // TODO: 업로드 API 연동
+    (uploadedFiles: File[], authLevel: AuthLevelType, fldCd?: string) => {
+      uploadFilesMutation(
+        { files: uploadedFiles, authLevel, fldCd },
+        { onSuccess: () => setShowUploadModal(false) }
+      );
     },
-    [uploadModalType]
+    [uploadFilesMutation]
   );
 
   /** 폴더 생성 모달 제출 */
-  const handleCreateFolderSubmit = useCallback((folderName: string) => {
-    console.log("폴더 생성:", folderName);
-    // TODO: 폴더 생성 API 연동
-  }, []);
+  const handleCreateFolderSubmit = useCallback(
+    (folderName: string) => {
+      createFolderMutation({
+        folderName,
+        parentFolderCode: currentFolderCode,
+        userDivCode: "private",
+      });
+      setShowCreateFolderModal(false);
+    },
+    [createFolderMutation, currentFolderCode]
+  );
 
-  /** 파일 수정 저장 */
+  /** 파일/폴더 수정 저장 */
   const handleEditSave = useCallback(
     (fileName: string, visibility: "private" | "team" | "public") => {
-      console.log("수정 저장:", { fileName, visibility, file: editingFile });
-      // TODO: 파일 수정 API 연동
+      if (!editingFile) return;
+
+      if (editingFile.type === "folder") {
+        // 폴더 수정: 폴더명만 변경
+        updateFolderMutation({
+          fldCd: editingFile.id,
+          folderName: fileName,
+        });
+      } else {
+        // 파일 수정: 파일명 및 공개 범위 변경
+        updateFileMutation({
+          fileId: (editingFile as any).file_id,
+          fileSeq: (editingFile as any).file_seq,
+          fileName,
+          visibility,
+          fldCd: (editingFile as any).fld_cd,
+        });
+      }
+
+      setShowEditModal(false);
+      setEditingFile(null);
     },
-    [editingFile]
+    [editingFile, updateFolderMutation, updateFileMutation]
   );
 
   /** 승인 요청 취소 */
@@ -537,20 +471,45 @@ export default function FileManagementPage() {
   /** 파일 이동 제출 */
   const handleMoveSubmit = useCallback(
     (targetFolderId: string) => {
-      console.log("파일 이동:", { file: movingFile, targetFolderId });
-      // TODO: 파일 이동 API 연동
+      if (!movingFile) return;
+
+      moveItemMutation({
+        itemId: movingFile.id,
+        itemType: movingFile.type,
+        targetFolderCode: targetFolderId,
+        // 파일인 경우 추가 정보
+        ...(movingFile.type === "file" && {
+          collectionNm: "test",
+          embdModel: "bge-m3:latest",
+          fileId: (movingFile as any).file_id,
+          fileSeq: (movingFile as any).file_seq,
+          currentFldCd: (movingFile as any).fld_cd,
+        }),
+      });
+      setShowMoveModal(false);
+      setMovingFile(null);
     },
-    [movingFile]
+    [movingFile, moveItemMutation]
   );
 
   /** 휴지통 이동 확인 */
   const handleTrashMoveConfirm = useCallback(() => {
     if (filePendingTrash) {
-      console.log("휴지통으로 이동:", filePendingTrash);
-      // TODO: 휴지통 이동 API 연동
+      deleteItemMutation({
+        itemId: filePendingTrash.id,
+        itemType: filePendingTrash.type,
+        // 파일인 경우 추가 정보
+        ...(filePendingTrash.type === "file" && {
+          collectionNm: "test",
+          embdModel: "bge-m3:latest",
+          fileId: (filePendingTrash as any).file_id,
+          fileSeq: (filePendingTrash as any).file_seq,
+          fldCd: (filePendingTrash as any).fld_cd,
+        }),
+      });
     }
     setFilePendingTrash(null);
-  }, [filePendingTrash]);
+  }, [filePendingTrash, deleteItemMutation]);
 
   /* ===== 그리드 액션 핸들러 ===== */
 
@@ -571,7 +530,7 @@ export default function FileManagementPage() {
     setFilePendingTrash(file);
   }, []);
 
-  /** 폴더 클릭 - 폴더 상세 페이지로 이동 */
+  /** 폴더 클릭 - 해당 폴더 상세 페이지로 이동 */
   const handleFolderClick = useCallback(
     (file: FileItem) => {
       if (file.type === "folder") {
@@ -790,13 +749,6 @@ export default function FileManagementPage() {
                     <MenuItemLabel>파일 업로드</MenuItemLabel>
                   </MenuItem>
                   <MenuDivider />
-                  <MenuItem onClick={handleFolderUpload}>
-                    <MenuItemIcon>
-                      <FolderUploadIcon />
-                    </MenuItemIcon>
-                    <MenuItemLabel>폴더 업로드</MenuItemLabel>
-                  </MenuItem>
-                  <MenuDivider />
                   <MenuItem onClick={handleCreateFolder}>
                     <MenuItemIcon>
                       <FolderCreateIcon />
@@ -971,7 +923,7 @@ export default function FileManagementPage() {
 
             {/* 파일 그리드 또는 드래그 앤 드롭 영역 */}
             <TableContent>
-              {files.length > 0 ? (
+              {filteredFiles.length > 0 ? (
                 viewMode === "grid" ? (
                   <FileGridView
                     files={paginatedFiles}
@@ -998,6 +950,13 @@ export default function FileManagementPage() {
                     onRowDoubleClicked={handleRowDoubleClicked}
                   />
                 )
+              ) : files.length > 0 ? (
+                // 필터링 결과가 없을 때
+                <DragDropArea style={{ textAlign: "center", padding: "40px" }}>
+                  <p style={{ color: "#666", fontSize: "14px" }}>
+                    검색 결과가 없습니다.
+                  </p>
+                </DragDropArea>
               ) : (
                 <DragDropArea>
                   <IsFileDrop
@@ -1016,11 +975,11 @@ export default function FileManagementPage() {
             </TableContent>
 
             {/* 페이지네이션 */}
-            {files.length > 0 && (
+            {filteredFiles.length > 0 && (
               <PaginationFooter>
                 <Pagination
                   currentPage={currentPage}
-                  totalItems={files.length}
+                  totalItems={filteredFiles.length}
                   itemsPerPage={ITEMS_PER_PAGE}
                   onPageChange={handlePageChange}
                 />
@@ -1036,6 +995,7 @@ export default function FileManagementPage() {
         onClose={() => setShowUploadModal(false)}
         onUpload={handleUploadSubmit}
         type={uploadModalType}
+        fldCd={currentFolderCode}
       />
 
       <CreateFolderModal

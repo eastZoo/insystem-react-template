@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useCallback } from "react";
+import { useState, useRef, useEffect, useCallback, useMemo } from "react";
 import styled, { keyframes } from "styled-components";
 import {
   PlusIconSmall,
@@ -10,13 +10,29 @@ import {
   TrashIcon,
 } from "@/styles/icons";
 import {
-  chatHistoryDummy,
-  getChatSessionById,
-  groupLabels,
-  type ChatHistoryItem,
-  type ChatMessage,
-} from "@/lib/data/chatDummy";
+  useChatRooms,
+  useChatMessages,
+  useSendMessage,
+  useCreateChatWithMessage,
+  useUpdateChatTitle,
+  useDeleteChatRoom,
+  groupChatRoomsByDate,
+  formatRelativeTime,
+  CHAT_QUERY_KEYS,
+  type ChatRoomItem,
+  type ChatMessageItem,
+  type ReferencedFileItem,
+} from "@/lib/hooks/useChat";
 import { Alert } from "@/components/atoms/Alert";
+import { useQueryClient } from "@tanstack/react-query";
+
+/** 그룹 라벨 */
+const groupLabels: Record<string, string> = {
+  today: "오늘",
+  yesterday: "어제",
+  thisWeek: "이번 주",
+  older: "이전",
+};
 
 /**
  * 채팅
@@ -27,74 +43,132 @@ export default function ChatPage() {
   const [selectedModel, setSelectedModel] = useState("GPT");
   const [inputMessage, setInputMessage] = useState("");
   const [selectedChatId, setSelectedChatId] = useState<string | null>(null);
-  const [chatHistory, setChatHistory] =
-    useState<ChatHistoryItem[]>(chatHistoryDummy);
-  const [currentMessages, setCurrentMessages] = useState<ChatMessage[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [pendingUserMessage, setPendingUserMessage] = useState<string | null>(
+    null
+  );
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const messagesContainerRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   /** 채팅 메뉴 관련 state */
   const [openMenuChatId, setOpenMenuChatId] = useState<string | null>(null);
   const [showDeleteAlert, setShowDeleteAlert] = useState(false);
   const [chatToDelete, setChatToDelete] = useState<string | null>(null);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editChatId, setEditChatId] = useState<string | null>(null);
+  const [editTitle, setEditTitle] = useState("");
   const menuRef = useRef<HTMLDivElement>(null);
+
+  const queryClient = useQueryClient();
+
+  /** ============================= API 훅 ============================= */
+  const { data: chatRoomsData, isLoading: isRoomsLoading } = useChatRooms(
+    1,
+    100
+  );
+  const {
+    data: messagesData,
+    isLoading: isMessagesLoading,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+  } = useChatMessages(selectedChatId, 30);
+  const { mutate: sendMessageMutation } = useSendMessage();
+  const { mutate: createChatWithMessageMutation } = useCreateChatWithMessage();
+  const { mutate: updateTitleMutation } = useUpdateChatTitle();
+  const { mutate: deleteChatMutation } = useDeleteChatRoom();
+
+  /** ============================= 파생 데이터 ============================= */
+  const chatRooms = useMemo(
+    () => chatRoomsData?.rooms || [],
+    [chatRoomsData?.rooms]
+  );
+
+  const groupedChats = useMemo(
+    () => groupChatRoomsByDate(chatRooms),
+    [chatRooms]
+  );
+
+  const currentMessages = useMemo(() => {
+    if (!messagesData?.pages) return [];
+    // 모든 페이지의 메시지를 합침 (역순으로 가져오므로 정방향으로 정렬)
+    const allMessages = messagesData.pages.flatMap((page) => page.messages);
+    return allMessages;
+  }, [messagesData?.pages]);
+
+  const hasMessages = currentMessages.length > 0 || pendingUserMessage !== null;
 
   /** ============================= 비즈니스 로직 영역 ============================= */
   const handleNewChat = () => {
     setSelectedChatId(null);
-    setCurrentMessages([]);
+    setPendingUserMessage(null);
     setInputMessage("");
   };
 
   const handleChatSelect = (chatId: string) => {
     setSelectedChatId(chatId);
-    const session = getChatSessionById(chatId);
-    if (session) {
-      setCurrentMessages(session.messages);
-    }
-  };
-
-  const handleSendMessage = () => {
-    if (!inputMessage.trim()) return;
-
-    const newUserMessage: ChatMessage = {
-      id: `msg-new-${Date.now()}`,
-      role: "user",
-      content: inputMessage.trim(),
-      timestamp: new Date().toISOString(),
-    };
-
-    // 새 채팅인 경우 히스토리에 추가
-    if (!selectedChatId) {
-      const newChatId = `chat-${Date.now()}`;
-      const newHistoryItem: ChatHistoryItem = {
-        id: newChatId,
-        title:
-          inputMessage.trim().slice(0, 30) +
-          (inputMessage.length > 30 ? "..." : ""),
-        timestamp: "방금 전",
-        group: "today",
-      };
-      setChatHistory((prev) => [newHistoryItem, ...prev]);
-      setSelectedChatId(newChatId);
-    }
-
-    setCurrentMessages((prev) => [...prev, newUserMessage]);
+    setPendingUserMessage(null);
     setInputMessage("");
-
-    // 시뮬레이션: AI 응답 (실제로는 API 호출)
-    setTimeout(() => {
-      const aiResponse: ChatMessage = {
-        id: `msg-ai-${Date.now()}`,
-        role: "assistant",
-        content:
-          "요청하신 내용을 확인했습니다. 관련 문서를 기반으로 답변드리겠습니다.\n\n현재 시스템에서 해당 기능을 지원하고 있으며, 자세한 설정 방법은 관련 문서를 참고해주세요.",
-        references: ["관련 문서.pdf"],
-        timestamp: new Date().toISOString(),
-      };
-      setCurrentMessages((prev) => [...prev, aiResponse]);
-    }, 1000);
   };
+
+  const handleSendMessage = useCallback(() => {
+    if (!inputMessage.trim() || isLoading) return;
+
+    const message = inputMessage.trim();
+    setInputMessage("");
+    setIsLoading(true);
+
+    if (!selectedChatId) {
+      // 새 채팅: 채팅방 생성 + 첫 메시지 전송
+      setPendingUserMessage(message);
+
+      createChatWithMessageMutation(
+        { message },
+        {
+          onSuccess: (data) => {
+            if (data) {
+              setSelectedChatId(data.chatId);
+              setPendingUserMessage(null);
+              // 메시지 목록 갱신
+              queryClient.invalidateQueries({
+                queryKey: CHAT_QUERY_KEYS.messages(data.chatId),
+              });
+            }
+            setIsLoading(false);
+          },
+          onError: () => {
+            setPendingUserMessage(null);
+            setIsLoading(false);
+          },
+        }
+      );
+    } else {
+      // 기존 채팅방에 메시지 전송
+      setPendingUserMessage(message);
+
+      sendMessageMutation(
+        { chatId: selectedChatId, message },
+        {
+          onSuccess: () => {
+            setPendingUserMessage(null);
+            setIsLoading(false);
+          },
+          onError: () => {
+            setPendingUserMessage(null);
+            setIsLoading(false);
+          },
+        }
+      );
+    }
+  }, [
+    inputMessage,
+    isLoading,
+    selectedChatId,
+    createChatWithMessageMutation,
+    sendMessageMutation,
+    queryClient,
+  ]);
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === "Enter" && !e.shiftKey) {
@@ -116,9 +190,30 @@ export default function ChatPage() {
   /** 수정하기 클릭 */
   const handleEditChat = (e: React.MouseEvent, chatId: string) => {
     e.stopPropagation();
-    console.log("Edit chat:", chatId);
+    const room = chatRooms.find((r: ChatRoomItem) => r.chatId === chatId);
+    if (room) {
+      setEditChatId(chatId);
+      setEditTitle(room.title);
+      setShowEditModal(true);
+    }
     setOpenMenuChatId(null);
-    // TODO: 수정 모달 또는 기능 구현
+  };
+
+  /** 수정 확인 */
+  const handleEditConfirm = () => {
+    if (editChatId && editTitle.trim()) {
+      updateTitleMutation({ chatId: editChatId, title: editTitle.trim() });
+    }
+    setShowEditModal(false);
+    setEditChatId(null);
+    setEditTitle("");
+  };
+
+  /** 수정 취소 */
+  const handleEditCancel = () => {
+    setShowEditModal(false);
+    setEditChatId(null);
+    setEditTitle("");
   };
 
   /** 삭제하기 클릭 */
@@ -131,15 +226,27 @@ export default function ChatPage() {
 
   /** 삭제 확인 */
   const handleDeleteConfirm = () => {
-    if (chatToDelete) {
-      setChatHistory((prev) => prev.filter((chat) => chat.id !== chatToDelete));
-      if (selectedChatId === chatToDelete) {
-        setSelectedChatId(null);
-        setCurrentMessages([]);
-      }
+    if (!chatToDelete) {
+      setShowDeleteAlert(false);
+      return;
     }
+
+    const chatIdToDelete = chatToDelete;
+
+    // Alert 닫기 및 state 초기화
     setShowDeleteAlert(false);
     setChatToDelete(null);
+
+    // 삭제 mutation 호출 (콜백에서 추가 처리)
+    deleteChatMutation(chatIdToDelete, {
+      onSuccess: () => {
+        // 삭제된 채팅방이 현재 선택된 채팅방이면 선택 해제
+        if (selectedChatId === chatIdToDelete) {
+          setSelectedChatId(null);
+          setPendingUserMessage(null);
+        }
+      },
+    });
   };
 
   /** 삭제 취소 */
@@ -148,11 +255,30 @@ export default function ChatPage() {
     setChatToDelete(null);
   };
 
+  /** 참조 파일 클릭 핸들러 */
+  const handleFileClick = (file: ReferencedFileItem) => {
+    // API 엔드포인트로 파일 직접 열기 (브라우저에서 PDF 등 표시)
+    const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || "";
+    const viewerUrl = `${apiBaseUrl}/api/app/collection/file/view?fileId=${file.fileId}&fileSeq=${file.fileSeq}`;
+    window.open(viewerUrl, "_blank");
+  };
+
+  /** 역방향 무한 스크롤 처리 */
+  const handleMessagesScroll = useCallback(() => {
+    const container = messagesContainerRef.current;
+    if (!container || !hasNextPage || isFetchingNextPage) return;
+
+    // 상단에 도달하면 이전 메시지 로드
+    if (container.scrollTop < 100) {
+      fetchNextPage();
+    }
+  }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
+
   /** ============================= useEffect 영역 ============================= */
   // 메시지가 추가되면 스크롤 아래로
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [currentMessages]);
+  }, [currentMessages, pendingUserMessage, isLoading]);
 
   // Textarea 자동 높이 조절
   useEffect(() => {
@@ -180,17 +306,6 @@ export default function ChatPage() {
   }, [openMenuChatId, handleCloseMenu]);
 
   /** ============================= 렌더링 헬퍼 ============================= */
-  const groupedChats = chatHistory.reduce(
-    (acc, chat) => {
-      if (!acc[chat.group]) acc[chat.group] = [];
-      acc[chat.group].push(chat);
-      return acc;
-    },
-    {} as Record<string, ChatHistoryItem[]>
-  );
-
-  const hasMessages = currentMessages.length > 0;
-
   /** 마크다운 스타일 텍스트 렌더링 (간단 버전) */
   const renderMessageContent = (content: string) => {
     const lines = content.split("\n");
@@ -243,53 +358,63 @@ export default function ChatPage() {
 
           {/* Chat History List */}
           <ChatHistoryContainer>
-            {(["today", "yesterday", "thisWeek", "older"] as const).map(
-              (group) =>
-                groupedChats[group]?.length > 0 && (
-                  <ChatGroup key={group}>
-                    <GroupLabel>{groupLabels[group]}</GroupLabel>
-                    {groupedChats[group].map((chat) => (
-                      <ChatItemWrapper key={chat.id}>
-                        <ChatItem
-                          $active={selectedChatId === chat.id}
-                          onClick={() => handleChatSelect(chat.id)}
-                        >
-                          <ChatItemContent>
-                            <ChatTitle>{chat.title}</ChatTitle>
-                            <ChatTimestamp>{chat.timestamp}</ChatTimestamp>
-                          </ChatItemContent>
-                          <ChatMenuButton
-                            onClick={(e) => handleChatMenu(e, chat.id)}
+            {isRoomsLoading ? (
+              <LoadingText>불러오는 중...</LoadingText>
+            ) : chatRooms.length === 0 ? (
+              <EmptyHistoryText>대화 내역이 없습니다.</EmptyHistoryText>
+            ) : (
+              (["today", "yesterday", "thisWeek", "older"] as const).map(
+                (group) =>
+                  groupedChats[group]?.length > 0 && (
+                    <ChatGroup key={group}>
+                      <GroupLabel>{groupLabels[group]}</GroupLabel>
+                      {groupedChats[group].map((chat) => (
+                        <ChatItemWrapper key={chat.chatId}>
+                          <ChatItem
+                            $active={selectedChatId === chat.chatId}
+                            onClick={() => handleChatSelect(chat.chatId)}
                           >
-                            <EllipsisIcon />
-                          </ChatMenuButton>
-                        </ChatItem>
+                            <ChatItemContent>
+                              <ChatTitle>{chat.title}</ChatTitle>
+                              <ChatTimestamp>
+                                {formatRelativeTime(chat.updatedAt)}
+                              </ChatTimestamp>
+                            </ChatItemContent>
+                            <ChatMenuButton
+                              onClick={(e) => handleChatMenu(e, chat.chatId)}
+                            >
+                              <EllipsisIcon />
+                            </ChatMenuButton>
+                          </ChatItem>
 
-                        {/* Chat Menu Tooltip */}
-                        {openMenuChatId === chat.id && (
-                          <ChatMenu ref={menuRef}>
-                            <ChatMenuItem
-                              onClick={(e) => handleEditChat(e, chat.id)}
-                            >
-                              <MenuItemIcon>
-                                <EditIcon />
-                              </MenuItemIcon>
-                              <MenuItemLabel>수정하기</MenuItemLabel>
-                            </ChatMenuItem>
-                            <ChatMenuItem
-                              onClick={(e) => handleDeleteClick(e, chat.id)}
-                            >
-                              <MenuItemIcon>
-                                <TrashIcon />
-                              </MenuItemIcon>
-                              <MenuItemLabel>삭제하기</MenuItemLabel>
-                            </ChatMenuItem>
-                          </ChatMenu>
-                        )}
-                      </ChatItemWrapper>
-                    ))}
-                  </ChatGroup>
-                )
+                          {/* Chat Menu Tooltip */}
+                          {openMenuChatId === chat.chatId && (
+                            <ChatMenu ref={menuRef}>
+                              <ChatMenuItem
+                                onClick={(e) => handleEditChat(e, chat.chatId)}
+                              >
+                                <MenuItemIcon>
+                                  <EditIcon />
+                                </MenuItemIcon>
+                                <MenuItemLabel>수정하기</MenuItemLabel>
+                              </ChatMenuItem>
+                              <ChatMenuItem
+                                onClick={(e) =>
+                                  handleDeleteClick(e, chat.chatId)
+                                }
+                              >
+                                <MenuItemIcon>
+                                  <TrashIcon />
+                                </MenuItemIcon>
+                                <MenuItemLabel>삭제하기</MenuItemLabel>
+                              </ChatMenuItem>
+                            </ChatMenu>
+                          )}
+                        </ChatItemWrapper>
+                      ))}
+                    </ChatGroup>
+                  )
+              )
             )}
           </ChatHistoryContainer>
         </Sidebar>
@@ -312,31 +437,73 @@ export default function ChatPage() {
               /* 대화 내용이 있을 때 — 빈 화면에서 전환 시 진입 애니메이션 */
               <ActiveChatColumn>
                 <MessagesAnimShell>
-                  <MessagesContainer>
+                  <MessagesContainer
+                    ref={messagesContainerRef}
+                    onScroll={handleMessagesScroll}
+                  >
+                    {/* 이전 메시지 로딩 표시 */}
+                    {isFetchingNextPage && (
+                      <LoadingMoreWrapper>
+                        <LoadingDots>
+                          <span />
+                          <span />
+                          <span />
+                        </LoadingDots>
+                      </LoadingMoreWrapper>
+                    )}
+
+                    {/* 메시지 목록 */}
                     {currentMessages.map((message) => (
-                      <MessageWrapper key={message.id} $role={message.role}>
-                        {message.role === "user" ? (
-                          <UserMessage>{message.content}</UserMessage>
+                      <MessageWrapper
+                        key={message.chatNo}
+                        $role={message.senderType === "user" ? "user" : "assistant"}
+                      >
+                        {message.senderType === "user" ? (
+                          <UserMessage>{message.message}</UserMessage>
                         ) : (
                           <AssistantMessageWrapper>
                             <AssistantMessage>
-                              {renderMessageContent(message.content)}
+                              {renderMessageContent(message.message)}
                             </AssistantMessage>
-                            {message.references &&
-                              message.references.length > 0 && (
-                                <ReferenceRow>
-                                  <ReferenceLabel>참조:</ReferenceLabel>
-                                  {message.references.map((ref, idx) => (
-                                    <ReferenceBadge key={idx}>
-                                      {ref}
-                                    </ReferenceBadge>
-                                  ))}
-                                </ReferenceRow>
-                              )}
+                            {/* 참조 파일 표시 */}
+                            {message.referencedFiles && message.referencedFiles.length > 0 && (
+                              <ReferencedFilesSection>
+                                <ReferenceLabel>참조:</ReferenceLabel>
+                                {message.referencedFiles.map((file, idx) => (
+                                  <FileBadge
+                                    key={`${file.fileId}-${file.fileSeq}-${idx}`}
+                                    onClick={() => handleFileClick(file)}
+                                  >
+                                    {file.fileName}
+                                  </FileBadge>
+                                ))}
+                              </ReferencedFilesSection>
+                            )}
                           </AssistantMessageWrapper>
                         )}
                       </MessageWrapper>
                     ))}
+
+                    {/* 전송 중인 사용자 메시지 */}
+                    {pendingUserMessage && (
+                      <MessageWrapper $role="user">
+                        <UserMessage>{pendingUserMessage}</UserMessage>
+                      </MessageWrapper>
+                    )}
+
+                    {/* AI 응답 대기 중 로딩 표시 */}
+                    {isLoading && (
+                      <MessageWrapper $role="assistant">
+                        <AssistantMessageWrapper>
+                          <LoadingDots>
+                            <span />
+                            <span />
+                            <span />
+                          </LoadingDots>
+                        </AssistantMessageWrapper>
+                      </MessageWrapper>
+                    )}
+
                     <div ref={messagesEndRef} />
                   </MessagesContainer>
                 </MessagesAnimShell>
@@ -351,10 +518,12 @@ export default function ChatPage() {
                         onChange={(e) => setInputMessage(e.target.value)}
                         onKeyDown={handleKeyDown}
                         rows={1}
+                        disabled={isLoading}
                       />
                       <SendButton
                         onClick={handleSendMessage}
-                        $hasContent={!!inputMessage.trim()}
+                        $hasContent={!!inputMessage.trim() && !isLoading}
+                        disabled={isLoading}
                       >
                         <ArrowUpIcon />
                       </SendButton>
@@ -384,10 +553,12 @@ export default function ChatPage() {
                     onChange={(e) => setInputMessage(e.target.value)}
                     onKeyDown={handleKeyDown}
                     rows={1}
+                    disabled={isLoading}
                   />
                   <SendButton
                     onClick={handleSendMessage}
-                    $hasContent={!!inputMessage.trim()}
+                    $hasContent={!!inputMessage.trim() && !isLoading}
+                    disabled={isLoading}
                   >
                     <ArrowUpIcon />
                   </SendButton>
@@ -409,6 +580,25 @@ export default function ChatPage() {
         confirmText="삭제"
         confirmVariant="danger"
       />
+
+      {/* 제목 수정 모달 */}
+      <Alert
+        isOpen={showEditModal}
+        onClose={handleEditCancel}
+        onConfirm={handleEditConfirm}
+        title="대화 제목 수정"
+        description=""
+        cancelText="취소"
+        confirmText="저장"
+      >
+        <EditTitleInput
+          value={editTitle}
+          onChange={(e) => setEditTitle(e.target.value)}
+          placeholder="새 제목을 입력하세요"
+          maxLength={50}
+          autoFocus
+        />
+      </Alert>
     </PageContainer>
   );
 }
@@ -509,6 +699,22 @@ const ChatHistoryContainer = styled.div`
   &::-webkit-scrollbar-track {
     background-color: transparent;
   }
+`;
+
+const LoadingText = styled.div`
+  padding: 20px;
+  text-align: center;
+  font-family: "Pretendard Variable", "Pretendard", sans-serif;
+  font-size: 13px;
+  color: #a0aabf;
+`;
+
+const EmptyHistoryText = styled.div`
+  padding: 20px;
+  text-align: center;
+  font-family: "Pretendard Variable", "Pretendard", sans-serif;
+  font-size: 13px;
+  color: #a0aabf;
 `;
 
 const ChatGroup = styled.div`
@@ -764,35 +970,85 @@ const MessageLine = styled.div`
   min-height: 1.5em;
 `;
 
-const ReferenceRow = styled.div`
+/* ===== Referenced Files Section ===== */
+const ReferencedFilesSection = styled.div`
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   gap: 6px;
-  padding: 0 4px;
+  padding: 4px;
 `;
 
 const ReferenceLabel = styled.span`
+  color: rgba(35, 46, 80, 0.61);
   font-family: "Pretendard Variable", "Pretendard", sans-serif;
   font-size: 12px;
   font-weight: 400;
-  line-height: 1.334;
-  letter-spacing: 0.3024px;
-  color: rgba(55, 56, 60, 0.61);
+  line-height: 16px;
+  letter-spacing: 0.3px;
 `;
 
-const ReferenceBadge = styled.span`
+const FileBadge = styled.button`
   display: inline-flex;
-  align-items: center;
   padding: 4px 9px 5px;
-  background: rgba(55, 56, 60, 0.61);
+  background: rgba(35, 46, 80, 0.61);
+  border: none;
   border-radius: 5px;
+  color: #ffffff;
   font-family: "Pretendard Variable", "Pretendard", sans-serif;
   font-size: 12px;
   font-weight: 400;
-  line-height: 1.334;
-  letter-spacing: 0.3024px;
-  color: #ffffff;
+  line-height: 16px;
+  letter-spacing: 0.3px;
+  cursor: pointer;
+  transition: background 0.15s ease;
+
+  &:hover {
+    background: rgba(35, 46, 80, 0.8);
+  }
+`;
+
+/* ===== Loading Dots Animation ===== */
+const dotPulse = keyframes`
+  0%, 80%, 100% {
+    opacity: 0.3;
+    transform: scale(0.8);
+  }
+  40% {
+    opacity: 1;
+    transform: scale(1);
+  }
+`;
+
+const LoadingDots = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 8px 0;
+
+  span {
+    width: 8px;
+    height: 8px;
+    background: #a0aabf;
+    border-radius: 50%;
+    animation: ${dotPulse} 1.4s ease-in-out infinite;
+
+    &:nth-child(1) {
+      animation-delay: 0s;
+    }
+    &:nth-child(2) {
+      animation-delay: 0.2s;
+    }
+    &:nth-child(3) {
+      animation-delay: 0.4s;
+    }
+  }
+`;
+
+const LoadingMoreWrapper = styled.div`
+  display: flex;
+  justify-content: center;
+  padding: 8px 0;
 `;
 
 /* ===== Empty State ===== */
@@ -895,6 +1151,11 @@ const ChatTextarea = styled.textarea`
     color: #a0aabf;
   }
 
+  &:disabled {
+    cursor: not-allowed;
+    opacity: 0.7;
+  }
+
   &::-webkit-scrollbar {
     width: 4px;
   }
@@ -924,6 +1185,10 @@ const SendButton = styled.button<{ $hasContent?: boolean }>`
   &:hover {
     background: ${({ $hasContent }) =>
       $hasContent ? "#26A88A" : "rgba(46, 196, 160, 0.5)"};
+  }
+
+  &:disabled {
+    cursor: not-allowed;
   }
 `;
 
@@ -980,4 +1245,25 @@ const MenuItemLabel = styled.span`
   line-height: 1.334;
   letter-spacing: 0.302px;
   color: rgba(46, 47, 51, 0.88);
+`;
+
+/* ===== Edit Title Input ===== */
+const EditTitleInput = styled.input`
+  width: 100%;
+  padding: 10px 12px;
+  margin-top: 8px;
+  border: 1px solid #e4e8f4;
+  border-radius: 8px;
+  font-family: "Pretendard Variable", "Pretendard", sans-serif;
+  font-size: 14px;
+  color: #171719;
+  outline: none;
+
+  &:focus {
+    border-color: #2ec4a0;
+  }
+
+  &::placeholder {
+    color: #a0aabf;
+  }
 `;

@@ -2,7 +2,7 @@ import type { FormEventHandler } from "react";
 import type { Control } from "react-hook-form";
 import type { ModalProps } from "..";
 import { Modals } from "..";
-import { Buttons } from "../../Buttons";
+import { IsButton } from "insystem-atoms";
 import { ControlText } from "../../../atoms/Controls/ControlText";
 import type { ChangePasswordInputs } from "../../../containers/Member/ChangePasswordModal";
 import { ModalFormBox } from "../Modals.style";
@@ -24,20 +24,24 @@ export const ModalPassword = ({
       setModalShow={setModalShow}
       modalButtons={
         <>
-          <Buttons
+          <IsButton
             type="submit"
+            variant="solid"
+            color="primary"
             size="md"
-            layout="primary"
-            label="확인"
             form={formId}
-          />
-          <Buttons
+          >
+            확인
+          </IsButton>
+          <IsButton
             type="button"
+            variant="outline"
+            color="gray"
             size="md"
-            layout="secondary"
-            label="취소"
             onClick={() => setModalShow(false)}
-          />
+          >
+            취소
+          </IsButton>
         </>
       }
     >

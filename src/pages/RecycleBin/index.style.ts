@@ -1,9 +1,8 @@
 /**
- * 폴더 상세 페이지 스타일
- * @description 폴더 상세 페이지의 styled-components 정의
+ * 휴지통 페이지 스타일
+ * @description 휴지통 페이지의 styled-components 정의
  */
 import styled from "styled-components";
-import { Link } from "react-router-dom";
 import { IsButton } from "insystem-atoms";
 
 /* ========================================
@@ -64,7 +63,7 @@ export const Content = styled.div`
    컨텐츠 헤더 영역
    ======================================== */
 
-/** 컨텐츠 헤더 (브레드크럼 + 업로드 버튼) */
+/** 컨텐츠 헤더 (제목 + 버튼) */
 export const ContentHeader = styled.div`
   display: flex;
   align-items: center;
@@ -76,6 +75,17 @@ export const HeaderTextGroup = styled.div`
   display: flex;
   flex-direction: column;
   gap: 3px;
+`;
+
+/** 메인 제목 */
+export const MainTitle = styled.h2`
+  font-family: "Pretendard Variable", "Pretendard", sans-serif;
+  font-size: 20px;
+  font-weight: 700;
+  line-height: 1.4;
+  letter-spacing: -0.24px;
+  color: #1b2a6b;
+  margin: 0;
 `;
 
 /** 설명 텍스트 */
@@ -90,129 +100,95 @@ export const Description = styled.p`
 `;
 
 /* ========================================
-   브레드크럼 네비게이션
+   휴지통 비우기 버튼
    ======================================== */
 
-/** 브레드크럼 컨테이너 */
-export const Breadcrumb = styled.nav`
-  display: flex;
-  align-items: center;
-  gap: 4px;
-`;
-
-/** 브레드크럼 링크 */
-export const BreadcrumbLink = styled(Link)`
-  font-family: "Pretendard Variable", "Pretendard", sans-serif;
-  font-size: 20px;
-  font-weight: 700;
-  line-height: 1.4;
-  letter-spacing: -0.24px;
-  color: #6b7a9f;
-  text-decoration: none;
-  transition: color 0.15s ease;
-
-  &:hover {
-    color: #1b2a6b;
-  }
-`;
-
-/** 브레드크럼 구분자 */
-export const BreadcrumbSeparator = styled.span`
-  display: flex;
-  align-items: center;
-  color: #6b7a9f;
-`;
-
-/** 브레드크럼 현재 위치 */
-export const BreadcrumbCurrent = styled.span`
-  font-family: "Pretendard Variable", "Pretendard", sans-serif;
-  font-size: 20px;
-  font-weight: 700;
-  line-height: 1.4;
-  letter-spacing: -0.24px;
-  color: #1b2a6b;
-`;
-
-/** 브레드크럼 아이템 */
-export const BreadcrumbItem = styled.span`
-  display: flex;
-  align-items: center;
-  gap: 4px;
+/** 휴지통 비우기 버튼 */
+export const EmptyTrashButton = styled(IsButton)`
+  /* 기본 스타일 유지 */
 `;
 
 /* ========================================
-   업로드 버튼 및 메뉴
+   상태 카드 영역
    ======================================== */
 
-/** 업로드 버튼 래퍼 */
-export const UploadButtonWrapper = styled.div`
-  position: relative;
+/** 상태 카드 그리드 */
+export const StatusCardGrid = styled.div`
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px;
 `;
 
-/** 업로드 버튼 (그림자 효과 추가) */
-export const UploadButton = styled(IsButton)`
-  box-shadow: 0px 0px 10px 0px rgba(46, 182, 170, 0.25);
-`;
-
-/** 업로드 드롭다운 메뉴 */
-export const UploadMenu = styled.div`
-  position: absolute;
-  top: calc(100% + 4px);
-  right: 0;
-  min-width: 140px;
-  background: #ffffff;
-  border: 1px solid #eaebec;
-  border-radius: 8px;
-  box-shadow:
-    0px 4px 6px -1px rgba(23, 23, 23, 0.06),
-    0px 2px 4px -2px rgba(23, 23, 23, 0.06);
-  padding: 4px 0;
-  z-index: 100;
-`;
-
-/** 메뉴 아이템 버튼 */
-export const MenuItem = styled.button`
+/** 상태 카드 */
+export const StatusCard = styled.div`
   display: flex;
   align-items: center;
-  gap: 8px;
-  width: 100%;
-  padding: 8px;
-  background: transparent;
-  border: none;
-  cursor: pointer;
-  transition: background 0.15s ease;
-
-  &:hover {
-    background: rgba(23, 23, 25, 0.075);
-  }
+  gap: 14px;
+  padding: 11px 21px;
+  background: #ffffff;
+  border: 1px solid rgba(112, 115, 124, 0.22);
+  border-radius: 12px;
 `;
 
-/** 메뉴 아이템 아이콘 */
-export const MenuItemIcon = styled.span`
+/** 카드 아이콘 타입 */
+type CardIconColor = "red" | "orange" | "gray";
+
+/** 카드 아이콘 래퍼 */
+export const CardIconWrap = styled.div<{ $color: CardIconColor }>`
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 20px;
-  height: 20px;
-  color: rgba(46, 47, 51, 0.88);
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
   flex-shrink: 0;
+
+  ${({ $color }) => {
+    switch ($color) {
+      case "red":
+        return `
+          background: rgba(239, 68, 68, 0.12);
+          color: #ef4444;
+        `;
+      case "orange":
+        return `
+          background: rgba(255, 146, 0, 0.12);
+          color: #ff9200;
+        `;
+      default:
+        return `
+          background: rgba(112, 115, 124, 0.08);
+          color: #70737c;
+        `;
+    }
+  }}
 `;
 
-/** 메뉴 아이템 라벨 */
-export const MenuItemLabel = styled.span`
+/** 카드 텍스트 그룹 */
+export const CardTextGroup = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+`;
+
+/** 카드 숫자 */
+export const CardNumber = styled.span`
+  font-family: "Pretendard Variable", "Pretendard", sans-serif;
+  font-size: 22px;
+  font-weight: 700;
+  line-height: 1.364;
+  letter-spacing: -0.427px;
+  color: #171719;
+`;
+
+/** 카드 라벨 */
+export const CardLabel = styled.span`
   font-family: "Pretendard Variable", "Pretendard", sans-serif;
   font-size: 12px;
-  font-weight: 500;
+  font-weight: 400;
   line-height: 1.334;
-  letter-spacing: 0.3024px;
-  color: rgba(46, 47, 51, 0.88);
-`;
-
-/** 메뉴 구분선 */
-export const MenuDivider = styled.div`
-  height: 1px;
-  margin: 0 8px;
-  background: rgba(112, 115, 124, 0.08);
+  letter-spacing: 0.302px;
+  color: rgba(55, 56, 60, 0.61);
 `;
 
 /* ========================================
@@ -250,11 +226,12 @@ export const PaginationFooter = styled.div`
   flex-shrink: 0;
 `;
 
-/** 검색 바 */
+/** 검색 바 (툴바 영역) */
 export const SearchBar = styled.div`
   display: flex;
   align-items: center;
   justify-content: space-between;
+  min-height: 32px;
   flex-shrink: 0;
 `;
 
@@ -336,23 +313,56 @@ export const ViewButton = styled.button<{
   }
 `;
 
-/** 드래그 앤 드롭 영역 */
-export const DragDropArea = styled.div`
+/** 빈 상태 영역 */
+export const EmptyState = styled.div`
   flex: 1;
   display: flex;
-  align-items: stretch;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  padding: 60px 20px;
+`;
 
-  /* IsFileDrop 스타일 오버라이드 */
-  & > div {
+/** 빈 상태 아이콘 */
+export const EmptyStateIcon = styled.div`
+  width: 80px;
+  height: 80px;
+  color: #a0aabf;
+
+  svg {
     width: 100%;
-    display: flex;
-    flex-direction: column;
+    height: 100%;
   }
+`;
 
-  & > div > div:last-child {
-    flex: 1;
-    min-height: 400px;
-  }
+/** 빈 상태 텍스트 그룹 */
+export const EmptyStateTextGroup = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+`;
+
+/** 빈 상태 제목 */
+export const EmptyStateTitle = styled.h3`
+  font-family: "Pretendard Variable", "Pretendard", sans-serif;
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 1.5;
+  color: #171719;
+  margin: 0;
+`;
+
+/** 빈 상태 설명 */
+export const EmptyStateDescription = styled.p`
+  font-family: "Pretendard Variable", "Pretendard", sans-serif;
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 1.429;
+  color: rgba(55, 56, 60, 0.61);
+  margin: 0;
+  text-align: center;
 `;
 
 /* ========================================
@@ -362,8 +372,8 @@ export const DragDropArea = styled.div`
 /** 선택 액션 바 컨테이너 */
 export const SelectionActionBar = styled.div`
   display: flex;
-  align-items: stretch;
-  padding-left: 16px;
+  align-items: center;
+  height: 32px;
   flex-shrink: 0;
 `;
 
@@ -401,7 +411,7 @@ export const SelectionCountText = styled.span`
 `;
 
 /** 액션 버튼 */
-export const ActionButton = styled.button`
+export const ActionButton = styled.button<{ $danger?: boolean }>`
   display: flex;
   align-items: center;
   gap: 4px;
@@ -415,11 +425,12 @@ export const ActionButton = styled.button`
   font-weight: 500;
   line-height: 1.334;
   letter-spacing: 0.302px;
-  color: rgba(55, 56, 60, 0.61);
+  color: ${({ $danger }) => ($danger ? "#ff4242" : "rgba(55, 56, 60, 0.61)")};
   transition: background 0.15s ease;
 
   &:hover {
-    background: rgba(112, 115, 124, 0.08);
+    background: ${({ $danger }) =>
+      $danger ? "rgba(255, 66, 66, 0.08)" : "rgba(112, 115, 124, 0.08)"};
   }
 
   svg {
@@ -428,20 +439,8 @@ export const ActionButton = styled.button`
   }
 `;
 
-/** 공개 범위 변경 셀렉트 래퍼 */
-export const VisibilitySelectWrapper = styled.div`
-  width: 120px;
-
-  /* IsSelect 트리거 버튼만 타겟팅 (드롭다운 옵션 버튼은 제외) */
-  & button[aria-haspopup="listbox"] {
-    background: #ffffff;
-    border: 1px solid rgba(112, 115, 124, 0.22);
-    height: 32px;
-  }
-`;
-
 /* ========================================
-   공개 범위 변경 모달 파일 목록
+   파일 목록 (Alert 모달용)
    ======================================== */
 
 /** 파일 목록 컨테이너 */

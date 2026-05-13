@@ -1,4 +1,5 @@
 import { createRoot } from "react-dom/client";
+import { IsButton } from "insystem-atoms";
 import { PopupAlert } from "../atoms/PopupAlert";
 
 const confirmRoot = document.createElement("div");
@@ -28,16 +29,14 @@ function Alert({ title, text, giveAnswer, options }: AlertProps) {
       title={title ?? "알림"}
       text={text}
       buttons={
-        <>
-          <button
-            className="confirm_btn"
-            onClick={() => giveAnswer(true)}
-            color="primary"
-            autoFocus
-          >
-            {options?.buttonText ? options?.buttonText : "확인"}
-          </button>
-        </>
+        <IsButton
+          variant="solid"
+          color="primary"
+          size="sm"
+          onClick={() => giveAnswer(true)}
+        >
+          {options?.buttonText ? options?.buttonText : "확인"}
+        </IsButton>
       }
     ></PopupAlert>
   );

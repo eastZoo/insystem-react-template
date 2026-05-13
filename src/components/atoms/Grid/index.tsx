@@ -5,6 +5,9 @@ import type {
   RowDoubleClickedEvent,
   RowSelectionOptions,
   SelectionChangedEvent,
+  CellValueChangedEvent,
+  RowStyle,
+  RowClassParams,
 } from "ag-grid-community";
 import { AgGridReact } from "ag-grid-react";
 import { ModuleRegistry, AllCommunityModule } from "ag-grid-community";
@@ -32,6 +35,8 @@ interface GridProps<TData = any> {
   onRowClicked?: (event: any) => void;
   onRowDoubleClicked?: (event: RowDoubleClickedEvent<TData>) => void;
   onCellClicked?: (event: any) => void;
+  onCellValueChanged?: (event: CellValueChangedEvent<TData>) => void;
+  getRowStyle?: (params: RowClassParams<TData>) => RowStyle | undefined;
 }
 
 const Grid = forwardRef<AgGridReact, GridProps>(
@@ -54,6 +59,8 @@ const Grid = forwardRef<AgGridReact, GridProps>(
       onRowClicked,
       onRowDoubleClicked,
       onCellClicked,
+      onCellValueChanged,
+      getRowStyle,
     },
     ref
   ) => {
@@ -101,6 +108,8 @@ const Grid = forwardRef<AgGridReact, GridProps>(
                 onGridReady={onGridReady}
                 onSelectionChanged={onSelectionChanged}
                 onCellClicked={handleCellClicked}
+                onCellValueChanged={onCellValueChanged}
+                getRowStyle={getRowStyle}
                 suppressCellFocus={suppressCellFocus}
               />
             </S.GridWrapper>

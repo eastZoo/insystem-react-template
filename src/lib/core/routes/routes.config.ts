@@ -100,13 +100,26 @@ export const ROUTE_CONFIGS: RouteConfig[] = [
     title: "폴더 상세",
     protected: true,
   },
+
+  {
+    path: "/cmn/user-mng",
+    page: "Common/UserManagement",
+    title: "사용자 관리",
+    protected: true,
+  },
+  {
+    path: "/cmn/com-code",
+    page: "Common/ComCodeManagement",
+    title: "공통 코드 관리",
+    protected: true,
+  },
+
   {
     path: "/chat",
     name: "Chat",
     title: "채팅",
     protected: true,
   },
-
   // {
   //   path: "/sample",
   //   name: "SamplePage1",

@@ -23,7 +23,7 @@
     "dayjs": "^1.11.18",
     "echarts": "^6.0.0",
     "echarts-for-react": "^3.0.6",
-    "insystem-atoms": "^0.1.7",
+    "insystem-atoms": "file:../insystem-atoms",
     "jotai": "^2.19.0",
     "maplibre-gl": "^5.16.0",
     "pmtiles": "^4.3.2",

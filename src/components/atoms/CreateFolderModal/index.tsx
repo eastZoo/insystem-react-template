@@ -62,7 +62,7 @@ export const CreateFolderModal = ({
         <InputWrapper>
           <IsInputText
             label="폴더 명"
-            placeholder="폴더 명을 입력해주세요."
+            placeholderText="폴더 명을 입력해주세요."
             value={folderName}
             onChange={(e) => setFolderName(e.target.value)}
             onKeyDown={handleKeyDown}
@@ -73,7 +73,7 @@ export const CreateFolderModal = ({
 
       {/* Actions */}
       <Actions>
-        <IsButton variant="solid" color="neutral" onClick={handleClose}>
+        <IsButton variant="solid" color="secondary" onClick={handleClose}>
           취소
         </IsButton>
         <IsButton

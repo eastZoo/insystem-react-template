@@ -368,9 +368,15 @@ export function FileGridView({
     [onFolderClick]
   );
 
-  /** 파일 클릭 핸들러 */
+  /** 파일 클릭 핸들러 - 새 탭에서 파일 열기 */
   const handleFileClick = useCallback(
     (file: FileItem) => {
+      // 파일인 경우 새 탭에서 열기
+      if (file.file_id && file.file_seq !== undefined) {
+        const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || "";
+        const viewerUrl = `${apiBaseUrl}/api/app/collection/file/view?fileId=${file.file_id}&fileSeq=${file.file_seq}`;
+        window.open(viewerUrl, "_blank");
+      }
       onFileClick?.(file);
     },
     [onFileClick]
