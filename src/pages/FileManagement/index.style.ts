@@ -277,6 +277,8 @@ export const TableContainer = styled.div`
 
 /** 테이블 컨텐츠 영역 (스크롤 가능) */
 export const TableContent = styled.div`
+  display: flex;
+  flex-direction: column;
   flex: 1;
   overflow: auto;
   min-height: 0;
@@ -383,18 +385,7 @@ export const DragDropArea = styled.div`
   flex: 1;
   display: flex;
   align-items: stretch;
-
-  /* IsFileDrop 스타일 오버라이드 */
-  & > div {
-    width: 100%;
-    display: flex;
-    flex-direction: column;
-  }
-
-  & > div > div:last-child {
-    flex: 1;
-    min-height: 400px;
-  }
+  min-height: 400px;
 `;
 
 /* ========================================

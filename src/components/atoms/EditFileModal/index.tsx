@@ -229,7 +229,6 @@ export const EditFileModal = ({
           <InputSection>
             <InputLabel>{isFolder ? "폴더 명" : "파일 명"}</InputLabel>
             <IsInputSearch
-              labelShow={false}
               value={fileName}
               onChange={handleFileNameChange}
               placeholder={

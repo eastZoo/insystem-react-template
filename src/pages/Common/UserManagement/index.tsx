@@ -4,10 +4,12 @@
  */
 import { useState, useCallback } from "react";
 import { IsInputText, IsSelect, IsButton, IsCheckbox } from "insystem-atoms";
-import { Tabs } from "@/components/atoms/Tabs";
 import { RadioGroup } from "@/components/atoms/RadioGroup";
 import { Pagination } from "@/components/atoms/Pagination";
-import { SearchIcon, CalendarIcon } from "@/styles/icons";
+import { FilterBar } from "@/components/atoms/FilterBar";
+import { PageHeader } from "@/components/atoms/PageHeader";
+import { PageTemplate } from "@/components/template/PageTemplate";
+import { CalendarIcon } from "@/styles/icons";
 import * as S from "./index.style";
 
 /* ========================================
@@ -195,6 +197,31 @@ export default function UserManagementPage() {
     []
   );
 
+  /** 추가 핸들러 */
+  const handleAdd = useCallback(() => {
+    console.log("추가");
+    // TODO: 신규 사용자 추가 로직
+    setLeftUserInfo(initialUserInfo);
+    setRightUserInfo(initialUserInfo);
+    setSelectedUserId(null);
+  }, []);
+
+  /** 저장 핸들러 */
+  const handleSave = useCallback(() => {
+    console.log("저장:", { leftUserInfo, rightUserInfo });
+    // TODO: API 호출하여 저장
+  }, [leftUserInfo, rightUserInfo]);
+
+  /** 삭제 핸들러 */
+  const handleDelete = useCallback(() => {
+    if (!selectedUserId) {
+      console.log("삭제할 사용자를 선택해주세요.");
+      return;
+    }
+    console.log("삭제:", selectedUserId);
+    // TODO: API 호출하여 삭제
+  }, [selectedUserId]);
+
   /* ============================= 컴포넌트 영역 ============================= */
 
   /** 기본 정보 폼 컬럼 렌더링 */
@@ -213,8 +240,6 @@ export default function UserManagementPage() {
             value={userInfo.name}
             onChange={(e) => updateUserInfo("name", e.target.value)}
             placeholderText="입력해주세요."
-            labelShow={false}
-            placeholderActive
             fullWidth
           />
         </S.FormTableCell>
@@ -229,8 +254,6 @@ export default function UserManagementPage() {
             value={userInfo.nameEn}
             onChange={(e) => updateUserInfo("nameEn", e.target.value)}
             placeholderText="Name"
-            labelShow={false}
-            placeholderActive
             fullWidth
           />
         </S.FormTableCell>
@@ -245,7 +268,6 @@ export default function UserManagementPage() {
             value={userInfo.division}
             onChange={(value) => updateUserInfo("division", value)}
             options={DIVISION_OPTIONS}
-            labelShow={false}
             fullWidth
           />
         </S.FormTableCell>
@@ -260,8 +282,6 @@ export default function UserManagementPage() {
             value={userInfo.ssn}
             onChange={(e) => updateUserInfo("ssn", e.target.value)}
             placeholderText="'-' 없이 숫자만 입력"
-            labelShow={false}
-            placeholderActive
             fullWidth
           />
         </S.FormTableCell>
@@ -277,8 +297,6 @@ export default function UserManagementPage() {
             value={userInfo.birthDate}
             onChange={(e) => updateUserInfo("birthDate", e.target.value)}
             placeholderText="연도-월-일"
-            labelShow={false}
-            placeholderActive
             fullWidth
             rightIconSlot={<CalendarIcon />}
           />
@@ -294,7 +312,6 @@ export default function UserManagementPage() {
               size="xSmall"
               value={userInfo.phone1}
               onChange={(value) => updateUserInfo("phone1", value)}
-              labelShow={false}
               options={PHONE_PREFIX_OPTIONS}
               width={70}
             />
@@ -304,7 +321,6 @@ export default function UserManagementPage() {
               value={userInfo.phone2}
               onChange={(e) => updateUserInfo("phone2", e.target.value)}
               maxLength={4}
-              labelShow={false}
               fullWidth
             />
             <S.PhoneSeparator>-</S.PhoneSeparator>
@@ -313,7 +329,6 @@ export default function UserManagementPage() {
               value={userInfo.phone3}
               onChange={(e) => updateUserInfo("phone3", e.target.value)}
               maxLength={4}
-              labelShow={false}
               fullWidth
             />
           </S.PhoneInputGroup>
@@ -329,7 +344,6 @@ export default function UserManagementPage() {
               size="xSmall"
               value={userInfo.email1}
               onChange={(e) => updateUserInfo("email1", e.target.value)}
-              labelShow={false}
               fullWidth
             />
             <S.EmailSeparator>@</S.EmailSeparator>
@@ -337,7 +351,6 @@ export default function UserManagementPage() {
               size="xSmall"
               value={userInfo.email2}
               onChange={(e) => updateUserInfo("email2", e.target.value)}
-              labelShow={false}
               fullWidth
             />
           </S.EmailInputGroup>
@@ -362,7 +375,6 @@ export default function UserManagementPage() {
                 size="xSmall"
                 value={userInfo.zipCode}
                 readOnly
-                labelShow={false}
                 fullWidth
               />
             </S.AddressSearchRow>
@@ -371,8 +383,6 @@ export default function UserManagementPage() {
               value={userInfo.addressDetail}
               onChange={(e) => updateUserInfo("addressDetail", e.target.value)}
               placeholderText="상세주소를 입력하세요."
-              labelShow={false}
-              placeholderActive
               fullWidth
             />
           </S.AddressInputGroup>
@@ -403,203 +413,181 @@ export default function UserManagementPage() {
   /* ============================= 렌더링 ============================= */
 
   return (
-    <>
-      <title>사용자 관리</title>
-      <S.PageContainer>
-        {/* 페이지 헤더 */}
-        <S.PageHeader>
-          <S.PageTitle>사용자 관리</S.PageTitle>
-        </S.PageHeader>
+    <PageTemplate title="사용자 관리">
+      {/* 페이지 헤더 (타이틀 + CRUD 버튼) */}
+      <PageHeader
+        title="사용자 관리"
+        onAdd={handleAdd}
+        onSave={handleSave}
+        onDelete={handleDelete}
+      />
 
-        {/* 메인 컨텐츠 */}
-        <S.MainContainer>
-          {/* 타이틀 */}
-          <S.TitleSection>
-            <S.MainTitle>사용자 관리</S.MainTitle>
-          </S.TitleSection>
+      {/* 검색 필터 - FilterBar 컴포넌트 사용 */}
+      <FilterBar
+        rows={[
+          {
+            // Row 1: 부서, 사원명, 재직구분, 체크
+            items: [
+              <IsInputText
+                key="department"
+                size="xSmall"
+                position="row"
+                label="부서"
+                value={department}
+                onChange={(e) => setDepartment(e.target.value)}
+                placeholderText="부서명 입력"
+                fullWidth
+              />,
+              <IsInputText
+                key="employeeName"
+                size="xSmall"
+                position="row"
+                label="사원명"
+                value={employeeName}
+                onChange={(e) => setEmployeeName(e.target.value)}
+                placeholderText="사원명 입력"
+                fullWidth
+              />,
+              <IsSelect
+                key="employmentStatus"
+                size="xSmall"
+                position="row"
+                label="재직구분"
+                value={employmentStatus}
+                onChange={setEmploymentStatus}
+                options={EMPLOYMENT_STATUS_OPTIONS}
+                fullWidth
+              />,
+              {
+                element: (
+                  <IsCheckbox
+                    size="small"
+                    label="Check"
+                    checked={isChecked}
+                    onChange={(e) => setIsChecked(e.target.checked)}
+                  />
+                ),
+                width: "auto",
+              },
+            ],
+          },
+          {
+            // Row 2: 분류, 형태
+            items: [
+              <IsSelect
+                key="category"
+                size="xSmall"
+                position="row"
+                label="분류"
+                value={category}
+                onChange={setCategory}
+                options={CATEGORY_OPTIONS}
+                fullWidth
+              />,
+              <IsSelect
+                key="type"
+                size="xSmall"
+                position="row"
+                label="형태"
+                value={type}
+                onChange={setType}
+                options={TYPE_OPTIONS}
+                fullWidth
+              />,
+            ],
+          },
+        ]}
+        onSearch={handleSearch}
+        onClear={handleReset}
+      />
 
-          {/* 검색 필터 - 피그마 기준: 컨테이너 + 입력그룹 + 버튼그룹 분리 */}
-          <S.SearchFilterContainer>
-            {/* 필터 입력 그룹 */}
-            <S.FilterInputGroup>
-              {/* 부서 */}
-              <S.FilterFieldWrapper>
-                <IsInputText
-                  size="xSmall"
-                  position="row"
-                  label="부서"
-                  value={department}
-                  onChange={(e) => setDepartment(e.target.value)}
-                  placeholderText="부서명 입력"
-                  placeholderActive
-                  fullWidth
-                />
-              </S.FilterFieldWrapper>
+      {/* 컨텐츠 영역 (좌우 분할) */}
+      <S.ContentWrapper>
+        {/* 좌측 패널: 인사 정보 리스트 */}
+        <S.LeftPanel>
+          <S.PanelHeader>
+            <S.PanelTitle>인사 정보</S.PanelTitle>
+            <S.CountBadge>총 {userList.length}건</S.CountBadge>
+          </S.PanelHeader>
 
-              {/* 사원명 */}
-              <S.FilterFieldWrapper>
-                <IsInputText
-                  size="xSmall"
-                  position="row"
-                  label="사원명"
-                  value={employeeName}
-                  onChange={(e) => setEmployeeName(e.target.value)}
-                  placeholderText="사원명 입력"
-                  labelShow={false}
-                  placeholderActive
-                  fullWidth
-                />
-              </S.FilterFieldWrapper>
+          <S.ListContainer>
+            {userList.length === 0 ? (
+              <S.EmptyState>데이터가 없습니다.</S.EmptyState>
+            ) : (
+              userList.map((user) => (
+                <S.ListItem
+                  key={user.id}
+                  $selected={selectedUserId === user.id}
+                  onClick={() => handleSelectUser(user.id)}
+                >
+                  <S.ListItemText>{user.name}</S.ListItemText>
+                </S.ListItem>
+              ))
+            )}
+          </S.ListContainer>
 
-              {/* 재직구분 */}
-              <S.FilterFieldWrapper>
-                <IsSelect
-                  size="xSmall"
-                  position="row"
-                  label="재직구분"
-                  value={employmentStatus}
-                  onChange={setEmploymentStatus}
-                  options={EMPLOYMENT_STATUS_OPTIONS}
-                  fullWidth
-                />
-              </S.FilterFieldWrapper>
+          <S.PanelFooter>
+            <Pagination
+              currentPage={currentPage}
+              totalPages={totalPages}
+              onPageChange={setCurrentPage}
+            />
+          </S.PanelFooter>
+        </S.LeftPanel>
 
-              {/* Check */}
-              <IsCheckbox
-                size="small"
-                label="Check"
-                checked={isChecked}
-                onChange={(e) => setIsChecked(e.target.checked)}
-              />
-
-              {/* 분류 */}
-              <S.FilterFieldWrapper>
-                <IsSelect
-                  size="xSmall"
-                  position="row"
-                  label="분류"
-                  value={category}
-                  onChange={setCategory}
-                  options={CATEGORY_OPTIONS}
-                  fullWidth
-                />
-              </S.FilterFieldWrapper>
-
-              {/* 형태 */}
-              <S.FilterFieldWrapper>
-                <IsSelect
-                  size="xSmall"
-                  position="row"
-                  label="형태"
-                  value={type}
-                  onChange={setType}
-                  options={TYPE_OPTIONS}
-                  fullWidth
-                />
-              </S.FilterFieldWrapper>
-            </S.FilterInputGroup>
-
-            {/* 검색/초기화 버튼 그룹 */}
-            <S.SearchButtonGroup>
-              <IsButton
-                variant="solid"
-                color="primary"
-                size="xs"
-                onClick={handleSearch}
-                leftIconSlot={<SearchIcon />}
+        {/* 우측 패널: 상세 정보 */}
+        <S.RightPanel>
+          <S.TabBar>
+            {TABS.map((tab, index) => (
+              <S.TabItem
+                key={tab.id}
+                $active={activeTab === tab.id}
+                $position={
+                  index === 0
+                    ? "start"
+                    : index === TABS.length - 1
+                      ? "end"
+                      : "center"
+                }
+                onClick={() => setActiveTab(tab.id)}
               >
-                검색
-              </IsButton>
-              <IsButton
-                variant="solid"
-                color="secondary"
-                size="sm"
-                onClick={handleReset}
-              >
-                초기화
-              </IsButton>
-            </S.SearchButtonGroup>
-          </S.SearchFilterContainer>
+                {tab.label}
+              </S.TabItem>
+            ))}
+          </S.TabBar>
 
-          {/* 컨텐츠 영역 (좌우 분할) */}
-          <S.ContentWrapper>
-            {/* 좌측 패널: 인사 정보 리스트 */}
-            <S.LeftPanel>
-              <S.PanelHeader>
-                <S.PanelTitle>인사 정보</S.PanelTitle>
-                <S.CountBadge>총 {userList.length}건</S.CountBadge>
-              </S.PanelHeader>
-
-              <S.ListContainer>
-                {userList.length === 0 ? (
-                  <S.EmptyState>데이터가 없습니다.</S.EmptyState>
-                ) : (
-                  userList.map((user) => (
-                    <S.ListItem
-                      key={user.id}
-                      $selected={selectedUserId === user.id}
-                      onClick={() => handleSelectUser(user.id)}
-                    >
-                      <S.ListItemText>{user.name}</S.ListItemText>
-                    </S.ListItem>
-                  ))
+          <S.TabContent>
+            {activeTab === "basic" && (
+              <S.FormTable>
+                {/* 좌측 폼 */}
+                {renderBasicInfoColumn(
+                  leftUserInfo,
+                  updateLeftUserInfo,
+                  "left"
                 )}
-              </S.ListContainer>
-
-              <S.PanelFooter>
-                <Pagination
-                  currentPage={currentPage}
-                  totalPages={totalPages}
-                  onPageChange={setCurrentPage}
-                />
-              </S.PanelFooter>
-            </S.LeftPanel>
-
-            {/* 우측 패널: 상세 정보 */}
-            <S.RightPanel>
-              <S.TabContainer>
-                <Tabs
-                  tabs={TABS}
-                  activeTab={activeTab}
-                  onTabChange={setActiveTab}
-                  fullWidth
-                />
-              </S.TabContainer>
-
-              <S.TabContent>
-                {activeTab === "basic" && (
-                  <S.FormTable>
-                    {/* 좌측 폼 */}
-                    {renderBasicInfoColumn(
-                      leftUserInfo,
-                      updateLeftUserInfo,
-                      "left"
-                    )}
-                    {/* 우측 폼 */}
-                    {renderBasicInfoColumn(
-                      rightUserInfo,
-                      updateRightUserInfo,
-                      "right"
-                    )}
-                  </S.FormTable>
+                {/* 우측 폼 */}
+                {renderBasicInfoColumn(
+                  rightUserInfo,
+                  updateRightUserInfo,
+                  "right"
                 )}
+              </S.FormTable>
+            )}
 
-                {activeTab === "transaction" && (
-                  <S.EmptyState>거래 정보 탭 내용</S.EmptyState>
-                )}
+            {activeTab === "transaction" && (
+              <S.EmptyState>거래 정보 탭 내용</S.EmptyState>
+            )}
 
-                {activeTab === "salary" && (
-                  <S.EmptyState>급여 정보 탭 내용</S.EmptyState>
-                )}
+            {activeTab === "salary" && (
+              <S.EmptyState>급여 정보 탭 내용</S.EmptyState>
+            )}
 
-                {activeTab === "manager" && (
-                  <S.EmptyState>담당자 정보 탭 내용</S.EmptyState>
-                )}
-              </S.TabContent>
-            </S.RightPanel>
-          </S.ContentWrapper>
-        </S.MainContainer>
-      </S.PageContainer>
-    </>
+            {activeTab === "manager" && (
+              <S.EmptyState>담당자 정보 탭 내용</S.EmptyState>
+            )}
+          </S.TabContent>
+        </S.RightPanel>
+      </S.ContentWrapper>
+    </PageTemplate>
   );
 }

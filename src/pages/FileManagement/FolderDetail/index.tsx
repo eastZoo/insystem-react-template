@@ -48,10 +48,9 @@ import {
   useUpdateFile,
   type FileListItem as ApiFileListItem,
 } from "@/lib/hooks/useCollection";
+import { PageTemplate } from "@/components/template/PageTemplate";
+import { PageHeader as CommonPageHeader } from "@/components/atoms/PageHeader";
 import {
-  PageContainer,
-  PageHeader,
-  PageTitle,
   MainContainer,
   Content,
   ContentHeader,
@@ -284,7 +283,9 @@ export default function FolderDetailPage() {
     let currentId = folderId;
 
     while (currentId && currentId !== "ROOT") {
-      const info = folderTreeData.find((item: any) => item.fld_cd === currentId);
+      const info = folderTreeData.find(
+        (item: any) => item.fld_cd === currentId
+      );
       if (info) {
         path.unshift({ id: currentId, name: info.fld_nm });
         currentId = info.up_fld_cd;
@@ -326,7 +327,17 @@ export default function FolderDetailPage() {
           case "img":
             return ["jpg", "jpeg", "png", "gif", "bmp", "webp"].includes(ext);
           case "etc":
-            return !["pdf", "doc", "docx", "jpg", "jpeg", "png", "gif", "bmp", "webp"].includes(ext);
+            return ![
+              "pdf",
+              "doc",
+              "docx",
+              "jpg",
+              "jpeg",
+              "png",
+              "gif",
+              "bmp",
+              "webp",
+            ].includes(ext);
           default:
             return true;
         }
@@ -782,11 +793,8 @@ export default function FolderDetailPage() {
      ======================================== */
 
   return (
-    <PageContainer>
-      {/* 페이지 헤더 */}
-      <PageHeader>
-        <PageTitle>파일 관리</PageTitle>
-      </PageHeader>
+    <PageTemplate title="파일 관리">
+      <CommonPageHeader title="파일 관리" />
 
       {/* 메인 컨텐츠 */}
       <MainContainer>
@@ -857,9 +865,7 @@ export default function FolderDetailPage() {
                 <SearchInputWrapper>
                   <IsInputSearch
                     size="sm"
-                    labelShow={false}
                     placeholder="파일 검색..."
-                    suffix
                     suffixSlot={<SearchIcon />}
                     clearable
                     value={searchKeyword}
@@ -872,7 +878,6 @@ export default function FolderDetailPage() {
                 <SelectWrapper>
                   <IsSelect
                     size="small"
-                    labelShow={false}
                     options={FILE_TYPE_OPTIONS}
                     value={fileType}
                     onChange={setFileType}
@@ -883,7 +888,6 @@ export default function FolderDetailPage() {
                 <SelectWrapper>
                   <IsSelect
                     size="small"
-                    labelShow={false}
                     options={DATE_OPTIONS}
                     value={dateFilter}
                     onChange={setDateFilter}
@@ -894,7 +898,6 @@ export default function FolderDetailPage() {
                 <SelectWrapper>
                   <IsSelect
                     size="small"
-                    labelShow={false}
                     options={SCOPE_OPTIONS}
                     value={scopeFilter}
                     onChange={setScopeFilter}
@@ -905,7 +908,6 @@ export default function FolderDetailPage() {
                 <SelectWrapper>
                   <IsSelect
                     size="small"
-                    labelShow={false}
                     options={VECTOR_OPTIONS}
                     value={vectorFilter}
                     onChange={setVectorFilter}
@@ -944,7 +946,6 @@ export default function FolderDetailPage() {
                 <VisibilitySelectWrapper>
                   <IsSelect
                     size="small"
-                    labelShow={false}
                     options={[
                       { value: "", label: "공개 범위 변경" },
                       { value: "public", label: "전체 공개" },
@@ -1031,12 +1032,13 @@ export default function FolderDetailPage() {
               ) : (
                 <DragDropArea>
                   <IsFileDrop
-                    labelShow={false}
                     fullWidth
-                    accept=".jpg,.jpeg,.png,.pdf,.doc,.docx"
+                    fillHeight
+                    multiple
+                    accept=".pdf"
                     leadText="끌어다 놓기 또는 "
                     actionText="선택하기"
-                    infoText="JPG, PNG 형식만 허용됩니다(최대 2MB)"
+                    infoText="PDF 형식만 허용됩니다(최대 2MB)"
                     dropIconSlot={<UploadIcon />}
                     onFileChange={handleFileChange}
                     onFileRemove={handleFileRemove}
@@ -1161,6 +1163,6 @@ export default function FolderDetailPage() {
           ))}
         </FileListContainer>
       </Alert>
-    </PageContainer>
+    </PageTemplate>
   );
 }

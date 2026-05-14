@@ -275,7 +275,7 @@ export const LoginLabel = styled.span`
   font-weight: 600;
   line-height: 1.429;
   letter-spacing: 0.203px;
-  color: #0066ff;
+  color: ${({ theme }) => theme.semantic?.primary?.normal};
 `;
 
 /** 로그인 제목 */
@@ -299,19 +299,6 @@ export const Form = styled.form`
 /** 로그인 버튼 스타일 오버라이드 */
 export const LoginButtonWrapper = styled.div`
   margin-top: 8px;
-
-  /* IsButton 스타일 오버라이드 */
-  button {
-    background: #0066ff !important;
-    border-radius: 8px !important;
-    padding: 12px 28px !important;
-    height: auto !important;
-    min-height: 44px;
-
-    &:hover:not(:disabled) {
-      background: #0052cc !important;
-    }
-  }
 `;
 
 /* ========================================
@@ -379,6 +366,68 @@ export const ErrorMessage = styled.div`
       opacity: 1;
       transform: translateY(0);
     }
+  }
+`;
+
+/* ========================================
+   테스트 계정 (임시)
+   ======================================== */
+
+/** 테스트 계정 섹션 래퍼 */
+export const TestAccountSection = styled.div`
+  margin-top: 20px;
+  padding: 14px 16px;
+  background: rgba(15, 25, 69, 0.04);
+  border: 1px dashed rgba(15, 25, 69, 0.2);
+  border-radius: 8px;
+`;
+
+/** 테스트 계정 레이블 */
+export const TestAccountLabel = styled.div`
+  font-size: 11px;
+  color: #888;
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+
+  &::before,
+  &::after {
+    content: "";
+    flex: 1;
+    height: 1px;
+    background: rgba(0, 0, 0, 0.1);
+  }
+`;
+
+/** 테스트 계정 버튼 목록 */
+export const TestAccountList = styled.div`
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+`;
+
+/** 테스트 계정 버튼 */
+export const TestAccountButton = styled.button`
+  padding: 5px 12px;
+  font-size: 12px;
+  font-weight: 500;
+  color: #0f1945;
+  background: white;
+  border: 1px solid rgba(15, 25, 69, 0.25);
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  font-family: inherit;
+
+  &:hover {
+    background: #0f1945;
+    color: white;
+    border-color: #0f1945;
+  }
+
+  &:active {
+    transform: scale(0.97);
   }
 `;
 

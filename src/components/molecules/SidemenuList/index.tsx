@@ -1,6 +1,5 @@
 import * as S from "./SidemenuList.style";
 import { SidemenuItem } from "../../atoms/SidemenuItem";
-import React from "react";
 
 interface SidemenuListProps {
   menuList: any;
@@ -30,4 +29,4 @@ const SidemenuList = ({
     </S.SidemenuListBox>
   );
 };
-export default React.memo(SidemenuList);
+export default SidemenuList;

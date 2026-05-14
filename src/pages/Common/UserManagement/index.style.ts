@@ -232,7 +232,66 @@ export const RightPanel = styled.div`
   overflow: hidden;
 `;
 
-/** 탭 컨테이너 */
+/** 탭 바 컨테이너 */
+export const TabBar = styled.div`
+  display: flex;
+  flex-shrink: 0;
+`;
+
+/** 탭 아이템 - Figma 기준 */
+export const TabItem = styled.button<{ $active?: boolean; $position?: "start" | "center" | "end" | "single" }>`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 16px;
+  flex: 1;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: "Pretendard Variable", "Pretendard", sans-serif;
+  font-size: 14px;
+  line-height: 1.429;
+  letter-spacing: 0.203px;
+  white-space: nowrap;
+
+  /* 선택 상태에 따른 스타일 */
+  background: ${({ $active }) => ($active ? "#ffffff" : "rgba(255, 255, 255, 0.5)")};
+  color: ${({ $active }) => ($active ? "#171719" : "rgba(55, 56, 60, 0.28)")};
+  font-weight: ${({ $active }) => ($active ? 600 : 400)};
+
+  /* 테두리 */
+  border-bottom: 1px solid rgba(112, 115, 124, 0.08);
+  border-right: 1px solid rgba(112, 115, 124, 0.08);
+
+  /* 위치에 따른 border-radius */
+  border-radius: ${({ $position }) => {
+    switch ($position) {
+      case "start":
+        return "8px 0 0 0";
+      case "end":
+        return "0 8px 0 0";
+      case "single":
+        return "8px 8px 0 0";
+      default:
+        return "0";
+    }
+  }};
+
+  &:last-child {
+    border-right: none;
+  }
+
+  &:hover {
+    background: ${({ $active }) => ($active ? "#ffffff" : "rgba(255, 255, 255, 0.7)")};
+    color: ${({ $active }) => ($active ? "#171719" : "rgba(55, 56, 60, 0.5)")};
+  }
+
+  &:focus {
+    outline: none;
+  }
+`;
+
+/** 탭 컨테이너 (레거시 호환) */
 export const TabContainer = styled.div`
   flex-shrink: 0;
 `;

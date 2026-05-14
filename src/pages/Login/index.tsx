@@ -15,9 +15,9 @@ import { IsButton, IsInputText } from "insystem-atoms";
    ======================================== */
 
 const SEED_ACCOUNTS = [
-  { userId: "admin", role: "ADMIN" },
-  { userId: "manager", role: "MANAGER" },
-  { userId: "developer", role: "DEVELOPER" },
+  { userId: "admin" },
+  { userId: "inadmin" },
+  { userId: "intest" },
 ] as const;
 
 const SEED_PASSWORD = "1";
@@ -328,7 +328,6 @@ export default function LoginPage() {
               {/* 아이디 입력 */}
               <IsInputText
                 label="아이디"
-                labelShow
                 size="medium"
                 value={userId}
                 onChange={(e) => {
@@ -337,7 +336,6 @@ export default function LoginPage() {
                 }}
                 leftIconSlot={<UserIcon />}
                 placeholderText="입력해주세요."
-                placeholderActive
                 fullWidth
                 required
               />
@@ -345,7 +343,6 @@ export default function LoginPage() {
               {/* 비밀번호 입력 */}
               <IsInputText
                 label="비밀번호"
-                labelShow
                 size="medium"
                 type="password"
                 value={password}
@@ -355,7 +352,6 @@ export default function LoginPage() {
                 }}
                 leftIconSlot={<LockIcon />}
                 placeholderText="입력해주세요."
-                placeholderActive
                 fullWidth
                 required
               />
@@ -386,6 +382,26 @@ export default function LoginPage() {
                   주세요.
                 </S.InfoText>
               </S.InfoContainer>
+
+              {/* 테스트 계정 (임시) */}
+              <S.TestAccountSection>
+                <S.TestAccountLabel>테스트 계정</S.TestAccountLabel>
+                <S.TestAccountList>
+                  {SEED_ACCOUNTS.map((account) => (
+                    <S.TestAccountButton
+                      key={account.userId}
+                      type="button"
+                      onClick={() => {
+                        setUserId(account.userId);
+                        setPassword(SEED_PASSWORD);
+                        setErrorMessage("");
+                      }}
+                    >
+                      {account.userId}
+                    </S.TestAccountButton>
+                  ))}
+                </S.TestAccountList>
+              </S.TestAccountSection>
             </S.Form>
           </S.FormContainer>
         </S.RightPanel>

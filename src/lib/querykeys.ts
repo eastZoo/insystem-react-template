@@ -6,6 +6,10 @@ export const GET_AUTH_ME = "GET_AUTH_ME";
 /** Permission (사용자 권한 정보) */
 export const GET_USER_INFO = "GET_USER_INFO";
 export const GET_USER_MENUS = "GET_USER_MENUS";
+export const GET_GROUP_PERMISSIONS = "GET_GROUP_PERMISSIONS";
+
+/** Screen */
+export const GET_SCREEN_ROUTE = "GET_SCREEN_ROUTE";
 
 /** Test API (/api/app/test/*) */
 export const GET_TEST_PING = "GET_TEST_PING";

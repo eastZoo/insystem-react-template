@@ -3,7 +3,7 @@ import type { Control } from "react-hook-form";
 import type { ModalProps } from "..";
 import { Modals } from "..";
 import { IsButton } from "insystem-atoms";
-import { ControlText } from "../../../atoms/Controls/ControlText";
+import { ControlText } from "../../Controls/ControlText";
 import type { ChangePasswordInputs } from "../../../containers/Member/ChangePasswordModal";
 import { ModalFormBox } from "../Modals.style";
 
@@ -35,8 +35,8 @@ export const ModalPassword = ({
           </IsButton>
           <IsButton
             type="button"
-            variant="outline"
-            color="gray"
+            variant="outlined"
+            color="secondary"
             size="md"
             onClick={() => setModalShow(false)}
           >
