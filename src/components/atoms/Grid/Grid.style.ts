@@ -29,8 +29,8 @@ export const GridBox = styled.div<{ $isRadius?: boolean }>`
     --ag-odd-row-background-color: #ffffff;
     --ag-border-color: rgba(112, 115, 124, 0.08);
     --ag-row-border-color: rgba(112, 115, 124, 0.08);
-    --ag-row-hover-color: rgba(112, 115, 124, 0.05);
-    --ag-selected-row-background-color: rgba(112, 115, 124, 0.05);
+    --ag-row-hover-color: rgba(46, 196, 160, 0.15);
+    --ag-selected-row-background-color: rgba(46, 196, 160, 0.15);
     --ag-cell-horizontal-padding: 12px;
     --ag-checkbox-checked-color: #0066ff;
     --ag-checkbox-unchecked-color: rgba(112, 115, 124, 0.22);
@@ -80,8 +80,12 @@ export const GridWrapper = styled.div<{
       .ag-header-row {
         .ag-header-cell {
           padding: 0 12px;
-          border-right: none;
+          border-right: 1px solid rgba(112, 115, 124, 0.08);
           background-color: #f7f7f8;
+
+          &:last-child {
+            border-right: none;
+          }
 
           &.custom-header-bg {
             background-color: #f7f7f8 !important;
@@ -122,8 +126,12 @@ export const GridWrapper = styled.div<{
           font-weight: 600;
           line-height: 1.334;
           letter-spacing: 0.3024px;
-          border-right: none;
+          border-right: 1px solid rgba(128, 128, 128, 0.18);
           background-color: #f7f7f8;
+
+          &:last-child {
+            border-right: none;
+          }
         }
 
         .ag-header-cell-comp-wrapper {
@@ -151,19 +159,19 @@ export const GridWrapper = styled.div<{
           background-color: #ffffff;
         }
 
-        /* 호버 상태 */
+        /* 호버 상태 - primary 색상 사용 */
         &.ag-row-hover:not(.ag-full-width-row)::before,
         &.ag-row-hover.ag-full-width-row.ag-row-group::before {
-          background-color: rgba(112, 115, 124, 0.05) !important;
+          background-color: rgba(46, 196, 160, 0.08) !important;
         }
 
-        /* 선택 상태 */
+        /* 선택 상태 - primary 색상 사용 */
         &.ag-row-selected {
-          background-color: rgba(112, 115, 124, 0.05) !important;
+          background-color: rgba(46, 196, 160, 0.15) !important;
         }
 
         &.ag-row-selected::before {
-          background-color: rgba(112, 115, 124, 0.05) !important;
+          background-color: rgba(46, 196, 160, 0.15) !important;
         }
 
         .ag-cell {
@@ -178,8 +186,8 @@ export const GridWrapper = styled.div<{
           display: flex;
           align-items: center;
           justify-content: center;
-          border-right: none;
-          border-bottom: 1px solid rgba(112, 115, 124, 0.08);
+          border-right: 1px solid rgba(128, 128, 128, 0.18);
+          border-bottom: 1px solid rgba(104, 104, 104, 0.08);
 
           &:last-child {
             border-right: none;

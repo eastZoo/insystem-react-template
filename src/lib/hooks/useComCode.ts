@@ -144,3 +144,85 @@ export function useSaveCodeSub() {
     },
   });
 }
+
+/**
+ * 메인 코드 삭제 훅 (하위 코드 cascade 삭제)
+ * - 하위 코드를 먼저 save 엔드포인트로 삭제한 뒤 메인 코드 삭제
+ */
+export function useDeleteCodeMain() {
+  const { showToast } = useToast();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({
+      mainCd,
+      mainItem,
+      subItems,
+    }: {
+      mainCd: string;
+      mainItem: CodeMainItem;
+      subItems: CodeSubItem[];
+    }) => {
+      // 1. 하위 코드 일괄 삭제 (존재하는 경우)
+      if (subItems.length > 0) {
+        await api.post("/api/app/basicinfo/code-sub/save", {
+          mainCd,
+          items: subItems.map((item) => ({ ...item, _isDeleted: true })),
+        });
+      }
+
+      // 2. 메인 코드 삭제
+      const { data } = await api.post<
+        ApiSuccessResponse<{ savedCount: number; deletedCount: number }>
+      >("/api/app/basicinfo/code-main/save", {
+        items: [{ ...mainItem, _isDeleted: true }],
+      });
+      return data;
+    },
+    onSuccess: () => {
+      showToast({ message: "삭제가 완료되었습니다.", type: "success" });
+      queryClient.invalidateQueries({
+        queryKey: COM_CODE_QUERY_KEYS.codeMain,
+      });
+    },
+    onError: () => {
+      showToast({ message: "삭제에 실패했습니다.", type: "error" });
+    },
+  });
+}
+
+/**
+ * 서브 코드 삭제 훅
+ */
+export function useDeleteCodeSub() {
+  const { showToast } = useToast();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({
+      mainCd,
+      subItem,
+    }: {
+      mainCd: string;
+      subCd: string;
+      subItem: CodeSubItem;
+    }) => {
+      const { data } = await api.post<
+        ApiSuccessResponse<{ savedCount: number; deletedCount: number }>
+      >("/api/app/basicinfo/code-sub/save", {
+        mainCd,
+        items: [{ ...subItem, _isDeleted: true }],
+      });
+      return data;
+    },
+    onSuccess: (_, variables) => {
+      showToast({ message: "삭제가 완료되었습니다.", type: "success" });
+      queryClient.invalidateQueries({
+        queryKey: COM_CODE_QUERY_KEYS.codeSub(variables.mainCd),
+      });
+    },
+    onError: () => {
+      showToast({ message: "삭제에 실패했습니다.", type: "error" });
+    },
+  });
+}

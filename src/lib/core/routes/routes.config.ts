@@ -113,6 +113,24 @@ export const ROUTE_CONFIGS: RouteConfig[] = [
     title: "공통 코드 관리",
     protected: true,
   },
+  {
+    path: "/cmn/menu-mng",
+    page: "Common/MenuManagement",
+    title: "메뉴 관리",
+    protected: true,
+  },
+  {
+    path: "/cmn/grp-auth-mng",
+    page: "Common/GroupAuthManagement",
+    title: "그룹 권한 관리",
+    protected: true,
+  },
+  {
+    path: "/cmn/user-auth-mng",
+    page: "Common/UserAuthManagement",
+    title: "사용자 권한 관리",
+    protected: true,
+  },
 
   {
     path: "/chat",

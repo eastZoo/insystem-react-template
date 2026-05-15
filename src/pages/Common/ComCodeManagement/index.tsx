@@ -1,19 +1,20 @@
 /**
  * 공통 코드 관리 페이지
  *
- * 좌측: 메인 코드 (sya_code_main)
- * 우측: 상세 정보 / 서브 코드 (sya_code_sub) - 좌측 선택 시 표시
+ * 좌측: 메인 코드 목록 (sys_code_main)
+ * 우측: 상세 정보 탭 / 하위코드 관리 탭 (sys_code_sub)
  */
 import { useState, useMemo, useCallback, useRef, useEffect } from "react";
 import type {
   ColDef,
-  CellValueChangedEvent,
   CellStyle,
+  ICellRendererParams,
+  CellValueChangedEvent,
 } from "ag-grid-community";
 import type { AgGridReact } from "ag-grid-react";
-import { IsInputText, IsSelect } from "insystem-atoms";
+import { IsInputText, IsRadio, IsTabItem } from "insystem-atoms";
 import Grid from "@/components/atoms/Grid";
-import { PlusIcon, TrashIcon, ChevronRightIcon } from "@/styles/icons";
+import { ChevronRightIcon, PlusIcon, TrashIcon } from "@/styles/icons";
 import { Alert } from "@/components/atoms/Alert";
 import { FilterBar } from "@/components/atoms/FilterBar";
 import {
@@ -21,377 +22,140 @@ import {
   useCodeSubList,
   useSaveCodeMain,
   useSaveCodeSub,
+  useDeleteCodeMain,
+  useDeleteCodeSub,
   type CodeMainItem,
   type CodeSubItem,
 } from "@/lib/hooks/useComCode";
 import { PageTemplate } from "@/components/template/PageTemplate";
 import { PageHeader as CommonPageHeader } from "@/components/atoms/PageHeader";
+import { FormTable, FormField } from "@/components/atoms/FormTable";
 import {
   DualGridContainer,
   GridPanel,
   PanelHeader,
   PanelTitle,
-  PanelActions,
-  AddButton,
   GridContent,
   DeleteButton,
   SelectGuideMessage,
-  FormTable,
-  FormTableColumn,
-  FormTableRow,
-  FormTableLabel,
-  FormTableCell,
   TabBar,
-  TabItem,
   PanelContainer,
+  AddButton,
+  PanelActions,
 } from "./index.style";
+
+/** 폼 데이터 초기값 */
+const INITIAL_FORM_DATA: Omit<
+  CodeMainItem,
+  "_isNew" | "_isModified" | "_isDeleted"
+> = {
+  main_cd: "",
+  main_nm: "",
+  sys_yn: "N",
+  use_yn: "Y",
+  mng_cd1: null,
+  mng_cd2: null,
+  sort: 0,
+};
 
 /**
  * 공통 코드 관리 페이지 컴포넌트
  */
 export default function ComCodeManagementPage() {
   /** ============================= state 영역 ============================= */
+  // 선택된 메인 코드 (그리드에서 선택)
   const [selectedMainCd, setSelectedMainCd] = useState<string | null>(null);
-  const [mainItems, setMainItems] = useState<CodeMainItem[]>([]);
+
+  // 폼 데이터 (상세정보 탭에서 수정)
+  const [formData, setFormData] =
+    useState<typeof INITIAL_FORM_DATA>(INITIAL_FORM_DATA);
+
+  // 신규 등록 모드 여부
+  const [isAddMode, setIsAddMode] = useState(false);
+
+  // 하위코드 데이터
   const [subItems, setSubItems] = useState<CodeSubItem[]>([]);
-  const [hasMainChanges, setHasMainChanges] = useState(false);
-  const [hasSubChanges, setHasSubChanges] = useState(false);
 
   // 검색 필터 상태
   const [searchText, setSearchText] = useState("");
 
-  // 탭 상태
-  const [rightActiveTab, setRightActiveTab] = useState("detail");
+  // 탭 상태: "detail" (상세정보) | "subCode" (하위코드 관리)
+  const [rightActiveTab, setRightActiveTab] = useState<"detail" | "subCode">(
+    "detail"
+  );
 
-  // 저장 확인 알림
-  const [showSaveAlert, setShowSaveAlert] = useState(false);
-  const [saveTarget, setSaveTarget] = useState<"main" | "sub" | null>(null);
+  // 알림창 상태
+  const [alertState, setAlertState] = useState<{
+    isOpen: boolean;
+    type:
+      | "save"
+      | "delete"
+      | "sysYnWarning"
+      | "deleteSubConfirm"
+      | "deleteMainConfirm";
+    message: string;
+    onConfirm?: () => void;
+  }>({
+    isOpen: false,
+    type: "save",
+    message: "",
+  });
 
   // Grid refs
   const mainGridRef = useRef<AgGridReact>(null);
   const subGridRef = useRef<AgGridReact>(null);
 
   /** ============================= API 영역 ============================= */
-  const { data: mainListData = [] } = useCodeMainList();
-  const { data: subListData = [] } = useCodeSubList(selectedMainCd);
+  const { data: mainListData = [], refetch: refetchMainList } =
+    useCodeMainList();
+  const { data: subListData = [], refetch: refetchSubList } =
+    useCodeSubList(selectedMainCd);
   const { mutate: saveMainMutation, isPending: isSavingMain } =
     useSaveCodeMain();
   const { mutate: saveSubMutation, isPending: isSavingSub } = useSaveCodeSub();
+  const { mutate: deleteMainMutation, isPending: isDeletingMain } =
+    useDeleteCodeMain();
+  const { mutate: deleteSubMutation, isPending: isDeletingSub } =
+    useDeleteCodeSub();
 
   /** ============================= 데이터 초기화 ============================= */
-  // 메인 코드 데이터 초기화
-  useEffect(() => {
-    if (mainListData.length > 0 && !hasMainChanges) {
-      setMainItems(mainListData.map((item) => ({ ...item })));
-    }
-  }, [mainListData, hasMainChanges]);
-
   // 서브 코드 데이터 초기화
   useEffect(() => {
-    if (!hasSubChanges) {
-      setSubItems(subListData.map((item) => ({ ...item })));
-    }
-  }, [subListData, hasSubChanges]);
+    setSubItems(subListData.map((item) => ({ ...item })));
+  }, [subListData]);
 
-  // 메인 코드 선택 변경 시 서브 변경사항 초기화
+  // 메인 코드 선택 시 폼 데이터 초기화
   useEffect(() => {
-    setHasSubChanges(false);
-  }, [selectedMainCd]);
-
-  /** ============================= 컬럼 정의 ============================= */
-  // 메인 코드 컬럼
-  const mainColumnDefs: ColDef<CodeMainItem>[] = useMemo(
-    () => [
-      {
-        field: "main_cd",
-        headerName: "코드",
-        width: 80,
-        editable: (params) => !!params.data?._isNew,
-        cellStyle: (params): CellStyle | undefined =>
-          params.data?._isNew
-            ? { backgroundColor: "rgba(46, 196, 160, 0.1)" }
-            : undefined,
-      },
-      {
-        field: "main_nm",
-        headerName: "코드명",
-        flex: 1,
-        editable: true,
-        cellStyle: (params): CellStyle | undefined =>
-          params.data?._isModified
-            ? { backgroundColor: "rgba(255, 193, 7, 0.1)" }
-            : params.data?._isNew
-              ? { backgroundColor: "rgba(46, 196, 160, 0.1)" }
-              : undefined,
-      },
-      {
-        field: "use_yn",
-        headerName: "사용",
-        width: 70,
-        editable: true,
-        cellEditor: "agSelectCellEditor",
-        cellEditorParams: { values: ["Y", "N"] },
-      },
-      {
-        field: "sort",
-        headerName: "정렬",
-        width: 70,
-        editable: true,
-        cellEditor: "agNumberCellEditor",
-      },
-      {
-        headerName: "",
-        width: 50,
-        sortable: false,
-        filter: false,
-        cellRenderer: (params: any) => {
-          const item = params.data as CodeMainItem;
-          // 시스템 코드는 삭제 불가
-          if (item?.sys_yn === "Y") return null;
-          return (
-            <DeleteButton
-              onClick={(e) => {
-                e.stopPropagation();
-                handleDeleteMain(item);
-              }}
-              title="삭제"
-            >
-              <TrashIcon />
-            </DeleteButton>
-          );
-        },
-      },
-    ],
-    []
-  );
-
-  // 서브 코드 컬럼
-  const subColumnDefs: ColDef<CodeSubItem>[] = useMemo(
-    () => [
-      {
-        field: "sub_cd",
-        headerName: "서브코드",
-        width: 100,
-        editable: (params) => !!params.data?._isNew,
-        cellStyle: (params): CellStyle | undefined =>
-          params.data?._isNew
-            ? { backgroundColor: "rgba(46, 196, 160, 0.1)" }
-            : undefined,
-      },
-      {
-        field: "sub_nm",
-        headerName: "코드명",
-        flex: 1,
-        editable: true,
-        cellStyle: (params): CellStyle | undefined =>
-          params.data?._isModified
-            ? { backgroundColor: "rgba(255, 193, 7, 0.1)" }
-            : params.data?._isNew
-              ? { backgroundColor: "rgba(46, 196, 160, 0.1)" }
-              : undefined,
-      },
-      {
-        field: "code",
-        headerName: "풀코드",
-        width: 120,
-        editable: false,
-      },
-      {
-        field: "use_yn",
-        headerName: "사용",
-        width: 70,
-        editable: true,
-        cellEditor: "agSelectCellEditor",
-        cellEditorParams: { values: ["Y", "N"] },
-      },
-      {
-        field: "sort",
-        headerName: "정렬",
-        width: 70,
-        editable: true,
-        cellEditor: "agNumberCellEditor",
-      },
-      {
-        headerName: "",
-        width: 50,
-        sortable: false,
-        filter: false,
-        cellRenderer: (params: any) => {
-          const item = params.data as CodeSubItem;
-          // 시스템 코드는 삭제 불가
-          if (item?.sys_yn === "Y") return null;
-          return (
-            <DeleteButton
-              onClick={(e) => {
-                e.stopPropagation();
-                handleDeleteSub(item);
-              }}
-              title="삭제"
-            >
-              <TrashIcon />
-            </DeleteButton>
-          );
-        },
-      },
-    ],
-    []
-  );
-
-  /** ============================= 비즈니스 로직 영역 ============================= */
-
-  // 메인 코드 행 클릭
-  const handleMainRowClicked = useCallback((event: any) => {
-    const data = event.data as CodeMainItem;
-    if (data && !data._isDeleted) {
-      setSelectedMainCd(data.main_cd);
+    if (selectedMainCd && !isAddMode) {
+      const selectedItem = mainListData.find(
+        (item) => item.main_cd === selectedMainCd
+      );
+      if (selectedItem) {
+        setFormData({
+          main_cd: selectedItem.main_cd,
+          main_nm: selectedItem.main_nm,
+          sys_yn: selectedItem.sys_yn,
+          use_yn: selectedItem.use_yn,
+          mng_cd1: selectedItem.mng_cd1,
+          mng_cd2: selectedItem.mng_cd2,
+          sort: selectedItem.sort,
+        });
+      }
     }
-  }, []);
+  }, [selectedMainCd, mainListData, isAddMode]);
 
-  // 선택된 메인 코드 필드 수정
-  const handleDetailFieldChange = useCallback(
-    (field: keyof CodeMainItem, value: string | number | null) => {
-      if (!selectedMainCd) return;
+  /** ============================= 핸들러 (컬럼 정의 전) ============================= */
+  // 하위코드 행 삭제 (그리드 내 삭제 버튼)
+  const handleDeleteSubRow = useCallback((item: CodeSubItem) => {
+    if (item.sys_yn === "Y") {
+      setAlertState({
+        isOpen: true,
+        type: "delete",
+        message: "시스템 사용 코드는 삭제할 수 없습니다.",
+      });
+      return;
+    }
 
-      setMainItems((prev) =>
-        prev.map((item) =>
-          item.main_cd === selectedMainCd
-            ? { ...item, [field]: value, _isModified: !item._isNew }
-            : item
-        )
-      );
-      setHasMainChanges(true);
-    },
-    [selectedMainCd]
-  );
-
-  // 메인 코드 셀 변경
-  const handleMainCellChanged = useCallback(
-    (event: CellValueChangedEvent<CodeMainItem>) => {
-      if (!event.data) return;
-
-      setMainItems((prev) =>
-        prev.map((item) =>
-          item.main_cd === event.data!.main_cd
-            ? { ...event.data!, _isModified: !event.data!._isNew }
-            : item
-        )
-      );
-      setHasMainChanges(true);
-    },
-    []
-  );
-
-  // 서브 코드 셀 변경
-  const handleSubCellChanged = useCallback(
-    (event: CellValueChangedEvent<CodeSubItem>) => {
-      if (!event.data) return;
-
-      setSubItems((prev) =>
-        prev.map((item) =>
-          item.main_cd === event.data!.main_cd &&
-          item.sub_cd === event.data!.sub_cd
-            ? { ...event.data!, _isModified: !event.data!._isNew }
-            : item
-        )
-      );
-      setHasSubChanges(true);
-    },
-    []
-  );
-
-  // 메인 코드 추가
-  const handleAddMain = useCallback(() => {
-    const newItem: CodeMainItem = {
-      main_cd: "",
-      main_nm: "",
-      sys_yn: "N",
-      use_yn: "Y",
-      mng_cd1: null,
-      mng_cd2: null,
-      sort: mainItems.length,
-      _isNew: true,
-    };
-    setMainItems((prev) => [...prev, newItem]);
-    setHasMainChanges(true);
-
-    // 새 행으로 스크롤 및 포커스
-    setTimeout(() => {
-      const api = mainGridRef.current?.api;
-      if (api) {
-        const lastIndex = mainItems.length;
-        api.ensureIndexVisible(lastIndex);
-        api.setFocusedCell(lastIndex, "main_cd");
-        api.startEditingCell({ rowIndex: lastIndex, colKey: "main_cd" });
-      }
-    }, 100);
-  }, [mainItems.length]);
-
-  // 서브 코드 추가
-  const handleAddSub = useCallback(() => {
-    if (!selectedMainCd) return;
-
-    // 다음 서브코드 자동 생성
-    const maxSubCd = subItems
-      .filter((item) => !item._isDeleted)
-      .reduce((max, item) => {
-        const num = parseInt(item.sub_cd, 10);
-        return num > max ? num : max;
-      }, 0);
-    const nextSubCd = (maxSubCd + 1).toString().padStart(6, "0");
-
-    const newItem: CodeSubItem = {
-      main_cd: selectedMainCd,
-      sub_cd: nextSubCd,
-      sub_nm: "",
-      code: selectedMainCd + nextSubCd,
-      sys_yn: "N",
-      use_yn: "Y",
-      mng_cd1: null,
-      mng_cd2: null,
-      sort: subItems.length,
-      _isNew: true,
-    };
-    setSubItems((prev) => [...prev, newItem]);
-    setHasSubChanges(true);
-
-    // 새 행으로 스크롤 및 포커스
-    setTimeout(() => {
-      const api = subGridRef.current?.api;
-      if (api) {
-        const lastIndex = subItems.length;
-        api.ensureIndexVisible(lastIndex);
-        api.setFocusedCell(lastIndex, "sub_nm");
-        api.startEditingCell({ rowIndex: lastIndex, colKey: "sub_nm" });
-      }
-    }, 100);
-  }, [selectedMainCd, subItems]);
-
-  // 메인 코드 삭제 (마킹)
-  const handleDeleteMain = useCallback(
-    (item: CodeMainItem) => {
-      if (item._isNew) {
-        // 신규 항목은 바로 제거
-        setMainItems((prev) => prev.filter((i) => i.main_cd !== item.main_cd));
-      } else {
-        // 기존 항목은 삭제 마킹
-        setMainItems((prev) =>
-          prev.map((i) =>
-            i.main_cd === item.main_cd ? { ...i, _isDeleted: true } : i
-          )
-        );
-      }
-      setHasMainChanges(true);
-
-      // 삭제된 메인이 선택되어 있으면 선택 해제
-      if (item.main_cd === selectedMainCd) {
-        setSelectedMainCd(null);
-      }
-    },
-    [selectedMainCd]
-  );
-
-  // 서브 코드 삭제 (마킹)
-  const handleDeleteSub = useCallback((item: CodeSubItem) => {
     if (item._isNew) {
       // 신규 항목은 바로 제거
       setSubItems((prev) =>
@@ -409,103 +173,577 @@ export default function ComCodeManagementPage() {
         )
       );
     }
-    setHasSubChanges(true);
   }, []);
 
-  // 저장 버튼 클릭
-  const handleSave = useCallback(() => {
-    if (hasMainChanges && hasSubChanges) {
-      // 둘 다 변경된 경우 메인 먼저 저장
-      setSaveTarget("main");
-      setShowSaveAlert(true);
-    } else if (hasMainChanges) {
-      setSaveTarget("main");
-      setShowSaveAlert(true);
-    } else if (hasSubChanges) {
-      setSaveTarget("sub");
-      setShowSaveAlert(true);
-    }
-  }, [hasMainChanges, hasSubChanges]);
-
-  // 저장 확인
-  const handleSaveConfirm = useCallback(() => {
-    setShowSaveAlert(false);
-
-    if (saveTarget === "main") {
-      // 삭제되지 않은 항목과 삭제 마킹된 항목 모두 전송
-      const itemsToSave = mainItems.filter(
-        (item) => item._isNew || item._isModified || item._isDeleted
-      );
-
-      saveMainMutation(itemsToSave, {
-        onSuccess: () => {
-          setHasMainChanges(false);
-          // 서브 코드도 변경되었으면 이어서 저장
-          if (hasSubChanges && selectedMainCd) {
-            setSaveTarget("sub");
-            setShowSaveAlert(true);
+  /** ============================= 컬럼 정의 ============================= */
+  // 메인 코드 컬럼: No., 코드, 코드명, 시스템 사용여부, 사용여부
+  const mainColumnDefs: ColDef<CodeMainItem>[] = useMemo(
+    () => [
+      {
+        headerName: "No.",
+        width: 60,
+        minWidth: 60,
+        valueGetter: (params) => {
+          if (params.node?.rowIndex != null) {
+            return params.node.rowIndex + 1;
           }
+          return "";
+        },
+        sortable: false,
+        filter: false,
+      },
+      {
+        field: "main_cd",
+        headerName: "코드",
+        width: 90,
+        minWidth: 90,
+      },
+      {
+        field: "main_nm",
+        headerName: "코드명",
+        flex: 1,
+        minWidth: 160,
+      },
+      {
+        field: "sys_yn",
+        headerName: "시스템 사용여부",
+        width: 140,
+        minWidth: 140,
+        valueFormatter: (params) => (params.value === "Y" ? "사용" : "미사용"),
+      },
+      {
+        field: "use_yn",
+        headerName: "사용여부",
+        width: 100,
+        minWidth: 100,
+        valueFormatter: (params) => (params.value === "Y" ? "사용" : "미사용"),
+      },
+    ],
+    []
+  );
+
+  // 하위 코드 컬럼
+  const subColumnDefs: ColDef<CodeSubItem>[] = useMemo(
+    () => [
+      {
+        field: "sub_cd",
+        headerName: "하위코드",
+        width: 110,
+        minWidth: 110,
+        editable: (params) => !!params.data?._isNew,
+        cellStyle: (params): CellStyle | undefined =>
+          params.data?._isNew
+            ? { backgroundColor: "rgba(46, 196, 160, 0.1)" }
+            : undefined,
+      },
+      {
+        field: "sub_nm",
+        headerName: "하위코드명",
+        flex: 1,
+        minWidth: 150,
+        editable: (params) => params.data?.sys_yn !== "Y",
+        cellStyle: (params): CellStyle | undefined =>
+          params.data?._isModified
+            ? { backgroundColor: "rgba(255, 193, 7, 0.1)" }
+            : params.data?._isNew
+              ? { backgroundColor: "rgba(46, 196, 160, 0.1)" }
+              : undefined,
+      },
+      {
+        field: "sys_yn",
+        headerName: "시스템 사용여부",
+        width: 140,
+        minWidth: 140,
+        editable: (params) => params.data?.sys_yn !== "Y",
+        cellEditor: "agSelectCellEditor",
+        cellEditorParams: { values: ["Y", "N"] },
+        valueFormatter: (params) => (params.value === "Y" ? "사용" : "미사용"),
+      },
+      {
+        field: "use_yn",
+        headerName: "사용여부",
+        width: 100,
+        minWidth: 100,
+        editable: true,
+        cellEditor: "agSelectCellEditor",
+        cellEditorParams: { values: ["Y", "N"] },
+        valueFormatter: (params) => (params.value === "Y" ? "사용" : "미사용"),
+      },
+      {
+        field: "sort",
+        headerName: "정렬",
+        width: 70,
+        minWidth: 70,
+        editable: (params) => params.data?.sys_yn !== "Y",
+        cellEditor: "agNumberCellEditor",
+      },
+      {
+        field: "mng_cd1",
+        headerName: "비고1",
+        width: 130,
+        minWidth: 130,
+        editable: (params) => params.data?.sys_yn !== "Y",
+      },
+      {
+        field: "mng_cd2",
+        headerName: "비고2",
+        width: 130,
+        minWidth: 130,
+        editable: (params) => params.data?.sys_yn !== "Y",
+      },
+      {
+        field: "code",
+        headerName: "Code",
+        width: 160,
+        minWidth: 160,
+        editable: false,
+      },
+      {
+        headerName: "",
+        width: 50,
+        minWidth: 50,
+        sortable: false,
+        filter: false,
+        cellRenderer: (params: ICellRendererParams<CodeSubItem>) => {
+          const item = params.data;
+          // 데이터 없거나 시스템 코드는 삭제 불가
+          if (!item || item.sys_yn === "Y") return null;
+          return (
+            <DeleteButton
+              onClick={(e) => {
+                e.stopPropagation();
+                handleDeleteSubRow(item);
+              }}
+              title="삭제"
+            >
+              <TrashIcon />
+            </DeleteButton>
+          );
+        },
+      },
+    ],
+    [handleDeleteSubRow]
+  );
+
+  /** ============================= 폼 초기화 ============================= */
+  const initForm = useCallback(() => {
+    setFormData(INITIAL_FORM_DATA);
+    setIsAddMode(false);
+    setSelectedMainCd(null);
+    // 그리드 선택 해제
+    mainGridRef.current?.api?.deselectAll();
+  }, []);
+
+  /** ============================= 비즈니스 로직 영역 ============================= */
+
+  // 메인 코드 행 클릭
+  const handleMainRowClicked = useCallback((event: { data: CodeMainItem }) => {
+    const data = event.data;
+    if (data) {
+      setSelectedMainCd(data.main_cd);
+      setIsAddMode(false);
+    }
+  }, []);
+
+  // 상세 정보 필드 변경
+  const handleFormFieldChange = useCallback(
+    (field: keyof typeof INITIAL_FORM_DATA, value: string | number | null) => {
+      // 시스템 사용여부 Y 선택 시 경고
+      if (field === "sys_yn" && value === "Y") {
+        setAlertState({
+          isOpen: true,
+          type: "sysYnWarning",
+          message:
+            "시스템 사용여부를 '사용'으로 설정하면 해당 코드는 수정/삭제가 불가능합니다. 계속하시겠습니까?",
+          onConfirm: () => {
+            setFormData((prev) => ({ ...prev, [field]: value }));
+            setAlertState((prev) => ({ ...prev, isOpen: false }));
+          },
+        });
+        return;
+      }
+      setFormData((prev) => ({ ...prev, [field]: value }));
+    },
+    []
+  );
+
+  // 하위코드 셀 값 변경
+  const handleSubCellChanged = useCallback(
+    (event: CellValueChangedEvent<CodeSubItem>) => {
+      if (!event.data) return;
+
+      const updatedItem = { ...event.data, _isModified: !event.data._isNew };
+
+      // code 필드 자동 계산
+      if (event.colDef.field === "sub_cd") {
+        updatedItem.code = (selectedMainCd || "") + event.newValue;
+      }
+
+      setSubItems((prev) =>
+        prev.map((item) =>
+          item.main_cd === event.data!.main_cd &&
+          item.sub_cd === event.data!.sub_cd
+            ? updatedItem
+            : item
+        )
+      );
+    },
+    [selectedMainCd]
+  );
+
+  /** ============================= 추가 버튼 ============================= */
+  const handleAdd = useCallback(() => {
+    if (rightActiveTab === "detail") {
+      // 상세정보 탭: 신규 등록 모드
+      setIsAddMode(true);
+      setSelectedMainCd(null);
+      setFormData(INITIAL_FORM_DATA);
+      mainGridRef.current?.api?.deselectAll();
+    } else {
+      // 하위코드 관리 탭: 행 추가
+      if (!selectedMainCd) {
+        setAlertState({
+          isOpen: true,
+          type: "save",
+          message: "메인 코드를 먼저 선택해주세요.",
+        });
+        return;
+      }
+
+      const newSubCd = String(subItems.length + 1).padStart(6, "0");
+      const newItem: CodeSubItem = {
+        main_cd: selectedMainCd,
+        sub_cd: newSubCd,
+        sub_nm: "",
+        code: selectedMainCd + newSubCd,
+        sys_yn: "N",
+        use_yn: "Y",
+        mng_cd1: null,
+        mng_cd2: null,
+        sort: subItems.length,
+        _isNew: true,
+      };
+      setSubItems((prev) => [...prev, newItem]);
+
+      // 새 행으로 포커스
+      setTimeout(() => {
+        const api = subGridRef.current?.api;
+        if (api) {
+          const lastIndex = subItems.length;
+          api.ensureIndexVisible(lastIndex);
+          api.setFocusedCell(lastIndex, "sub_cd");
+          api.startEditingCell({ rowIndex: lastIndex, colKey: "sub_cd" });
+        }
+      }, 100);
+    }
+  }, [rightActiveTab, selectedMainCd, subItems]);
+
+  /** ============================= 저장 버튼 ============================= */
+  const handleSave = useCallback(() => {
+    if (rightActiveTab === "detail") {
+      // 상세정보 탭: 메인 코드 저장
+      // Validation
+      if (!formData.main_cd || formData.main_cd.length !== 4) {
+        setAlertState({
+          isOpen: true,
+          type: "save",
+          message: "코드번호는 4자리로 입력해주세요.",
+        });
+        return;
+      }
+      if (!formData.main_nm) {
+        setAlertState({
+          isOpen: true,
+          type: "save",
+          message: "코드명을 입력해주세요.",
+        });
+        return;
+      }
+
+      // 중복 체크 (신규 등록 시)
+      if (isAddMode) {
+        const isDuplicate = mainListData.some(
+          (item) => item.main_cd === formData.main_cd
+        );
+        if (isDuplicate) {
+          setAlertState({
+            isOpen: true,
+            type: "save",
+            message: "이미 등록된 코드번호입니다.",
+          });
+          return;
+        }
+      }
+
+      const itemToSave: CodeMainItem = {
+        ...formData,
+        _isNew: isAddMode,
+        _isModified: !isAddMode,
+      };
+
+      saveMainMutation([itemToSave], {
+        onSuccess: () => {
+          setAlertState({
+            isOpen: true,
+            type: "save",
+            message: "저장이 완료되었습니다.",
+            onConfirm: () => {
+              refetchMainList();
+              // 신규 등록 시에만 폼 초기화 — 수정 시에는 선택 상태 유지
+              if (isAddMode) {
+                initForm();
+              }
+              setAlertState((prev) => ({ ...prev, isOpen: false }));
+            },
+          });
+        },
+        onError: () => {
+          setAlertState({
+            isOpen: true,
+            type: "save",
+            message: "저장에 실패했습니다.",
+          });
         },
       });
-    } else if (saveTarget === "sub" && selectedMainCd) {
-      // 삭제되지 않은 항목과 삭제 마킹된 항목 모두 전송
-      const itemsToSave = subItems.filter(
+    } else {
+      // 하위코드 관리 탭: 서브 코드 저장
+      if (!selectedMainCd) {
+        setAlertState({
+          isOpen: true,
+          type: "save",
+          message: "메인 코드를 먼저 선택해주세요.",
+        });
+        return;
+      }
+
+      const changedItems = subItems.filter(
         (item) => item._isNew || item._isModified || item._isDeleted
       );
 
+      if (changedItems.length === 0) {
+        setAlertState({
+          isOpen: true,
+          type: "save",
+          message: "변경된 내용이 없습니다.",
+        });
+        return;
+      }
+
+      // Validation: sub_cd 1~6자리
+      for (const item of changedItems) {
+        if (!item._isDeleted && (!item.sub_cd || item.sub_cd.length > 6)) {
+          setAlertState({
+            isOpen: true,
+            type: "save",
+            message: "하위코드는 1~6자리로 입력해주세요.",
+          });
+          return;
+        }
+      }
+
       saveSubMutation(
-        { mainCd: selectedMainCd, items: itemsToSave },
+        { mainCd: selectedMainCd, items: changedItems },
         {
           onSuccess: () => {
-            setHasSubChanges(false);
+            setAlertState({
+              isOpen: true,
+              type: "save",
+              message: "저장이 완료되었습니다.",
+              onConfirm: () => {
+                refetchSubList();
+                setAlertState((prev) => ({ ...prev, isOpen: false }));
+              },
+            });
+          },
+          onError: () => {
+            setAlertState({
+              isOpen: true,
+              type: "save",
+              message: "저장에 실패했습니다.",
+            });
           },
         }
       );
     }
   }, [
-    saveTarget,
-    mainItems,
-    subItems,
+    rightActiveTab,
+    formData,
+    isAddMode,
+    mainListData,
     selectedMainCd,
-    hasSubChanges,
+    subItems,
     saveMainMutation,
     saveSubMutation,
+    refetchMainList,
+    refetchSubList,
+    initForm,
   ]);
 
-  // 저장 취소
-  const handleSaveCancel = useCallback(() => {
-    setShowSaveAlert(false);
-    setSaveTarget(null);
-  }, []);
+  /** ============================= 삭제 버튼 ============================= */
+  const handleDelete = useCallback(() => {
+    if (rightActiveTab === "detail") {
+      // 상세정보 탭: 메인 코드 삭제
+      if (!selectedMainCd) {
+        setAlertState({
+          isOpen: true,
+          type: "delete",
+          message: "데이터를 선택해 주세요.",
+        });
+        return;
+      }
+
+      const selectedItem = mainListData.find(
+        (item) => item.main_cd === selectedMainCd
+      );
+      if (selectedItem?.sys_yn === "Y") {
+        setAlertState({
+          isOpen: true,
+          type: "delete",
+          message: "시스템 사용 코드는 삭제할 수 없습니다.",
+        });
+        return;
+      }
+
+      setAlertState({
+        isOpen: true,
+        type: "deleteMainConfirm",
+        message:
+          "하위로 등록되어 있는 코드가 모두 삭제됩니다. 삭제 하시겠습니까?",
+        onConfirm: () => {
+          deleteMainMutation(
+            {
+              mainCd: selectedMainCd,
+              mainItem: selectedItem!,
+              subItems: subItems.filter((i) => !i._isNew),
+            },
+            {
+              onSuccess: () => {
+                refetchMainList();
+                initForm();
+                setAlertState((prev) => ({ ...prev, isOpen: false }));
+              },
+              onError: () => {
+                setAlertState({
+                  isOpen: true,
+                  type: "delete",
+                  message: "삭제에 실패했습니다.",
+                });
+              },
+            }
+          );
+        },
+      });
+    } else {
+      // 하위코드 관리 탭: 선택된 서브 코드 삭제
+      const selectedRows = subGridRef.current?.api?.getSelectedRows() || [];
+      if (selectedRows.length === 0) {
+        setAlertState({
+          isOpen: true,
+          type: "delete",
+          message: "데이터를 선택해 주세요.",
+        });
+        return;
+      }
+
+      const selectedItem = selectedRows[0] as CodeSubItem;
+      if (selectedItem.sys_yn === "Y") {
+        setAlertState({
+          isOpen: true,
+          type: "delete",
+          message: "시스템 사용 코드는 삭제할 수 없습니다.",
+        });
+        return;
+      }
+
+      setAlertState({
+        isOpen: true,
+        type: "deleteSubConfirm",
+        message: "선택한 하위코드를 삭제하시겠습니까?",
+        onConfirm: () => {
+          if (selectedItem._isNew) {
+            // 신규 항목은 바로 제거
+            setSubItems((prev) =>
+              prev.filter(
+                (i) =>
+                  !(
+                    i.main_cd === selectedItem.main_cd &&
+                    i.sub_cd === selectedItem.sub_cd
+                  )
+              )
+            );
+            setAlertState((prev) => ({ ...prev, isOpen: false }));
+          } else {
+            deleteSubMutation(
+              {
+                mainCd: selectedItem.main_cd,
+                subCd: selectedItem.sub_cd,
+                subItem: selectedItem,
+              },
+              {
+                onSuccess: () => {
+                  refetchSubList();
+                  setAlertState((prev) => ({ ...prev, isOpen: false }));
+                },
+                onError: () => {
+                  setAlertState({
+                    isOpen: true,
+                    type: "delete",
+                    message: "삭제에 실패했습니다.",
+                  });
+                },
+              }
+            );
+          }
+        },
+      });
+    }
+  }, [
+    rightActiveTab,
+    selectedMainCd,
+    mainListData,
+    deleteMainMutation,
+    deleteSubMutation,
+    refetchMainList,
+    refetchSubList,
+    initForm,
+  ]);
 
   /** ============================= 검색 로직 ============================= */
   const handleSearch = useCallback(() => {
-    // 검색 로직 - 클라이언트 사이드 필터링
-    console.log("검색:", searchText);
-  }, [searchText]);
+    // 클라이언트 사이드 필터링 (displayMainItems에서 처리)
+  }, []);
 
   const handleClear = useCallback(() => {
     setSearchText("");
   }, []);
 
-  /** ============================= 표시 데이터 ============================= */
-  // 삭제되지 않은 항목만 표시 + 검색 필터 적용
-  const displayMainItems = useMemo(() => {
-    let filtered = mainItems.filter((item) => !item._isDeleted);
+  /** ============================= 알림창 닫기 ============================= */
+  const handleAlertClose = useCallback(() => {
+    setAlertState((prev) => ({ ...prev, isOpen: false }));
+  }, []);
 
-    // 검색 텍스트가 있을 경우 필터링
-    if (searchText.trim()) {
-      const searchLower = searchText.toLowerCase();
-      filtered = filtered.filter(
-        (item) =>
-          item.main_cd.toLowerCase().includes(searchLower) ||
-          item.main_nm.toLowerCase().includes(searchLower)
-      );
+  const handleAlertConfirm = useCallback(() => {
+    if (alertState.onConfirm) {
+      alertState.onConfirm();
+    } else {
+      setAlertState((prev) => ({ ...prev, isOpen: false }));
     }
+  }, [alertState]);
 
-    return filtered;
-  }, [mainItems, searchText]);
+  /** ============================= 표시 데이터 ============================= */
+  // 메인 코드 필터링 (검색어 적용)
+  const displayMainItems = useMemo(() => {
+    if (!searchText.trim()) return mainListData;
 
+    const searchLower = searchText.toLowerCase();
+    return mainListData.filter(
+      (item) =>
+        item.main_cd.toLowerCase().includes(searchLower) ||
+        item.main_nm.toLowerCase().includes(searchLower)
+    );
+  }, [mainListData, searchText]);
+
+  // 삭제되지 않은 서브 코드만 표시
   const displaySubItems = useMemo(
     () => subItems.filter((item) => !item._isDeleted),
     [subItems]
@@ -513,19 +751,27 @@ export default function ComCodeManagementPage() {
 
   // 선택된 메인 코드 정보
   const selectedMainItem = useMemo(
-    () => mainItems.find((item) => item.main_cd === selectedMainCd),
-    [mainItems, selectedMainCd]
+    () => mainListData.find((item) => item.main_cd === selectedMainCd),
+    [mainListData, selectedMainCd]
   );
+
+  // 시스템 사용 코드 여부 (수정/삭제 불가)
+  const isSystemCode = selectedMainItem?.sys_yn === "Y";
+
+  // 폼 수정 가능 여부 (코드가 선택되었거나 신규 추가 모드)
+  const isFormEditable = isAddMode || !!selectedMainCd;
 
   /** ============================= 렌더링 ============================= */
   return (
     <PageTemplate title="공통 코드 관리">
       <CommonPageHeader
         title="공통 코드 관리"
+        onAdd={handleAdd}
         onSave={handleSave}
-        saveDisabled={
-          (!hasMainChanges && !hasSubChanges) || isSavingMain || isSavingSub
-        }
+        onDelete={handleDelete}
+        addDisabled={isSavingMain || isSavingSub}
+        saveDisabled={isSavingMain || isSavingSub}
+        deleteDisabled={isDeletingMain || isDeletingSub}
       />
 
       {/* 검색 필터 */}
@@ -552,269 +798,242 @@ export default function ComCodeManagementPage() {
 
       {/* 듀얼 그리드 */}
       <DualGridContainer>
-            {/* 메인 코드 패널 (코드 목록) */}
-            <GridPanel>
-              <TabBar>
-                <TabItem $active $position="single">
-                  코드 목록
-                </TabItem>
-              </TabBar>
-              <PanelContainer>
+        {/* 메인 코드 패널 (코드 목록) */}
+        <GridPanel>
+          <TabBar>
+            <IsTabItem active size="S" position="single">
+              코드 목록
+            </IsTabItem>
+          </TabBar>
+          <PanelContainer>
+            <PanelHeader>
+              <PanelTitle>
+                총 <strong>{displayMainItems.length}</strong>건
+              </PanelTitle>
+            </PanelHeader>
+            <GridContent>
+              <Grid
+                ref={mainGridRef}
+                rowData={displayMainItems}
+                columnDefs={mainColumnDefs}
+                rowHeight={40}
+                headerHeight={40}
+                height="100%"
+                isRadius={false}
+                onRowClicked={handleMainRowClicked}
+                selectionMode="singleRow"
+                showCheckbox={false}
+              />
+            </GridContent>
+          </PanelContainer>
+        </GridPanel>
+
+        {/* 우측 패널 (상세 정보 / 하위코드 관리) */}
+        <GridPanel>
+          <TabBar>
+            <IsTabItem
+              active={rightActiveTab === "detail"}
+              size="S"
+              position="start"
+              onClick={() => setRightActiveTab("detail")}
+            >
+              상세 정보
+            </IsTabItem>
+            <IsTabItem
+              active={rightActiveTab === "subCode"}
+              size="S"
+              position="end"
+              onClick={() => setRightActiveTab("subCode")}
+            >
+              하위코드 관리
+            </IsTabItem>
+          </TabBar>
+          <PanelContainer $activeTab={rightActiveTab}>
+            {/* 상세 정보 탭 */}
+            {rightActiveTab === "detail" && (
+              <>
+                {selectedMainItem || isAddMode ? (
+                  <FormTable>
+                    <FormTable.Column>
+                      <FormField label="코드번호" required isFirst>
+                        <IsInputText
+                          size="xSmall"
+                          value={formData.main_cd}
+                          onChange={(e) => {
+                            // 4자리로 제한
+                            const value = e.target.value.slice(0, 4);
+                            handleFormFieldChange("main_cd", value);
+                          }}
+                          disabled={!isAddMode}
+                          fullWidth
+                          maxLength={4}
+                          placeholderText="4자리 입력"
+                        />
+                      </FormField>
+                      <FormField label="코드명" required>
+                        <IsInputText
+                          size="xSmall"
+                          value={formData.main_nm}
+                          onChange={(e) =>
+                            handleFormFieldChange("main_nm", e.target.value)
+                          }
+                          disabled={!isFormEditable}
+                          fullWidth
+                        />
+                      </FormField>
+                      <FormField label="시스템 사용여부" required>
+                        <div style={{ display: "flex", gap: 16 }}>
+                          <IsRadio
+                            name="sys_yn"
+                            value="Y"
+                            label="사용"
+                            checked={formData.sys_yn === "Y"}
+                            onChange={() =>
+                              handleFormFieldChange("sys_yn", "Y")
+                            }
+                            disabled={!isFormEditable}
+                          />
+                          <IsRadio
+                            name="sys_yn"
+                            value="N"
+                            label="미사용"
+                            checked={formData.sys_yn === "N"}
+                            onChange={() =>
+                              handleFormFieldChange("sys_yn", "N")
+                            }
+                            disabled={!isFormEditable}
+                          />
+                        </div>
+                      </FormField>
+                      <FormField label="사용여부" required>
+                        <div style={{ display: "flex", gap: 16 }}>
+                          <IsRadio
+                            name="use_yn"
+                            value="Y"
+                            label="사용"
+                            checked={formData.use_yn === "Y"}
+                            onChange={() =>
+                              handleFormFieldChange("use_yn", "Y")
+                            }
+                            disabled={!isFormEditable}
+                          />
+                          <IsRadio
+                            name="use_yn"
+                            value="N"
+                            label="미사용"
+                            checked={formData.use_yn === "N"}
+                            onChange={() =>
+                              handleFormFieldChange("use_yn", "N")
+                            }
+                            disabled={!isFormEditable}
+                          />
+                        </div>
+                      </FormField>
+                      <FormField label="비고1">
+                        <IsInputText
+                          size="xSmall"
+                          value={formData.mng_cd1 || ""}
+                          onChange={(e) =>
+                            handleFormFieldChange(
+                              "mng_cd1",
+                              e.target.value || null
+                            )
+                          }
+                          disabled={!isFormEditable}
+                          fullWidth
+                          maxLength={100}
+                        />
+                      </FormField>
+                      <FormField label="비고2" isLast>
+                        <IsInputText
+                          size="xSmall"
+                          value={formData.mng_cd2 || ""}
+                          onChange={(e) =>
+                            handleFormFieldChange(
+                              "mng_cd2",
+                              e.target.value || null
+                            )
+                          }
+                          disabled={!isFormEditable}
+                          fullWidth
+                          maxLength={100}
+                        />
+                      </FormField>
+                    </FormTable.Column>
+                  </FormTable>
+                ) : (
+                  <SelectGuideMessage>
+                    <ChevronRightIcon />
+                    <span>
+                      좌측에서 코드를 선택하거나 [추가] 버튼을 클릭하세요.
+                    </span>
+                  </SelectGuideMessage>
+                )}
+              </>
+            )}
+
+            {/* 하위코드 관리 탭 */}
+            {rightActiveTab === "subCode" && (
+              <>
                 <PanelHeader>
                   <PanelTitle>
-                    총 <strong>{displayMainItems.length}</strong>건
+                    {selectedMainItem && (
+                      <span>
+                        {selectedMainItem.main_nm} ({selectedMainItem.main_cd})
+                        {" - "}총 <strong>{displaySubItems.length}</strong>건
+                      </span>
+                    )}
                   </PanelTitle>
-                  <PanelActions>
-                    <AddButton onClick={handleAddMain}>
-                      <PlusIcon />
-                      추가
+                  {/* <PanelActions>
+                    <AddButton onClick={handleAdd} disabled={!selectedMainCd}>
+                      <PlusIcon />행 추가
                     </AddButton>
-                  </PanelActions>
+                  </PanelActions> */}
                 </PanelHeader>
                 <GridContent>
-                  <Grid
-                    ref={mainGridRef}
-                    rowData={displayMainItems}
-                    columnDefs={mainColumnDefs}
-                    rowHeight={40}
-                    headerHeight={40}
-                    height="100%"
-                    isRadius={false}
-                    onRowClicked={handleMainRowClicked}
-                    onCellValueChanged={handleMainCellChanged}
-                    selectionMode="singleRow"
-                    getRowStyle={(params) => {
-                      if (params.data?.main_cd === selectedMainCd) {
-                        return { background: "rgba(46, 196, 160, 0.15)" };
-                      }
-                      return undefined;
-                    }}
-                  />
+                  {selectedMainCd ? (
+                    <Grid
+                      ref={subGridRef}
+                      rowData={displaySubItems}
+                      columnDefs={subColumnDefs}
+                      rowHeight={40}
+                      headerHeight={40}
+                      height="100%"
+                      isRadius={false}
+                      onCellValueChanged={handleSubCellChanged}
+                      selectionMode="singleRow"
+                      showCheckbox={false}
+                    />
+                  ) : (
+                    <SelectGuideMessage>
+                      <ChevronRightIcon />
+                      <span>좌측에서 코드를 선택하세요.</span>
+                    </SelectGuideMessage>
+                  )}
                 </GridContent>
-              </PanelContainer>
-            </GridPanel>
-
-            {/* 우측 패널 (상세 정보 / 하위코드 관리) */}
-            <GridPanel>
-              <TabBar>
-                <TabItem
-                  $active={rightActiveTab === "detail"}
-                  $position="start"
-                  onClick={() => setRightActiveTab("detail")}
-                >
-                  상세 정보
-                </TabItem>
-                <TabItem
-                  $active={rightActiveTab === "subCode"}
-                  $position="end"
-                  onClick={() => setRightActiveTab("subCode")}
-                >
-                  하위코드 관리
-                </TabItem>
-              </TabBar>
-              <PanelContainer $activeTab={rightActiveTab}>
-                {/* 상세 정보 탭 */}
-                {rightActiveTab === "detail" && (
-                  <>
-                    {selectedMainItem ? (
-                      <FormTable>
-                        <FormTableColumn>
-                          <FormTableRow $isFirst>
-                            <FormTableLabel>코드</FormTableLabel>
-                            <FormTableCell>
-                              <IsInputText
-                                size="xSmall"
-                                value={selectedMainItem.main_cd}
-                                disabled
-                                fullWidth
-                              />
-                            </FormTableCell>
-                          </FormTableRow>
-                          <FormTableRow>
-                            <FormTableLabel $required>코드명</FormTableLabel>
-                            <FormTableCell>
-                              <IsInputText
-                                size="xSmall"
-                                value={selectedMainItem.main_nm}
-                                onChange={(e) =>
-                                  handleDetailFieldChange(
-                                    "main_nm",
-                                    e.target.value
-                                  )
-                                }
-                                disabled={selectedMainItem.sys_yn === "Y"}
-                                fullWidth
-                              />
-                            </FormTableCell>
-                          </FormTableRow>
-                          <FormTableRow>
-                            <FormTableLabel>시스템코드</FormTableLabel>
-                            <FormTableCell>
-                              <IsSelect
-                                size="xSmall"
-                                value={selectedMainItem.sys_yn}
-                                onChange={(val) =>
-                                  handleDetailFieldChange(
-                                    "sys_yn",
-                                    val as string
-                                  )
-                                }
-                                options={[
-                                  { label: "예", value: "Y" },
-                                  { label: "아니오", value: "N" },
-                                ]}
-                                fullWidth
-                                disabled
-                              />
-                            </FormTableCell>
-                          </FormTableRow>
-                          <FormTableRow $isLast>
-                            <FormTableLabel>사용여부</FormTableLabel>
-                            <FormTableCell>
-                              <IsSelect
-                                size="xSmall"
-                                value={selectedMainItem.use_yn}
-                                onChange={(val) =>
-                                  handleDetailFieldChange(
-                                    "use_yn",
-                                    val as string
-                                  )
-                                }
-                                options={[
-                                  { label: "사용", value: "Y" },
-                                  { label: "미사용", value: "N" },
-                                ]}
-                                fullWidth
-                                disabled={selectedMainItem.sys_yn === "Y"}
-                              />
-                            </FormTableCell>
-                          </FormTableRow>
-                        </FormTableColumn>
-                        <FormTableColumn>
-                          <FormTableRow $isFirst>
-                            <FormTableLabel>관리코드1</FormTableLabel>
-                            <FormTableCell>
-                              <IsInputText
-                                size="xSmall"
-                                value={selectedMainItem.mng_cd1 || ""}
-                                onChange={(e) =>
-                                  handleDetailFieldChange(
-                                    "mng_cd1",
-                                    e.target.value || null
-                                  )
-                                }
-                                disabled={selectedMainItem.sys_yn === "Y"}
-                                fullWidth
-                              />
-                            </FormTableCell>
-                          </FormTableRow>
-                          <FormTableRow>
-                            <FormTableLabel>관리코드2</FormTableLabel>
-                            <FormTableCell>
-                              <IsInputText
-                                size="xSmall"
-                                value={selectedMainItem.mng_cd2 || ""}
-                                onChange={(e) =>
-                                  handleDetailFieldChange(
-                                    "mng_cd2",
-                                    e.target.value || null
-                                  )
-                                }
-                                disabled={selectedMainItem.sys_yn === "Y"}
-                                fullWidth
-                              />
-                            </FormTableCell>
-                          </FormTableRow>
-                          <FormTableRow $isLast>
-                            <FormTableLabel>정렬순서</FormTableLabel>
-                            <FormTableCell>
-                              <IsInputText
-                                size="xSmall"
-                                type="number"
-                                value={String(selectedMainItem.sort)}
-                                onChange={(e) =>
-                                  handleDetailFieldChange(
-                                    "sort",
-                                    parseInt(e.target.value, 10) || 0
-                                  )
-                                }
-                                disabled={selectedMainItem.sys_yn === "Y"}
-                                fullWidth
-                              />
-                            </FormTableCell>
-                          </FormTableRow>
-                        </FormTableColumn>
-                      </FormTable>
-                    ) : (
-                      <SelectGuideMessage>
-                        <ChevronRightIcon />
-                        <span>좌측에서 코드를 선택하세요.</span>
-                      </SelectGuideMessage>
-                    )}
-                  </>
-                )}
-
-                {/* 하위코드 관리 탭 */}
-                {rightActiveTab === "subCode" && (
-                  <>
-                    <PanelHeader>
-                      <PanelTitle>
-                        {selectedMainItem && (
-                          <span>
-                            {selectedMainItem.main_nm} (
-                            {selectedMainItem.main_cd}){" - "}총{" "}
-                            <strong>{displaySubItems.length}</strong>건
-                          </span>
-                        )}
-                      </PanelTitle>
-                      <PanelActions>
-                        <AddButton
-                          onClick={handleAddSub}
-                          disabled={!selectedMainCd}
-                        >
-                          <PlusIcon />
-                          추가
-                        </AddButton>
-                      </PanelActions>
-                    </PanelHeader>
-                    <GridContent>
-                      {selectedMainCd ? (
-                        <Grid
-                          ref={subGridRef}
-                          rowData={displaySubItems}
-                          columnDefs={subColumnDefs}
-                          rowHeight={40}
-                          headerHeight={40}
-                          height="100%"
-                          isRadius={false}
-                          onCellValueChanged={handleSubCellChanged}
-                        />
-                      ) : (
-                        <SelectGuideMessage>
-                          <ChevronRightIcon />
-                          <span>좌측에서 코드를 선택하세요.</span>
-                        </SelectGuideMessage>
-                      )}
-                    </GridContent>
-                  </>
-                )}
-              </PanelContainer>
-            </GridPanel>
+              </>
+            )}
+          </PanelContainer>
+        </GridPanel>
       </DualGridContainer>
 
-      {/* 저장 확인 알림 */}
+      {/* 알림창 */}
       <Alert
-        isOpen={showSaveAlert}
-        onClose={handleSaveCancel}
-        onConfirm={handleSaveConfirm}
-        title="변경사항 저장"
-        description={
-          saveTarget === "main"
-            ? "메인 코드 변경사항을 저장하시겠습니까?"
-            : "서브 코드 변경사항을 저장하시겠습니까?"
+        isOpen={alertState.isOpen}
+        onClose={handleAlertClose}
+        onConfirm={handleAlertConfirm}
+        title={
+          alertState.type === "save"
+            ? "알림"
+            : alertState.type === "delete" ||
+                alertState.type === "deleteMainConfirm" ||
+                alertState.type === "deleteSubConfirm"
+              ? "삭제 확인"
+              : "확인"
         }
-        cancelText="취소"
-        confirmText="저장"
+        description={alertState.message}
+        cancelText={alertState.onConfirm ? "취소" : undefined}
+        confirmText="확인"
       />
     </PageTemplate>
   );

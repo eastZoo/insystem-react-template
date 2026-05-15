@@ -128,55 +128,7 @@ export const GridPanel = styled.div`
 export const TabBar = styled.div`
   display: flex;
   flex-shrink: 0;
-`;
-
-/** 탭 아이템 - Figma 332:9294 (선택됨), 332:9295 (선택 안됨) 기준 */
-export const TabItem = styled.button<{ $active?: boolean; $position?: "start" | "center" | "end" | "single" }>`
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 8px;
-  min-width: 140px;
-  border: none;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  font-family: "Pretendard Variable", "Pretendard", sans-serif;
-  font-size: 14px;
-  line-height: 1.429;
-  letter-spacing: 0.203px;
-  white-space: nowrap;
-
-  /* 선택 상태에 따른 스타일 */
-  background: ${({ $active }) => ($active ? "#ffffff" : "rgba(255, 255, 255, 0.5)")};
-  color: ${({ $active }) => ($active ? "#171719" : "rgba(55, 56, 60, 0.28)")};
-  font-weight: ${({ $active }) => ($active ? 600 : 400)};
-
-  /* 테두리 */
-  border-bottom: 1px solid rgba(112, 115, 124, 0.08);
-  border-right: 1px solid rgba(112, 115, 124, 0.08);
-
-  /* 위치에 따른 border-radius */
-  border-radius: ${({ $position }) => {
-    switch ($position) {
-      case "start":
-        return "8px 0 0 0";
-      case "end":
-        return "0 8px 0 0";
-      case "single":
-        return "8px 8px 0 0";
-      default:
-        return "0";
-    }
-  }};
-
-  &:hover {
-    background: ${({ $active }) => ($active ? "#ffffff" : "rgba(255, 255, 255, 0.7)")};
-    color: ${({ $active }) => ($active ? "#171719" : "rgba(55, 56, 60, 0.5)")};
-  }
-
-  &:focus {
-    outline: none;
-  }
+  border-bottom: 1px solid rgba(112, 115, 124, 0.22);
 `;
 
 /** 패널 컨테이너 (탭 아래 컨텐츠 영역) - Figma 기준 */
@@ -327,79 +279,8 @@ export const SelectGuideMessage = styled.div`
 `;
 
 /* ========================================
-   상세 정보 폼 스타일
+   상세 정보 폼 스타일 (레거시 호환용)
    ======================================== */
-
-/* ========================================
-   폼 테이블 영역 (UserManagement 스타일)
-   ======================================== */
-
-/** 폼 테이블 컨테이너 */
-export const FormTable = styled.div`
-  display: flex;
-  gap: 16px;
-  padding: 8px;
-  flex: 1;
-  overflow: auto;
-`;
-
-/** 폼 테이블 컬럼 */
-export const FormTableColumn = styled.div`
-  flex: 1 1 0;
-  display: flex;
-  flex-direction: column;
-  border-radius: 8px;
-  overflow: hidden;
-  border: 1px solid rgba(160, 170, 191, 0.08);
-`;
-
-/** 폼 테이블 행 */
-export const FormTableRow = styled.div<{ $isFirst?: boolean; $isLast?: boolean }>`
-  display: flex;
-  align-items: stretch;
-  min-height: ${({ $isFirst, $isLast }) =>
-    $isFirst || $isLast ? "34px" : "40px"};
-  border-bottom: 1px solid rgba(160, 170, 191, 0.08);
-
-  &:last-child {
-    border-bottom: none;
-  }
-`;
-
-/** 폼 테이블 라벨 셀 */
-export const FormTableLabel = styled.div<{ $required?: boolean }>`
-  display: flex;
-  align-items: center;
-  width: 100px;
-  padding: 0 12px;
-  background: rgba(160, 170, 191, 0.12);
-  font-family: "Pretendard Variable", "Pretendard", sans-serif;
-  font-size: 13px;
-  font-weight: 500;
-  line-height: 1.385;
-  letter-spacing: 0.25px;
-  color: rgba(46, 47, 51, 0.88);
-  flex-shrink: 0;
-
-  ${({ $required }) =>
-    $required &&
-    `
-    &::after {
-      content: "*";
-      color: #ff4d4f;
-      margin-left: 2px;
-    }
-  `}
-`;
-
-/** 폼 테이블 입력 셀 */
-export const FormTableCell = styled.div`
-  flex: 1;
-  display: flex;
-  align-items: center;
-  padding: 4px 8px;
-  gap: 4px;
-`;
 
 /** 레거시 호환용 (삭제 예정) */
 export const FormContainer = styled.div`

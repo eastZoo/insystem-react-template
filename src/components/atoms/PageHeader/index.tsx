@@ -123,7 +123,7 @@ export function PageHeader({
           {onAdd && (
             <IsButton
               variant="solid"
-              color="dark"
+              color="primary"
               size="xs"
               onClick={onAdd}
               disabled={addDisabled}
@@ -136,7 +136,7 @@ export function PageHeader({
           {onSave && (
             <IsButton
               variant="solid"
-              color="dark"
+              color="primary"
               size="xs"
               onClick={onSave}
               disabled={saveDisabled}

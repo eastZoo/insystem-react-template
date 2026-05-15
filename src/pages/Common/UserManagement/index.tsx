@@ -3,12 +3,13 @@
  * @description 사용자 정보 조회, 등록, 수정 기능을 제공하는 페이지
  */
 import { useState, useCallback } from "react";
-import { IsInputText, IsSelect, IsButton, IsCheckbox } from "insystem-atoms";
+import { IsInputText, IsSelect, IsButton, IsCheckbox, IsTabItem } from "insystem-atoms";
 import { RadioGroup } from "@/components/atoms/RadioGroup";
 import { Pagination } from "@/components/atoms/Pagination";
 import { FilterBar } from "@/components/atoms/FilterBar";
 import { PageHeader } from "@/components/atoms/PageHeader";
 import { PageTemplate } from "@/components/template/PageTemplate";
+import { FormTable, FormField } from "@/components/atoms/FormTable";
 import { CalendarIcon } from "@/styles/icons";
 import * as S from "./index.style";
 
@@ -230,83 +231,68 @@ export default function UserManagementPage() {
     updateUserInfo: (field: keyof UserInfo, value: string) => void,
     side: "left" | "right"
   ) => (
-    <S.FormTableColumn>
+    <FormTable.Column>
       {/* 성명 */}
-      <S.FormTableRow $isFirst>
-        <S.FormTableLabel $required>성명</S.FormTableLabel>
-        <S.FormTableCell>
-          <IsInputText
-            size="xSmall"
-            value={userInfo.name}
-            onChange={(e) => updateUserInfo("name", e.target.value)}
-            placeholderText="입력해주세요."
-            fullWidth
-          />
-        </S.FormTableCell>
-      </S.FormTableRow>
+      <FormField label="성명" required isFirst>
+        <IsInputText
+          size="xSmall"
+          value={userInfo.name}
+          onChange={(e) => updateUserInfo("name", e.target.value)}
+          placeholderText="입력해주세요."
+          fullWidth
+        />
+      </FormField>
 
       {/* 성명(영문) */}
-      <S.FormTableRow>
-        <S.FormTableLabel>성명(영문)</S.FormTableLabel>
-        <S.FormTableCell>
-          <IsInputText
-            size="xSmall"
-            value={userInfo.nameEn}
-            onChange={(e) => updateUserInfo("nameEn", e.target.value)}
-            placeholderText="Name"
-            fullWidth
-          />
-        </S.FormTableCell>
-      </S.FormTableRow>
+      <FormField label="성명(영문)">
+        <IsInputText
+          size="xSmall"
+          value={userInfo.nameEn}
+          onChange={(e) => updateUserInfo("nameEn", e.target.value)}
+          placeholderText="Name"
+          fullWidth
+        />
+      </FormField>
 
       {/* 구분 */}
-      <S.FormTableRow>
-        <S.FormTableLabel>구분</S.FormTableLabel>
-        <S.FormTableCell>
-          <IsSelect
-            size="xSmall"
-            value={userInfo.division}
-            onChange={(value) => updateUserInfo("division", value)}
-            options={DIVISION_OPTIONS}
-            fullWidth
-          />
-        </S.FormTableCell>
-      </S.FormTableRow>
+      <FormField label="구분">
+        <IsSelect
+          size="xSmall"
+          value={userInfo.division}
+          onChange={(value) => updateUserInfo("division", value)}
+          options={DIVISION_OPTIONS}
+          fullWidth
+        />
+      </FormField>
 
       {/* 주민등록번호 */}
-      <S.FormTableRow>
-        <S.FormTableLabel $required>주민등록번호</S.FormTableLabel>
-        <S.FormTableCell>
-          <IsInputText
-            size="xSmall"
-            value={userInfo.ssn}
-            onChange={(e) => updateUserInfo("ssn", e.target.value)}
-            placeholderText="'-' 없이 숫자만 입력"
-            fullWidth
-          />
-        </S.FormTableCell>
-      </S.FormTableRow>
+      <FormField label="주민등록번호" required>
+        <IsInputText
+          size="xSmall"
+          value={userInfo.ssn}
+          onChange={(e) => updateUserInfo("ssn", e.target.value)}
+          placeholderText="'-' 없이 숫자만 입력"
+          fullWidth
+        />
+      </FormField>
 
       {/* 생년월일 */}
-      <S.FormTableRow>
-        <S.FormTableLabel $required>생년월일</S.FormTableLabel>
-        <S.FormTableCell>
-          <IsInputText
-            size="xSmall"
-            type="date"
-            value={userInfo.birthDate}
-            onChange={(e) => updateUserInfo("birthDate", e.target.value)}
-            placeholderText="연도-월-일"
-            fullWidth
-            rightIconSlot={<CalendarIcon />}
-          />
-        </S.FormTableCell>
-      </S.FormTableRow>
+      <FormField label="생년월일" required>
+        <IsInputText
+          size="xSmall"
+          type="date"
+          value={userInfo.birthDate}
+          onChange={(e) => updateUserInfo("birthDate", e.target.value)}
+          placeholderText="연도-월-일"
+          fullWidth
+          rightIconSlot={<CalendarIcon />}
+        />
+      </FormField>
 
       {/* 휴대폰번호 */}
-      <S.FormTableRow>
-        <S.FormTableLabel>휴대폰번호</S.FormTableLabel>
-        <S.FormTableCell>
+      <FormTable.Row>
+        <FormTable.Label>휴대폰번호</FormTable.Label>
+        <FormTable.Cell>
           <S.PhoneInputGroup>
             <IsSelect
               size="xSmall"
@@ -332,13 +318,13 @@ export default function UserManagementPage() {
               fullWidth
             />
           </S.PhoneInputGroup>
-        </S.FormTableCell>
-      </S.FormTableRow>
+        </FormTable.Cell>
+      </FormTable.Row>
 
       {/* 이메일 */}
-      <S.FormTableRow>
-        <S.FormTableLabel>이메일</S.FormTableLabel>
-        <S.FormTableCell>
+      <FormTable.Row>
+        <FormTable.Label>이메일</FormTable.Label>
+        <FormTable.Cell>
           <S.EmailInputGroup>
             <IsInputText
               size="xSmall"
@@ -354,13 +340,13 @@ export default function UserManagementPage() {
               fullWidth
             />
           </S.EmailInputGroup>
-        </S.FormTableCell>
-      </S.FormTableRow>
+        </FormTable.Cell>
+      </FormTable.Row>
 
       {/* 주소 */}
-      <S.FormTableRow $multiLine>
-        <S.FormTableLabel $multiLine>주소</S.FormTableLabel>
-        <S.FormTableCell $multiLine>
+      <FormTable.Row multiLine>
+        <FormTable.Label multiLine>주소</FormTable.Label>
+        <FormTable.Cell multiLine>
           <S.AddressInputGroup>
             <S.AddressSearchRow>
               <S.AddressSearchButton
@@ -386,26 +372,23 @@ export default function UserManagementPage() {
               fullWidth
             />
           </S.AddressInputGroup>
-        </S.FormTableCell>
-      </S.FormTableRow>
+        </FormTable.Cell>
+      </FormTable.Row>
 
       {/* 결혼 여부 */}
-      <S.FormTableRow $isLast>
-        <S.FormTableLabel>결혼 여부</S.FormTableLabel>
-        <S.FormTableCell>
-          <RadioGroup
-            name={`maritalStatus-${side}`}
-            options={MARITAL_STATUS_OPTIONS}
-            value={userInfo.maritalStatus}
-            onChange={(value) =>
-              updateUserInfo("maritalStatus", value as "married" | "single")
-            }
-            direction="horizontal"
-            gap={16}
-          />
-        </S.FormTableCell>
-      </S.FormTableRow>
-    </S.FormTableColumn>
+      <FormField label="결혼 여부" isLast>
+        <RadioGroup
+          name={`maritalStatus-${side}`}
+          options={MARITAL_STATUS_OPTIONS}
+          value={userInfo.maritalStatus}
+          onChange={(value) =>
+            updateUserInfo("maritalStatus", value as "married" | "single")
+          }
+          direction="horizontal"
+          gap={16}
+        />
+      </FormField>
+    </FormTable.Column>
   );
 
   /* ============================= useEffect 영역 ============================= */
@@ -539,10 +522,11 @@ export default function UserManagementPage() {
         <S.RightPanel>
           <S.TabBar>
             {TABS.map((tab, index) => (
-              <S.TabItem
+              <IsTabItem
                 key={tab.id}
-                $active={activeTab === tab.id}
-                $position={
+                active={activeTab === tab.id}
+                size="S"
+                position={
                   index === 0
                     ? "start"
                     : index === TABS.length - 1
@@ -552,13 +536,13 @@ export default function UserManagementPage() {
                 onClick={() => setActiveTab(tab.id)}
               >
                 {tab.label}
-              </S.TabItem>
+              </IsTabItem>
             ))}
           </S.TabBar>
 
           <S.TabContent>
             {activeTab === "basic" && (
-              <S.FormTable>
+              <FormTable>
                 {/* 좌측 폼 */}
                 {renderBasicInfoColumn(
                   leftUserInfo,
@@ -571,7 +555,7 @@ export default function UserManagementPage() {
                   updateRightUserInfo,
                   "right"
                 )}
-              </S.FormTable>
+              </FormTable>
             )}
 
             {activeTab === "transaction" && (
